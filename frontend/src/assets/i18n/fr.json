@@ -1,0 +1,47 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filters": "Filtres",
+    "loading": "Chargement...",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "actions": "Actions",
+    "total": "Total",
+    "export": "Exporter"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "properties": "Biens",
+    "mandates": "Mandats",
+    "contacts": "Contacts",
+    "transactions": "Transactions",
+    "agenda": "Agenda",
+    "documents": "Documents",
+    "reporting": "Statistiques",
+    "settings": "Paramètres"
+  },
+  "property": {
+    "title": "Bien immobilier",
+    "reference": "Référence",
+    "price": "Prix",
+    "surface": "Surface",
+    "rooms": "Pièces",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bains",
+    "floor": "Étage",
+    "city": "Ville",
+    "type": "Type",
+    "status": "Statut",
+    "published": "Publié",
+    "unpublished": "Non publié"
+  }
+}

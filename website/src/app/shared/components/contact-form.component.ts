@@ -1,0 +1,129 @@
+import { Component, Input, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-contact-form',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="contact-form-widget">
+      @if (!submitted()) {
+        <form (ngSubmit)="onSubmit()" #form="ngForm" class="space-y-4">
+          @if (title) {
+            <h3 class="font-heading font-bold text-lg text-primary mb-4">{{ title }}</h3>
+          }
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Prénom *</label>
+              <input type="text" [(ngModel)]="formData.firstName" name="firstName" required
+                     class="form-input" placeholder="Jean">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom *</label>
+              <input type="text" [(ngModel)]="formData.lastName" name="lastName" required
+                     class="form-input" placeholder="Dupont">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" [(ngModel)]="formData.email" name="email" required
+                   class="form-input" placeholder="jean.dupont@email.fr">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input type="tel" [(ngModel)]="formData.phone" name="phone"
+                   class="form-input" placeholder="06 00 00 00 00">
+          </div>
+
+          @if (showPropertyRef) {
+            <div class="form-group">
+              <label class="form-label">Référence du bien</label>
+              <input type="text" [(ngModel)]="formData.propertyRef" name="propertyRef"
+                     class="form-input" [placeholder]="propertyRefPlaceholder || 'IMB-2024-XXX'">
+            </div>
+          }
+
+          <div class="form-group">
+            <label class="form-label">Message *</label>
+            <textarea [(ngModel)]="formData.message" name="message" required rows="4"
+                      class="form-input resize-none"
+                      [placeholder]="messagePlaceholder || 'Votre message...'"></textarea>
+          </div>
+
+          <div class="flex items-start gap-2">
+            <input type="checkbox" [(ngModel)]="formData.gdpr" name="gdpr" required
+                   id="gdpr-consent" class="mt-1 w-4 h-4 rounded border-gray-300 text-primary">
+            <label for="gdpr-consent" class="text-xs text-gray-500 leading-relaxed">
+              J'accepte que mes données soient traitées par Imoblex dans le cadre de ma demande.
+              <a href="/politique-confidentialite" class="text-primary hover:underline">En savoir plus</a>
+            </label>
+          </div>
+
+          <button type="submit" [disabled]="!form.valid" class="btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+            {{ submitLabel || 'Envoyer ma demande' }}
+          </button>
+        </form>
+      } @else {
+        <div class="text-center py-10">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-primary mb-2">Message envoyé !</h3>
+          <p class="text-gray-600 text-sm leading-relaxed mb-6">
+            Merci pour votre message. Un conseiller Imoblex vous contactera dans les plus brefs délais, généralement sous 24h ouvrées.
+          </p>
+          <button (click)="reset()" class="btn-outline text-sm py-2.5 px-6">
+            Envoyer un nouveau message
+          </button>
+        </div>
+      }
+    </div>
+  `
+})
+export class ContactFormComponent {
+  @Input() title = '';
+  @Input() submitLabel = '';
+  @Input() showPropertyRef = false;
+  @Input() propertyRefPlaceholder = '';
+  @Input() messagePlaceholder = '';
+
+  submitted = signal(false);
+
+  formData = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    propertyRef: '',
+    message: '',
+    gdpr: false,
+  };
+
+  onSubmit(): void {
+    // In production: send to API
+    console.log('Form submitted:', this.formData);
+    this.submitted.set(true);
+  }
+
+  reset(): void {
+    this.submitted.set(false);
+    this.formData = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      propertyRef: '',
+      message: '',
+      gdpr: false,
+    };
+  }
+}

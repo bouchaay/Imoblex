@@ -1,0 +1,616 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   GLOBAL STYLES - IMOBLEX
+   ============================================ */
+
+:root {
+  --primary: #1B4F72;
+  --accent: #F39C12;
+  --background: #FAFAFA;
+  --dark: #1B2744;
+  --text-primary: #1a1a2e;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+  --shadow-card: 0 2px 15px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 8px 30px rgba(27, 79, 114, 0.15);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1B4F72;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #F39C12;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+.text-display {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.text-headline {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.text-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 600;
+}
+
+.text-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* ============================================
+   COMPONENTS
+   ============================================ */
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center justify-center px-6 py-3 bg-primary text-white font-semibold rounded-lg transition-all duration-300 hover:bg-primary-600 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+}
+
+.btn-accent {
+  @apply inline-flex items-center justify-center px-6 py-3 bg-accent text-white font-semibold rounded-lg transition-all duration-300 hover:bg-accent-600 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center px-6 py-3 border-2 border-primary text-primary font-semibold rounded-lg transition-all duration-300 hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+}
+
+.btn-outline-white {
+  @apply inline-flex items-center justify-center px-6 py-3 border-2 border-white text-white font-semibold rounded-lg transition-all duration-300 hover:bg-white hover:text-primary focus:outline-none;
+}
+
+/* Cards */
+.card {
+  @apply bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300;
+}
+
+/* Section titles */
+.section-label {
+  @apply inline-block text-accent font-semibold text-sm uppercase tracking-widest mb-3;
+}
+
+.section-title {
+  @apply text-headline text-primary mb-4;
+}
+
+.section-divider {
+  @apply w-16 h-1 bg-accent rounded-full mb-8;
+}
+
+/* ============================================
+   ANIMATIONS - INTERSECTION OBSERVER
+   ============================================ */
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+.animate-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-on-scroll-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+.animate-on-scroll-left.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.animate-on-scroll-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+.animate-on-scroll-right.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Staggered delay helpers */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+.delay-400 { transition-delay: 0.4s; }
+.delay-500 { transition-delay: 0.5s; }
+
+/* ============================================
+   PROPERTY CARD
+   ============================================ */
+
+.property-card {
+  @apply bg-white rounded-xl overflow-hidden shadow-card transition-all duration-300 cursor-pointer;
+
+  &:hover {
+    @apply shadow-card-hover -translate-y-1;
+
+    .property-card__image img {
+      transform: scale(1.08);
+    }
+
+    .property-card__overlay {
+      opacity: 1;
+    }
+  }
+}
+
+.property-card__image {
+  @apply relative overflow-hidden;
+  height: 220px;
+
+  img {
+    @apply w-full h-full object-cover transition-transform duration-500;
+  }
+}
+
+.property-card__overlay {
+  @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-300 flex items-end p-4;
+}
+
+/* ============================================
+   DPE DISPLAY
+   ============================================ */
+
+.dpe-bar {
+  @apply flex items-center rounded-sm mb-1 text-white text-xs font-bold px-2 py-1;
+}
+
+.dpe-A { background-color: #00A651; }
+.dpe-B { background-color: #57B944; }
+.dpe-C { background-color: #9DCE44; }
+.dpe-D { background-color: #FFEC00; color: #333; }
+.dpe-E { background-color: #F7941D; }
+.dpe-F { background-color: #F15A29; }
+.dpe-G { background-color: #ED1C24; }
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(27, 39, 68, 0.85) 0%, rgba(27, 79, 114, 0.7) 50%, rgba(27, 39, 68, 0.6) 100%);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: var(--transition);
+}
+
+.header--transparent {
+  background: transparent;
+}
+
+.header--solid {
+  background: white;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header--solid .nav-link {
+  color: var(--primary) !important;
+}
+
+.header--solid .logo-text {
+  color: var(--primary) !important;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.nav-link {
+  @apply relative text-white font-medium transition-colors duration-200;
+  font-size: 0.9375rem;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+
+  &:hover::after,
+  &.active::after {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   SEARCH BAR
+   ============================================ */
+
+.search-bar {
+  @apply bg-white rounded-2xl shadow-premium overflow-hidden;
+}
+
+.search-tab {
+  @apply px-6 py-4 font-semibold text-sm transition-all duration-200 cursor-pointer;
+
+  &.active {
+    @apply bg-primary text-white;
+  }
+
+  &:not(.active) {
+    @apply text-gray-600 hover:text-primary;
+  }
+}
+
+/* ============================================
+   FILTERS SIDEBAR
+   ============================================ */
+
+.filter-section {
+  @apply border-b border-gray-100 pb-5 mb-5;
+
+  h3 {
+    @apply text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3;
+  }
+}
+
+.filter-checkbox {
+  @apply flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-primary transition-colors;
+
+  input[type="checkbox"] {
+    @apply w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary;
+  }
+}
+
+/* ============================================
+   RANGE SLIDER
+   ============================================ */
+
+input[type="range"] {
+  @apply w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer;
+
+  &::-webkit-slider-thumb {
+    @apply appearance-none w-5 h-5 rounded-full bg-primary cursor-pointer shadow-md;
+  }
+
+  &::-moz-range-thumb {
+    @apply w-5 h-5 rounded-full bg-primary cursor-pointer shadow-md border-none;
+  }
+}
+
+/* ============================================
+   MAP STYLES
+   ============================================ */
+
+.leaflet-container {
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.property-marker {
+  background: white;
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--primary);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+  &.selected {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.1);
+  }
+}
+
+/* ============================================
+   SWIPER GALLERY
+   ============================================ */
+
+.swiper-button-next,
+.swiper-button-prev {
+  background: white;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+
+  &::after {
+    font-size: 16px !important;
+    color: var(--primary);
+    font-weight: 700;
+  }
+}
+
+.swiper-pagination-bullet-active {
+  background: var(--accent) !important;
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+
+.form-input {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-700 bg-white transition-all duration-200 outline-none;
+
+  &:focus {
+    @apply border-primary ring-2 ring-primary/20;
+  }
+
+  &::placeholder {
+    @apply text-gray-400;
+  }
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 mb-1.5;
+}
+
+.form-group {
+  @apply mb-5;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@layer utilities {
+  .container-fluid {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-16 lg:py-24;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #1B4F72, #F39C12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ============================================
+   RIBBON / BADGE
+   ============================================ */
+
+.ribbon {
+  @apply absolute top-4 left-4 px-3 py-1 text-xs font-bold uppercase tracking-wide rounded;
+}
+
+.ribbon-new { @apply bg-green-500 text-white; }
+.ribbon-exclusive { @apply bg-accent text-white; }
+.ribbon-reduced { @apply bg-red-500 text-white; }
+.ribbon-sold { @apply bg-gray-700 text-white; }
+
+/* ============================================
+   TOAST NOTIFICATION
+   ============================================ */
+
+.toast {
+  @apply fixed bottom-6 right-6 bg-white rounded-xl shadow-premium px-6 py-4 flex items-center gap-3 z-50 transition-all duration-300;
+
+  &.toast-success {
+    border-left: 4px solid #00A651;
+  }
+
+  &.toast-error {
+    border-left: 4px solid #ED1C24;
+  }
+}
+
+/* ============================================
+   STATS STRIP
+   ============================================ */
+
+.stats-strip {
+  @apply bg-primary text-white;
+}
+
+.stat-item {
+  @apply text-center px-6 py-8 border-r border-white/10 last:border-0;
+
+  .stat-number {
+    @apply block font-heading font-bold text-3xl text-accent;
+  }
+
+  .stat-label {
+    @apply block text-sm text-white/80 mt-1;
+  }
+}
+
+/* ============================================
+   ESTIMATION STEPS
+   ============================================ */
+
+.step-indicator {
+  @apply flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-all duration-300;
+
+  &.step-active {
+    @apply bg-primary text-white;
+  }
+
+  &.step-done {
+    @apply bg-green-500 text-white;
+  }
+
+  &.step-pending {
+    @apply bg-gray-200 text-gray-500;
+  }
+}
+
+/* ============================================
+   LOAN CALCULATOR
+   ============================================ */
+
+.calc-result {
+  @apply bg-primary/5 rounded-xl p-5 text-center;
+
+  .calc-value {
+    @apply text-2xl font-bold font-heading text-primary;
+  }
+
+  .calc-label {
+    @apply text-sm text-gray-500 mt-1;
+  }
+}
+
+/* ============================================
+   TEAM CARD
+   ============================================ */
+
+.team-card {
+  @apply bg-white rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 text-center;
+
+  .team-photo {
+    @apply w-full aspect-square object-cover;
+  }
+
+  .team-info {
+    @apply p-5;
+  }
+}
+
+/* ============================================
+   BREADCRUMB
+   ============================================ */
+
+.breadcrumb {
+  @apply flex items-center gap-2 text-sm text-gray-500;
+
+  a {
+    @apply hover:text-primary transition-colors;
+  }
+
+  .separator {
+    @apply text-gray-300;
+  }
+
+  .current {
+    @apply text-primary font-medium;
+  }
+}
+
+/* ============================================
+   MOBILE MENU
+   ============================================ */
+
+.mobile-menu {
+  @apply fixed inset-0 z-50 bg-dark flex flex-col;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.is-open {
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   PARTNER LOGOS
+   ============================================ */
+
+.partner-logo {
+  @apply grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer;
+}
+
+/* ============================================
+   NEWSLETTER
+   ============================================ */
+
+.newsletter-input {
+  @apply flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-l-lg text-white placeholder-white/50 outline-none focus:border-accent;
+}

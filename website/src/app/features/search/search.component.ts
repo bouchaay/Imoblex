@@ -1,0 +1,479 @@
+import { Component, OnInit, AfterViewInit, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { PropertyService } from '../../shared/services/property.service';
+import { PropertyCardComponent } from '../../shared/components/property-card.component';
+import { BreadcrumbComponent } from '../../shared/components/breadcrumb.component';
+import { Property, PropertySearchParams, TransactionType, PropertyType } from '../../shared/models/property.model';
+
+type ViewMode = 'grid' | 'list' | 'map';
+type SortOption = 'date_desc' | 'price_asc' | 'price_desc' | 'area_desc';
+
+@Component({
+  selector: 'app-search',
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule, PropertyCardComponent, BreadcrumbComponent],
+  template: `
+    <!-- Page header -->
+    <div class="bg-primary pt-28 pb-10">
+      <div class="container-fluid">
+        <app-breadcrumb [items]="breadcrumbs()" />
+        <h1 class="text-headline text-white mt-4">
+          {{ transactionType() === 'sale' ? 'Biens à vendre' : 'Biens à louer' }}
+          <span class="text-accent text-2xl font-normal ml-2">({{ totalResults() }} résultats)</span>
+        </h1>
+      </div>
+    </div>
+
+    <div class="container-fluid py-8">
+      <div class="flex gap-8">
+
+        <!-- ===== SIDEBAR FILTERS ===== -->
+        <aside class="w-72 flex-shrink-0 hidden lg:block">
+          <div class="bg-white rounded-xl shadow-card p-6 sticky top-24">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="font-heading font-bold text-primary">Filtres</h2>
+              <button (click)="resetFilters()" class="text-xs text-accent hover:underline">Réinitialiser</button>
+            </div>
+
+            <!-- Transaction type toggle -->
+            <div class="filter-section">
+              <h3>Type d'annonce</h3>
+              <div class="flex rounded-lg overflow-hidden border border-gray-200">
+                <button
+                  class="flex-1 py-2 text-sm font-medium transition-colors"
+                  [class.bg-primary]="transactionType() === 'sale'"
+                  [class.text-white]="transactionType() === 'sale'"
+                  [class.text-gray-500]="transactionType() !== 'sale'"
+                  (click)="setTransactionType('sale')">
+                  Vente
+                </button>
+                <button
+                  class="flex-1 py-2 text-sm font-medium transition-colors"
+                  [class.bg-primary]="transactionType() === 'rent'"
+                  [class.text-white]="transactionType() === 'rent'"
+                  [class.text-gray-500]="transactionType() !== 'rent'"
+                  (click)="setTransactionType('rent')">
+                  Location
+                </button>
+              </div>
+            </div>
+
+            <!-- Property types -->
+            <div class="filter-section">
+              <h3>Type de bien</h3>
+              <div class="space-y-2">
+                @for (type of propertyTypes; track type.value) {
+                  <label class="filter-checkbox">
+                    <input type="checkbox" [value]="type.value" [(ngModel)]="type.checked" (change)="applyFilters()">
+                    {{ type.label }}
+                  </label>
+                }
+              </div>
+            </div>
+
+            <!-- Price range -->
+            <div class="filter-section">
+              <h3>{{ transactionType() === 'sale' ? 'Prix (€)' : 'Loyer mensuel (€)' }}</h3>
+              <div class="flex gap-2 mb-3">
+                <input type="number" [(ngModel)]="minPrice" placeholder="Min"
+                       class="form-input text-sm py-2" (change)="applyFilters()">
+                <input type="number" [(ngModel)]="maxPrice" placeholder="Max"
+                       class="form-input text-sm py-2" (change)="applyFilters()">
+              </div>
+              <div class="text-xs text-gray-400 text-center">
+                @if (minPrice || maxPrice) {
+                  {{ minPrice | number:'1.0-0' }}{{ minPrice ? ' €' : '' }} –
+                  {{ maxPrice | number:'1.0-0' }}{{ maxPrice ? ' €' : '' }}
+                } @else {
+                  Tous les prix
+                }
+              </div>
+            </div>
+
+            <!-- Area -->
+            <div class="filter-section">
+              <h3>Surface (m²)</h3>
+              <div class="flex gap-2">
+                <input type="number" [(ngModel)]="minArea" placeholder="Min"
+                       class="form-input text-sm py-2" (change)="applyFilters()">
+                <input type="number" [(ngModel)]="maxArea" placeholder="Max"
+                       class="form-input text-sm py-2" (change)="applyFilters()">
+              </div>
+            </div>
+
+            <!-- Rooms -->
+            <div class="filter-section">
+              <h3>Nombre de pièces minimum</h3>
+              <div class="flex gap-2 flex-wrap">
+                @for (r of [1,2,3,4,5]; track r) {
+                  <button
+                    class="w-10 h-10 rounded-lg border text-sm font-medium transition-colors"
+                    [class.bg-primary]="minRooms === r"
+                    [class.text-white]="minRooms === r"
+                    [class.border-primary]="minRooms === r"
+                    [class.border-gray-200]="minRooms !== r"
+                    [class.text-gray-600]="minRooms !== r"
+                    (click)="setMinRooms(r)">
+                    {{ r }}{{ r === 5 ? '+' : '' }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- City -->
+            <div class="filter-section">
+              <h3>Ville</h3>
+              <input type="text" [(ngModel)]="cityFilter" placeholder="Toulouse, Blagnac..."
+                     class="form-input text-sm" (input)="applyFilters()">
+            </div>
+
+            <!-- Features -->
+            <div class="filter-section">
+              <h3>Équipements</h3>
+              <div class="space-y-2">
+                @for (feature of amenityFilters; track feature.label) {
+                  <label class="filter-checkbox">
+                    <input type="checkbox" [(ngModel)]="feature.checked" (change)="applyFilters()">
+                    {{ feature.label }}
+                  </label>
+                }
+              </div>
+            </div>
+
+            <button (click)="applyFilters()" class="btn-primary w-full text-sm py-3 mt-2">
+              Appliquer les filtres
+            </button>
+          </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="flex-1 min-w-0">
+
+          <!-- Toolbar -->
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="font-semibold text-primary">{{ totalResults() }}</span> biens trouvés
+            </div>
+
+            <div class="flex items-center gap-4">
+              <!-- Sort -->
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500 hidden sm:inline">Trier par :</span>
+                <select [(ngModel)]="sortBy" (change)="applyFilters()" class="form-input text-sm py-2 pl-3 pr-8 !w-auto">
+                  <option value="date_desc">Plus récents</option>
+                  <option value="price_asc">Prix croissant</option>
+                  <option value="price_desc">Prix décroissant</option>
+                  <option value="area_desc">Surface décroissante</option>
+                </select>
+              </div>
+
+              <!-- View toggle -->
+              <div class="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                @for (view of viewModes; track view.mode) {
+                  <button
+                    class="p-2 rounded-md transition-colors"
+                    [class.bg-white]="currentView() === view.mode"
+                    [class.shadow-sm]="currentView() === view.mode"
+                    [class.text-primary]="currentView() === view.mode"
+                    [class.text-gray-400]="currentView() !== view.mode"
+                    (click)="setView(view.mode)"
+                    [title]="view.label">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path [attr.d]="view.icon"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading state -->
+          @if (loading()) {
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              @for (i of [1,2,3,4,5,6]; track i) {
+                <div class="h-72 bg-gray-100 animate-pulse rounded-xl"></div>
+              }
+            </div>
+          }
+
+          <!-- Grid view -->
+          @if (!loading() && currentView() === 'grid') {
+            @if (properties().length > 0) {
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                @for (property of properties(); track property.id) {
+                  <app-property-card [property]="property" />
+                }
+              </div>
+            } @else {
+              <div class="text-center py-20">
+                <svg class="w-16 h-16 text-gray-200 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <h3 class="font-heading font-bold text-gray-400 text-xl mb-2">Aucun bien trouvé</h3>
+                <p class="text-gray-400 text-sm mb-6">Essayez de modifier vos critères de recherche.</p>
+                <button (click)="resetFilters()" class="btn-outline text-sm">Réinitialiser les filtres</button>
+              </div>
+            }
+          }
+
+          <!-- List view -->
+          @if (!loading() && currentView() === 'list') {
+            <div class="space-y-4">
+              @for (property of properties(); track property.id) {
+                <div class="bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden cursor-pointer flex" [routerLink]="['/bien', property.id]">
+                  <div class="w-64 flex-shrink-0 relative overflow-hidden">
+                    <img [src]="property.photos[0]" [alt]="property.title" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" style="height: 200px;">
+                    @if (property.isNew) {
+                      <span class="ribbon ribbon-new absolute top-3 left-3">Nouveau</span>
+                    }
+                    @if (property.isExclusive) {
+                      <span class="ribbon ribbon-exclusive absolute top-3 left-3">Exclusif</span>
+                    }
+                  </div>
+                  <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div class="flex items-start justify-between mb-2">
+                        <h3 class="font-heading font-bold text-primary text-lg hover:text-accent transition-colors">{{ property.title }}</h3>
+                        <span class="text-price text-xl ml-4 flex-shrink-0">{{ formatPrice(property) }}</span>
+                      </div>
+                      <p class="text-gray-500 text-sm mb-3">
+                        <svg class="w-3.5 h-3.5 inline text-accent mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        {{ property.location.city }}{{ property.location.district ? ' – ' + property.location.district : '' }}
+                      </p>
+                      <p class="text-gray-400 text-sm line-clamp-2">{{ property.description }}</p>
+                    </div>
+                    <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+                      <span class="text-sm text-gray-600">{{ property.area }} m²</span>
+                      <span class="text-gray-200">|</span>
+                      <span class="text-sm text-gray-600">{{ property.rooms }} pièces</span>
+                      @if (property.bedrooms > 0) {
+                        <span class="text-gray-200">|</span>
+                        <span class="text-sm text-gray-600">{{ property.bedrooms }} chambres</span>
+                      }
+                      <span class="text-gray-200">|</span>
+                      <span class="text-xs px-2 py-0.5 rounded-full font-semibold" [ngClass]="'dpe-' + property.dpe">DPE {{ property.dpe }}</span>
+                      <span class="ml-auto text-xs text-gray-400">Réf. {{ property.reference }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Map view -->
+          @if (!loading() && currentView() === 'map') {
+            <div class="flex gap-4" style="height: 600px;">
+              <div id="search-map" class="flex-1 rounded-xl overflow-hidden shadow-card bg-blue-50 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                  <svg class="w-12 h-12 mx-auto mb-2 text-primary/20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                  </svg>
+                  <p class="text-sm font-medium">Carte interactive</p>
+                  <p class="text-xs mt-1">{{ properties().length }} biens à afficher</p>
+                </div>
+              </div>
+              <div class="w-72 flex-shrink-0 overflow-y-auto space-y-3">
+                @for (property of properties().slice(0, 10); track property.id) {
+                  <div class="bg-white rounded-xl shadow-card p-3 cursor-pointer hover:shadow-card-hover transition-all" [routerLink]="['/bien', property.id]">
+                    <img [src]="property.photos[0]" [alt]="property.title" class="w-full h-28 object-cover rounded-lg mb-2">
+                    <p class="font-semibold text-sm text-primary line-clamp-1">{{ property.title }}</p>
+                    <p class="text-accent font-bold text-sm">{{ formatPrice(property) }}</p>
+                    <p class="text-gray-400 text-xs mt-1">{{ property.area }} m² · {{ property.rooms }} pièces</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Pagination -->
+          @if (!loading() && totalPages() > 1) {
+            <div class="flex items-center justify-center gap-2 mt-10">
+              <button
+                (click)="goToPage(currentPage() - 1)"
+                [disabled]="currentPage() === 1"
+                class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:border-primary hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+
+              @for (page of visiblePages(); track page) {
+                <button
+                  (click)="goToPage(page)"
+                  class="w-10 h-10 rounded-lg border text-sm font-medium transition-colors"
+                  [class.bg-primary]="page === currentPage()"
+                  [class.text-white]="page === currentPage()"
+                  [class.border-primary]="page === currentPage()"
+                  [class.border-gray-200]="page !== currentPage()"
+                  [class.text-gray-600]="page !== currentPage()"
+                  [class.hover:border-primary]="page !== currentPage()">
+                  {{ page }}
+                </button>
+              }
+
+              <button
+                (click)="goToPage(currentPage() + 1)"
+                [disabled]="currentPage() === totalPages()"
+                class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:border-primary hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`:host { display: block; padding-top: 0; }`]
+})
+export class SearchComponent implements OnInit {
+  private readonly propertyService = inject(PropertyService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  transactionType = signal<TransactionType>('sale');
+  properties = signal<Property[]>([]);
+  totalResults = signal(0);
+  currentPage = signal(1);
+  totalPages = signal(1);
+  loading = signal(true);
+  currentView = signal<ViewMode>('grid');
+  sortBy: SortOption = 'date_desc';
+
+  // Filter values
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  minArea: number | null = null;
+  maxArea: number | null = null;
+  minRooms: number | null = null;
+  cityFilter = '';
+
+  propertyTypes = [
+    { value: 'apartment' as PropertyType, label: 'Appartement', checked: false },
+    { value: 'house' as PropertyType, label: 'Maison', checked: false },
+    { value: 'villa' as PropertyType, label: 'Villa', checked: false },
+    { value: 'studio' as PropertyType, label: 'Studio', checked: false },
+    { value: 'loft' as PropertyType, label: 'Loft', checked: false },
+    { value: 'commercial' as PropertyType, label: 'Local commercial', checked: false },
+    { value: 'land' as PropertyType, label: 'Terrain', checked: false },
+  ];
+
+  amenityFilters = [
+    { label: 'Balcon / Terrasse', checked: false },
+    { label: 'Jardin', checked: false },
+    { label: 'Parking / Garage', checked: false },
+    { label: 'Piscine', checked: false },
+    { label: 'Ascenseur', checked: false },
+    { label: 'Cave', checked: false },
+  ];
+
+  viewModes = [
+    { mode: 'grid' as ViewMode, label: 'Grille', icon: 'M4 6h4v4H4zm0 7h4v4H4zm7-7h4v4h-4zm0 7h4v4h-4zm7-7h4v4h-4zm0 7h4v4h-4z' },
+    { mode: 'list' as ViewMode, label: 'Liste', icon: 'M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z' },
+    { mode: 'map' as ViewMode, label: 'Carte', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
+  ];
+
+  breadcrumbs = computed(() => [
+    { label: 'Accueil', path: '/' },
+    { label: this.transactionType() === 'sale' ? 'Vente' : 'Location' },
+  ]);
+
+  visiblePages = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+    const start = Math.max(1, current - 2);
+    const end = Math.min(total, current + 2);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  });
+
+  ngOnInit(): void {
+    // Read route data and query params
+    this.route.data.subscribe(data => {
+      if (data['transactionType']) {
+        this.transactionType.set(data['transactionType']);
+      }
+    });
+
+    this.route.queryParamMap.subscribe(params => {
+      const type = params.get('type') as TransactionType;
+      if (type === 'sale' || type === 'rent') this.transactionType.set(type);
+      this.cityFilter = params.get('city') ?? '';
+      const maxPrice = params.get('maxPrice');
+      if (maxPrice) this.maxPrice = +maxPrice;
+      this.applyFilters();
+    });
+  }
+
+  setTransactionType(type: TransactionType): void {
+    this.transactionType.set(type);
+    this.currentPage.set(1);
+    this.applyFilters();
+    this.router.navigate([type === 'sale' ? '/vente' : '/location']);
+  }
+
+  setView(mode: ViewMode): void {
+    this.currentView.set(mode);
+  }
+
+  setMinRooms(rooms: number): void {
+    this.minRooms = this.minRooms === rooms ? null : rooms;
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
+    this.loading.set(true);
+    const selectedTypes = this.propertyTypes.filter(t => t.checked).map(t => t.value);
+    const params: PropertySearchParams = {
+      type: this.transactionType(),
+      propertyTypes: selectedTypes.length > 0 ? selectedTypes : undefined,
+      city: this.cityFilter || undefined,
+      minPrice: this.minPrice ?? undefined,
+      maxPrice: this.maxPrice ?? undefined,
+      minArea: this.minArea ?? undefined,
+      maxArea: this.maxArea ?? undefined,
+      minRooms: this.minRooms ?? undefined,
+      sortBy: this.sortBy,
+      page: this.currentPage(),
+      limit: 12,
+    };
+
+    this.propertyService.searchProperties(params).subscribe(result => {
+      this.properties.set(result.properties);
+      this.totalResults.set(result.total);
+      this.totalPages.set(result.totalPages);
+      this.loading.set(false);
+    });
+  }
+
+  resetFilters(): void {
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.minArea = null;
+    this.maxArea = null;
+    this.minRooms = null;
+    this.cityFilter = '';
+    this.propertyTypes.forEach(t => t.checked = false);
+    this.amenityFilters.forEach(f => f.checked = false);
+    this.currentPage.set(1);
+    this.applyFilters();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.applyFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  formatPrice(property: Property): string {
+    const formatted = new Intl.NumberFormat('fr-FR', {
+      style: 'currency', currency: 'EUR', maximumFractionDigits: 0,
+    }).format(property.price);
+    return property.transactionType === 'rent' ? `${formatted}/mois` : formatted;
+  }
+}

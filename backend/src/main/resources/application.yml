@@ -1,0 +1,97 @@
+spring:
+  application:
+    name: imoblex-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/imoblex
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:boucha123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: public
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:contact@imoblex.fr}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 200MB
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+
+# Application config
+imoblex:
+  jwt:
+    secret: ${JWT_SECRET:imoblexSecretKey2024VeryLongAndSecureKeyForJWT}
+    expiration: 86400000      # 24h en ms
+    refresh-expiration: 604800000  # 7j en ms
+
+  minio:
+    url: ${MINIO_URL:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    bucket:
+      properties: imoblex-properties
+      documents: imoblex-documents
+      avatars: imoblex-avatars
+
+  agency:
+    name: Imoblex
+    address: 22 Rue Hyères, 31500 Toulouse
+    phone: 05.61.61.57.38
+    email: contact@imoblex.fr
+    website: https://imoblex.fr
+
+  cors:
+    allowed-origins:
+      - http://localhost:4200   # back-office dev
+      - http://localhost:4201   # website dev
+      - https://app.imoblex.fr  # back-office prod
+      - https://imoblex.fr      # website prod

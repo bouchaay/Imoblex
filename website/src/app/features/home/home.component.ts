@@ -1,0 +1,504 @@
+import { Component, OnInit, AfterViewInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { PropertyService } from '../../shared/services/property.service';
+import { PropertyCardComponent } from '../../shared/components/property-card.component';
+import { SearchBarComponent } from '../../shared/components/search-bar.component';
+import { Property } from '../../shared/models/property.model';
+
+@Component({
+  selector: 'app-home',
+  standalone: true,
+  imports: [CommonModule, RouterModule, PropertyCardComponent, SearchBarComponent],
+  template: `
+    <!-- ===================== HERO ===================== -->
+    <section class="hero">
+      <div class="hero__bg" style="background-image: url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&q=80')"></div>
+      <div class="hero__overlay"></div>
+
+      <!-- Animated particles -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="particle" style="left:15%;top:20%;animation-delay:0s;width:4px;height:4px;background:rgba(243,156,18,0.4);border-radius:50%;position:absolute;animation:float 6s ease-in-out infinite;"></div>
+        <div class="particle" style="left:80%;top:30%;animation-delay:2s;width:6px;height:6px;background:rgba(255,255,255,0.2);border-radius:50%;position:absolute;animation:float 8s ease-in-out infinite;"></div>
+        <div class="particle" style="left:50%;top:70%;animation-delay:4s;width:3px;height:3px;background:rgba(243,156,18,0.3);border-radius:50%;position:absolute;animation:float 7s ease-in-out infinite;"></div>
+      </div>
+
+      <div class="relative container-fluid w-full pt-24">
+        <div class="max-w-3xl mx-auto text-center text-white">
+          <!-- Badge -->
+          <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-white/90 mb-6 border border-white/20">
+            <span class="w-2 h-2 bg-accent rounded-full animate-pulse-slow"></span>
+            18 ans d'expertise à Toulouse
+          </div>
+
+          <!-- Main title -->
+          <h1 class="text-display text-white mb-4">
+            Votre expert immobilier<br>
+            <span style="color: #F39C12;">à Toulouse</span>
+          </h1>
+
+          <p class="text-lg text-white/80 mb-10 max-w-xl mx-auto leading-relaxed">
+            Vente, location, estimation gratuite. Découvrez notre sélection exclusive de biens immobiliers en Haute-Garonne.
+          </p>
+
+          <!-- Search bar -->
+          <div class="w-full max-w-4xl mx-auto">
+            <app-search-bar />
+          </div>
+
+          <!-- Quick links -->
+          <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+            <span class="text-white/50 text-sm">Recherches populaires :</span>
+            @for (tag of popularSearches; track tag.label) {
+              <a [routerLink]="tag.path" class="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-sm text-white/80 hover:text-white transition-all">
+                {{ tag.label }}
+              </a>
+            }
+          </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60 text-xs">
+          <span>Découvrir</span>
+          <div class="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center pt-2">
+            <div class="w-1.5 h-3 bg-white/60 rounded-full animate-bounce"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== STATS STRIP ===================== -->
+    <section class="stats-strip">
+      <div class="container-fluid">
+        <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-white/10">
+          @for (stat of stats; track stat.label) {
+            <div class="stat-item animate-on-scroll">
+              <span class="stat-number">{{ stat.number }}</span>
+              <span class="stat-label">{{ stat.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FEATURED PROPERTIES ===================== -->
+    <section class="section-padding bg-background">
+      <div class="container-fluid">
+        <div class="flex items-end justify-between mb-10">
+          <div class="animate-on-scroll">
+            <span class="section-label">Sélection du moment</span>
+            <h2 class="section-title">Biens en vedette</h2>
+            <div class="section-divider"></div>
+          </div>
+          <a routerLink="/vente" class="btn-outline text-sm px-5 py-2.5 hidden md:flex items-center gap-2 animate-on-scroll-right">
+            Voir tous les biens
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+
+        @if (featuredProperties().length > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (property of featuredProperties(); track property.id; let i = $index) {
+              <div class="animate-on-scroll" [class]="'delay-' + ((i % 3) * 100 + 100)">
+                <app-property-card [property]="property" />
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <div class="property-card h-80 bg-gray-100 animate-pulse rounded-xl"></div>
+            }
+          </div>
+        }
+
+        <div class="text-center mt-10 md:hidden">
+          <a routerLink="/vente" class="btn-outline">Voir tous les biens</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SERVICES ===================== -->
+    <section class="section-padding bg-white">
+      <div class="container-fluid">
+        <div class="text-center mb-12 animate-on-scroll">
+          <span class="section-label">Ce que nous faisons</span>
+          <h2 class="section-title">Nos services immobiliers</h2>
+          <div class="section-divider mx-auto"></div>
+          <p class="text-gray-500 max-w-xl mx-auto">
+            Une offre complète pour vous accompagner à chaque étape de votre projet immobilier.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          @for (service of services; track service.title; let i = $index) {
+            <div class="card p-6 text-center hover:-translate-y-2 animate-on-scroll" [class]="'delay-' + ((i + 1) * 100)">
+              <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-colors"
+                   [style.background]="service.bgColor">
+                <svg class="w-8 h-8" [style.color]="service.iconColor" fill="currentColor" viewBox="0 0 24 24">
+                  <path [attr.d]="service.icon"/>
+                </svg>
+              </div>
+              <h3 class="font-heading font-bold text-primary mb-2">{{ service.title }}</h3>
+              <p class="text-gray-500 text-sm leading-relaxed mb-4">{{ service.description }}</p>
+              <a [routerLink]="service.link" class="text-accent text-sm font-semibold hover:underline inline-flex items-center gap-1">
+                En savoir plus
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== WHY CHOOSE US ===================== -->
+    <section class="section-padding" style="background: linear-gradient(135deg, #f8fafc 0%, #EBF3FA 100%);">
+      <div class="container-fluid">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div class="animate-on-scroll-left">
+            <span class="section-label">Pourquoi nous choisir</span>
+            <h2 class="section-title">L'excellence immobilière<br>depuis 2006</h2>
+            <div class="section-divider"></div>
+            <p class="text-gray-600 mb-8 leading-relaxed">
+              Chez Imoblex, nous mettons notre connaissance approfondie du marché toulousain et notre réseau exclusif au service de votre projet immobilier.
+            </p>
+
+            <div class="space-y-5">
+              @for (reason of whyChooseUs; track reason.title) {
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                      <path [attr.d]="reason.icon"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-heading font-semibold text-primary mb-1">{{ reason.title }}</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">{{ reason.description }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="flex gap-4 mt-8">
+              <a routerLink="/agence" class="btn-primary">Découvrir l'agence</a>
+              <a routerLink="/estimation" class="btn-outline">Estimation gratuite</a>
+            </div>
+          </div>
+
+          <div class="animate-on-scroll-right">
+            <div class="relative">
+              <img
+                src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=700&q=80"
+                alt="Équipe Imoblex Toulouse"
+                class="rounded-2xl shadow-premium w-full object-cover"
+                style="height: 520px;">
+
+              <!-- Floating stats card -->
+              <div class="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-premium p-5 min-w-48">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="font-heading font-bold text-xl text-primary">98%</div>
+                    <div class="text-xs text-gray-500">Clients satisfaits</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Floating badge -->
+              <div class="absolute -top-4 -right-4 bg-primary text-white rounded-xl shadow-premium p-4 text-center">
+                <div class="font-heading font-bold text-2xl">18</div>
+                <div class="text-xs text-white/80">ans<br>d'expertise</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ESTIMATION CTA ===================== -->
+    <section class="py-20" style="background: linear-gradient(135deg, #1B2744 0%, #1B4F72 100%);">
+      <div class="container-fluid text-center animate-on-scroll">
+        <div class="max-w-2xl mx-auto">
+          <span class="inline-block bg-accent/20 text-accent px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+            Service gratuit
+          </span>
+          <h2 class="text-headline text-white mb-4">
+            Quelle est la valeur<br>de votre bien ?
+          </h2>
+          <p class="text-white/70 mb-8 leading-relaxed">
+            Obtenez une estimation précise et personnalisée de votre bien immobilier. Notre expertise locale du marché toulousain vous garantit une évaluation au plus juste du marché.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a routerLink="/estimation" class="btn-accent text-base px-8 py-4 rounded-xl">
+              <svg class="w-5 h-5 mr-2 inline" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+              </svg>
+              Estimer mon bien gratuitement
+            </a>
+            <a routerLink="/contact" class="btn-outline-white text-base px-8 py-4 rounded-xl">
+              Contacter un conseiller
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TESTIMONIALS ===================== -->
+    <section class="section-padding bg-background">
+      <div class="container-fluid">
+        <div class="text-center mb-12 animate-on-scroll">
+          <span class="section-label">Ils nous font confiance</span>
+          <h2 class="section-title">Avis de nos clients</h2>
+          <div class="section-divider mx-auto"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          @for (testimonial of testimonials; track testimonial.name; let i = $index) {
+            <div class="card p-6 animate-on-scroll" [class]="'delay-' + ((i + 1) * 100)">
+              <!-- Stars -->
+              <div class="flex gap-1 mb-4">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                }
+              </div>
+
+              <!-- Quote -->
+              <p class="text-gray-600 text-sm leading-relaxed mb-5 italic">"{{ testimonial.text }}"</p>
+
+              <!-- Author -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-heading font-bold text-primary">
+                  {{ testimonial.name.charAt(0) }}
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-800">{{ testimonial.name }}</p>
+                  <p class="text-xs text-gray-400">{{ testimonial.role }}</p>
+                </div>
+                <div class="ml-auto">
+                  <span class="text-xs text-gray-400">{{ testimonial.date }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Trust bar -->
+        <div class="mt-10 flex flex-wrap items-center justify-center gap-8 opacity-60">
+          @for (partner of partners; track partner) {
+            <div class="text-gray-400 font-semibold text-lg tracking-wide">{{ partner }}</div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MAP SECTION ===================== -->
+    <section class="section-padding bg-white">
+      <div class="container-fluid">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="animate-on-scroll-left">
+            <span class="section-label">Nous trouver</span>
+            <h2 class="section-title">Au cœur de Toulouse</h2>
+            <div class="section-divider"></div>
+
+            <div class="space-y-4 mb-8">
+              <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-800">Adresse</p>
+                  <p class="text-gray-500 text-sm">15 Rue de la République, 31000 Toulouse</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-800">Téléphone</p>
+                  <a href="tel:+33561000000" class="text-gray-500 text-sm hover:text-primary">05 61 00 00 00</a>
+                </div>
+              </div>
+              <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-800">Horaires</p>
+                  <p class="text-gray-500 text-sm">Lun–Ven : 9h–18h30 | Sam : 9h–13h</p>
+                </div>
+              </div>
+            </div>
+
+            <a routerLink="/contact" class="btn-primary">
+              Prendre rendez-vous
+            </a>
+          </div>
+
+          <!-- Map placeholder -->
+          <div class="animate-on-scroll-right">
+            <div id="home-map" class="w-full rounded-2xl shadow-premium overflow-hidden" style="height: 400px; background: #e8f0fe; display:flex;align-items:center;justify-content:center;">
+              <div class="text-center text-gray-400">
+                <svg class="w-12 h-12 mx-auto mb-2 text-primary/30" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                <p class="text-sm">Toulouse, Haute-Garonne</p>
+                <p class="text-xs mt-1">15 Rue de la République</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `,
+  styles: [`
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    :host { display: block; }
+  `]
+})
+export class HomeComponent implements OnInit, AfterViewInit {
+  private readonly propertyService = inject(PropertyService);
+
+  featuredProperties = signal<Property[]>([]);
+
+  popularSearches = [
+    { label: 'Appartements Toulouse', path: '/vente?type=apartment&city=Toulouse' },
+    { label: 'Maisons à vendre', path: '/vente?type=house' },
+    { label: 'Villas prestige', path: '/vente?type=villa' },
+    { label: 'Location Toulouse', path: '/location?city=Toulouse' },
+  ];
+
+  stats = [
+    { number: '18 ans', label: "d'expérience locale" },
+    { number: '+500', label: 'biens vendus / loués' },
+    { number: '98%', label: 'clients satisfaits' },
+    { number: '+1M', label: "habitants dans notre zone" },
+  ];
+
+  services = [
+    {
+      title: 'Vente immobilière',
+      description: 'Accompagnement complet de l\'estimation à la signature chez le notaire.',
+      icon: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+      link: '/vente',
+      bgColor: '#EBF3FA',
+      iconColor: '#1B4F72',
+    },
+    {
+      title: 'Location',
+      description: 'Gestion locative professionnelle : recherche de locataires, états des lieux, quittances.',
+      icon: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z',
+      link: '/location',
+      bgColor: '#FEF6E7',
+      iconColor: '#F39C12',
+    },
+    {
+      title: 'Estimation gratuite',
+      description: 'Évaluation précise de votre bien par nos experts du marché toulousain.',
+      icon: 'M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z',
+      link: '/estimation',
+      bgColor: '#F0FDF4',
+      iconColor: '#16a34a',
+    },
+    {
+      title: 'Simulateur de prêt',
+      description: 'Calculez vos mensualités et capacité d\'emprunt en temps réel.',
+      icon: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z',
+      link: '/simulateur-pret',
+      bgColor: '#FDF2F8',
+      iconColor: '#9333ea',
+    },
+  ];
+
+  whyChooseUs = [
+    {
+      title: 'Expertise locale inégalée',
+      description: '18 ans de présence sur le marché toulousain. Nous connaissons chaque quartier, chaque rue.',
+      icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    },
+    {
+      title: 'Réseau exclusif de vendeurs',
+      description: 'Accédez à des biens off-market avant leur mise en vente publique grâce à notre réseau privilégié.',
+      icon: 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0',
+    },
+    {
+      title: 'Accompagnement personnalisé',
+      description: 'Un conseiller dédié vous suit de A à Z, disponible 7j/7 pour répondre à toutes vos questions.',
+      icon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
+    },
+    {
+      title: 'Transparence totale',
+      description: 'Honoraires clairs, communication régulière et reporting détaillé à chaque étape de votre projet.',
+      icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+    },
+  ];
+
+  testimonials = [
+    {
+      name: 'Marie L.',
+      role: 'Vendeuse – Appartement Capitole',
+      text: 'Imoblex a vendu notre appartement en 3 semaines au prix demandé. Une équipe professionnelle, disponible et de très bon conseil. Je recommande sans hésitation.',
+      date: 'Novembre 2024',
+    },
+    {
+      name: 'Pierre & Sophie M.',
+      role: 'Acheteurs – Villa Colomiers',
+      text: 'Nous cherchions la maison idéale depuis 6 mois. Marc chez Imoblex nous a trouvé notre coup de cœur en moins d\'un mois ! Service impeccable du début à la fin.',
+      date: 'Octobre 2024',
+    },
+    {
+      name: 'Antoine R.',
+      role: 'Investisseur locatif',
+      text: 'Claire m\'a accompagné dans l\'acquisition de 3 appartements à investissement. Ses conseils sur les quartiers porteurs ont été précieux. Rentabilité au rendez-vous.',
+      date: 'Septembre 2024',
+    },
+  ];
+
+  partners = ['Crédit Agricole', 'BNP Paribas', 'LCL', 'Société Générale', 'Banque Populaire'];
+
+  ngOnInit(): void {
+    this.propertyService.getFeaturedProperties().subscribe(props => {
+      this.featuredProperties.set(props);
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.initScrollAnimations();
+  }
+
+  private initScrollAnimations(): void {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    document.querySelectorAll('.animate-on-scroll, .animate-on-scroll-left, .animate-on-scroll-right').forEach(el => {
+      observer.observe(el);
+    });
+  }
+}
