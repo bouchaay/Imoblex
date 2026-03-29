@@ -1,0 +1,14 @@
+:host { display: block; }
+.tab-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.tab-btn:hover { background: #fff; color: #1B4F72; }
+.tab-btn.active { background: #fff; color: #1B4F72; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }

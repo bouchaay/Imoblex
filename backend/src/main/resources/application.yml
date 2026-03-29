@@ -90,8 +90,4 @@ imoblex:
     website: https://imoblex.fr
 
   cors:
-    allowed-origins:
-      - http://localhost:4200   # back-office dev
-      - http://localhost:4201   # website dev
-      - https://app.imoblex.fr  # back-office prod
-      - https://imoblex.fr      # website prod
+    allowed-origins: http://localhost:4200,http://localhost:4201,https://app.imoblex.fr,https://imoblex.fr

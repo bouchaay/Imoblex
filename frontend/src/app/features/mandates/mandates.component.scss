@@ -1,0 +1,37 @@
+.mandates-page { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
+.page-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0 0 0.2rem; }
+.page-subtitle { font-size: 0.875rem; color: #64748b; margin: 0; }
+.btn-primary { display: flex; align-items: center; gap: 0.4rem; background: #1B4F72; color: #fff; border: none; padding: 0.625rem 1.125rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+.alert-bar { display: flex; align-items: center; gap: 0.75rem; background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; color: #dc2626; font-size: 0.875rem; }
+.alert-bar i { flex-shrink: 0; }
+.alert-bar span { flex: 1; }
+.alert-filter-btn { background: #ef4444; color: #fff; border: none; padding: 3px 10px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
+.status-tabs { display: flex; gap: 4px; margin-bottom: 1.25rem; border-bottom: 2px solid #f1f5f9; }
+.tab-btn { padding: 0.625rem 1rem; background: none; border: none; font-size: 0.875rem; font-weight: 500; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 0.4rem; transition: all 0.15s; }
+.tab-btn.active { color: #1B4F72; border-bottom-color: #1B4F72; }
+.tab-count { background: #f1f5f9; color: #64748b; font-size: 0.7rem; font-weight: 700; padding: 1px 6px; border-radius: 100px; }
+.tab-btn.active .tab-count { background: rgba(27,79,114,0.1); color: #1B4F72; }
+.mandates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.mandate-card { background: #fff; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-top: 3px solid #e2e8f0; transition: box-shadow 0.2s, transform 0.2s; }
+.mandate-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.mandate-card.expiring { border-top-color: #ef4444; }
+.mandate-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.mandate-ref { font-size: 0.78rem; font-family: monospace; color: #94a3b8; }
+.mandate-type-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #1B4F72; background: rgba(27,79,114,0.08); padding: 4px 10px; border-radius: 100px; margin-bottom: 0.75rem; width: fit-content; }
+.mandate-price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+.mandate-fees { font-size: 0.75rem; color: #64748b; margin-bottom: 0.875rem; }
+.mandate-dates { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.date-item { flex: 1; }
+.date-item span { display: block; font-size: 0.68rem; color: #94a3b8; }
+.date-item strong { font-size: 0.82rem; color: #374151; }
+.text-red { color: #dc2626; }
+.date-separator { color: #cbd5e1; font-size: 0.7rem; }
+.days-remaining { font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 100px; width: fit-content; background: rgba(16,185,129,0.1); color: #059669; margin-bottom: 0.875rem; }
+.days-remaining.warning { background: rgba(245,158,11,0.12); color: #d97706; }
+.days-remaining.urgent { background: rgba(239,68,68,0.1); color: #dc2626; }
+.mandate-card-footer { display: flex; gap: 4px; padding-top: 0.75rem; border-top: 1px solid #f8fafc; }
+.action-btn-sm { width: 30px; height: 30px; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: #64748b; transition: all 0.15s; }
+.action-btn-sm:hover { border-color: #1B4F72; color: #1B4F72; }
+.action-btn-sm.danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }

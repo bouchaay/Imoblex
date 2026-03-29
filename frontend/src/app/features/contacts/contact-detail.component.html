@@ -1,0 +1,61 @@
+@if (contact()) {
+  <div class="detail-page">
+    <div class="page-header">
+      <a routerLink="/contacts" class="breadcrumb-link"><i class="pi pi-arrow-left"></i> Contacts</a>
+    </div>
+    <div class="contact-hero card">
+      <div class="avatar-large" [style.background]="getAvatarColor()">
+        {{ contact()!.firstName[0] }}{{ contact()!.lastName[0] }}
+      </div>
+      <div class="hero-info">
+        <h1 class="hero-name">{{ contact()!.civility }} {{ contact()!.firstName }} {{ contact()!.lastName }}</h1>
+        <div class="hero-meta">
+          <span class="type-badge-lg">{{ getTypeLabel(contact()!.type) }}</span>
+          @if (contact()!.isVip) { <span class="vip-badge-lg">⭐ VIP</span> }
+        </div>
+        <div class="hero-contacts">
+          @if (contact()!.email) { <a [href]="'mailto:' + contact()!.email" class="contact-link"><i class="pi pi-envelope"></i> {{ contact()!.email }}</a> }
+          @if (contact()!.mobilePhone) { <a [href]="'tel:' + contact()!.mobilePhone" class="contact-link"><i class="pi pi-phone"></i> {{ contact()!.mobilePhone }}</a> }
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-primary"><i class="pi pi-phone"></i> Appeler</button>
+        <button class="btn-secondary"><i class="pi pi-envelope"></i> Email</button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-main">
+        @if (contact()!.searchCriteria) {
+          <div class="card">
+            <h3 class="card-title">Critères de recherche</h3>
+            <div class="criteria-grid">
+              <div class="criterion"><span>Budget max</span><strong>{{ contact()!.searchCriteria!.maxBudget?.toLocaleString('fr-FR') }} €</strong></div>
+              <div class="criterion"><span>Surface min</span><strong>{{ contact()!.searchCriteria!.minSurface }} m²</strong></div>
+              <div class="criterion"><span>Pièces min</span><strong>{{ contact()!.searchCriteria!.minRooms }}</strong></div>
+              <div class="criterion"><span>Villes</span><strong>{{ contact()!.searchCriteria!.cities?.join(', ') || '—' }}</strong></div>
+            </div>
+          </div>
+        }
+        <div class="card">
+          <h3 class="card-title">Historique des interactions</h3>
+          <div class="empty-state-small">
+            <i class="pi pi-clock"></i>
+            <span>Aucune interaction enregistrée</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-sidebar">
+        <div class="card">
+          <h3 class="card-title">Informations</h3>
+          <div class="info-list">
+            <div class="info-row"><span>Référence</span><span>{{ contact()!.reference }}</span></div>
+            <div class="info-row"><span>Source</span><span>{{ contact()!.source || '—' }}</span></div>
+            <div class="info-row"><span>Interactions</span><span>{{ contact()!.interactionCount || 0 }}</span></div>
+            <div class="info-row"><span>Créé le</span><span>{{ contact()!.createdAt | date:'dd/MM/yyyy' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

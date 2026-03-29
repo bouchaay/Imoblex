@@ -54,8 +54,8 @@ public class Property {
     private String postalCode;
     private String department;
     private String region;
-    private Double latitude;
-    private Double longitude;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private Boolean addressVisible; // Afficher l'adresse complète sur le site ?
 
     // ===== PRIX =====
@@ -71,9 +71,9 @@ public class Property {
     private String agencyFeesInfo;         // Qui paie les honoraires
 
     // ===== SURFACES & PIÈCES =====
-    private Double livingArea;             // Surface habitable (m²)
-    private Double totalArea;              // Surface totale
-    private Double landArea;              // Surface terrain
+    private BigDecimal livingArea;         // Surface habitable (m²)
+    private BigDecimal totalArea;          // Surface totale
+    private BigDecimal landArea;           // Surface terrain
     private Integer rooms;                 // Nombre de pièces
     private Integer bedrooms;             // Chambres
     private Integer bathrooms;            // Salles de bain
@@ -113,8 +113,8 @@ public class Property {
     // ===== DIAGNOSTICS DPE =====
     private String dpeClass;             // A, B, C, D, E, F, G
     private String gesClass;             // A, B, C, D, E, F, G
-    private Double dpeValue;             // kWh/m²/an
-    private Double gesValue;             // kgCO2/m²/an
+    private BigDecimal dpeValue;         // kWh/m²/an
+    private BigDecimal gesValue;         // kgCO2/m²/an
     private LocalDate dpeDoneDate;
     private Boolean dpeExempt;           // Dispensé de DPE
 

@@ -59,7 +59,7 @@ public class Mandate {
     // Honoraires
     @Column(precision = 10, scale = 2)
     private BigDecimal agencyFees;
-    private Double agencyFeesPercent;
+    private BigDecimal agencyFeesPercent;
     private String feesChargedTo; // SELLER, BUYER, SHARED
 
     // Durée du mandat

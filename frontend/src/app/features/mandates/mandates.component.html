@@ -1,0 +1,80 @@
+<div class="mandates-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mandats</h1>
+      <p class="page-subtitle">{{ mandates().length }} mandats</p>
+    </div>
+    <button class="btn-primary" routerLink="/mandates/new">
+      <i class="pi pi-plus"></i> Nouveau mandat
+    </button>
+  </div>
+
+  <!-- Alert bar for expiring mandates -->
+  @if (expiringCount() > 0) {
+    <div class="alert-bar">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span><strong>{{ expiringCount() }} mandat{{ expiringCount() > 1 ? 's' : '' }}</strong> expire{{ expiringCount() > 1 ? 'nt' : '' }} dans moins de 15 jours</span>
+      <button class="alert-filter-btn" (click)="filterExpiring()">Voir</button>
+    </div>
+  }
+
+  <!-- Status tabs -->
+  <div class="status-tabs">
+    @for (tab of tabs; track tab.value) {
+      <button class="tab-btn" [class.active]="activeTab === tab.value" (click)="setTab(tab.value)">
+        {{ tab.label }}
+        <span class="tab-count">{{ getTabCount(tab.value) }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Mandate cards grid -->
+  <div class="mandates-grid">
+    @for (mandate of filteredMandates(); track mandate.id) {
+      <div class="mandate-card" [class.expiring]="mandate.isExpiringSoon">
+        <div class="mandate-card-top">
+          <div class="mandate-ref">{{ mandate.reference }}</div>
+          <app-status-badge [status]="mandate.status" type="mandate"></app-status-badge>
+        </div>
+
+        <div class="mandate-type-badge">
+          <i class="pi pi-file-edit"></i>
+          {{ getMandateTypeLabel(mandate.type) }}
+        </div>
+
+        <div class="mandate-price">{{ mandate.price | priceFormatter }}</div>
+        <div class="mandate-fees">
+          Commission: {{ mandate.agencyFeePercent }}% — {{ mandate.agencyFeeAmount > 0 ? (mandate.agencyFeeAmount | priceFormatter) : (mandate.price * mandate.agencyFeePercent / 100 | priceFormatter) }}
+        </div>
+
+        <div class="mandate-dates">
+          <div class="date-item">
+            <span>Début</span>
+            <strong>{{ mandate.startDate | date:'dd/MM/yyyy' }}</strong>
+          </div>
+          <div class="date-separator"><i class="pi pi-arrow-right"></i></div>
+          <div class="date-item">
+            <span>Fin</span>
+            <strong [class.text-red]="mandate.isExpiringSoon">{{ mandate.endDate | date:'dd/MM/yyyy' }}</strong>
+          </div>
+        </div>
+
+        @if (mandate.daysRemaining !== undefined && mandate.status === 'ACTIVE') {
+          <div class="days-remaining" [class.urgent]="(mandate.daysRemaining || 0) <= 7" [class.warning]="(mandate.daysRemaining || 0) <= 15 && (mandate.daysRemaining || 0) > 7">
+            @if ((mandate.daysRemaining || 0) < 0) {
+              <i class="pi pi-exclamation-circle"></i> Expiré
+            } @else {
+              <i class="pi pi-clock"></i> {{ mandate.daysRemaining }}j restants
+            }
+          </div>
+        }
+
+        <div class="mandate-card-footer">
+          <button class="action-btn-sm"><i class="pi pi-pencil"></i></button>
+          <button class="action-btn-sm"><i class="pi pi-refresh"></i></button>
+          <button class="action-btn-sm danger"><i class="pi pi-times"></i></button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

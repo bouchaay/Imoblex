@@ -36,8 +36,8 @@ public class SearchCriteria {
     private BigDecimal budgetMax;
 
     // Surface
-    private Double areaMin;
-    private Double areaMax;
+    private BigDecimal areaMin;
+    private BigDecimal areaMax;
 
     // Pièces
     private Integer roomsMin;
@@ -47,9 +47,9 @@ public class SearchCriteria {
     // Localisation
     private String cities;           // CSV des villes
     private String postalCodes;      // CSV des codes postaux
-    private Double radiusKm;         // Rayon de recherche en km
-    private Double centerLatitude;
-    private Double centerLongitude;
+    private BigDecimal radiusKm;         // Rayon de recherche en km
+    private BigDecimal centerLatitude;
+    private BigDecimal centerLongitude;
 
     // Critères optionnels
     private Boolean wantsGarden;

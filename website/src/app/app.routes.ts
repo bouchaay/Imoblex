@@ -44,6 +44,21 @@ export const routes: Routes = [
     title: 'Contact - Imoblex'
   },
   {
+    path: 'mentions-legales',
+    loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
+    title: 'Mentions légales - Imoblex'
+  },
+  {
+    path: 'politique-confidentialite',
+    loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
+    title: 'Politique de confidentialité - Imoblex'
+  },
+  {
+    path: 'cookies',
+    loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
+    title: 'Gestion des cookies - Imoblex'
+  },
+  {
     path: '**',
     redirectTo: ''
   }

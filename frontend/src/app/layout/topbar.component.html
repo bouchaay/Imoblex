@@ -1,0 +1,134 @@
+<header class="topbar">
+  <!-- Left side -->
+  <div class="topbar-left">
+    <button class="menu-btn" (click)="toggleSidebar.emit()">
+      <i class="pi pi-bars"></i>
+    </button>
+
+    <!-- Breadcrumb / page title placeholder -->
+    <div class="topbar-search">
+      <i class="pi pi-search search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="onSearch()"
+        placeholder="Rechercher biens, contacts, mandats..."
+        class="search-input"
+      />
+      @if (searchQuery) {
+        <button class="clear-search" (click)="searchQuery = ''">
+          <i class="pi pi-times"></i>
+        </button>
+      }
+      <span class="search-shortcut">⌘K</span>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="topbar-right">
+
+    <!-- Quick action button -->
+    <div class="quick-actions">
+      <button class="action-btn primary-btn" (click)="showActionMenu = !showActionMenu">
+        <i class="pi pi-plus"></i>
+        <span>Nouveau</span>
+        <i class="pi pi-chevron-down" style="font-size:0.65rem"></i>
+      </button>
+
+      @if (showActionMenu) {
+        <div class="dropdown-menu action-dropdown">
+          <a routerLink="/properties/new" class="dropdown-item" (click)="showActionMenu = false">
+            <i class="pi pi-building"></i> Nouveau bien
+          </a>
+          <a routerLink="/mandates/new" class="dropdown-item" (click)="showActionMenu = false">
+            <i class="pi pi-file-edit"></i> Nouveau mandat
+          </a>
+          <a routerLink="/contacts/new" class="dropdown-item" (click)="showActionMenu = false">
+            <i class="pi pi-user-plus"></i> Nouveau contact
+          </a>
+        </div>
+      }
+    </div>
+
+    <!-- Notifications -->
+    <div class="notif-wrapper">
+      <button class="icon-btn" (click)="showNotifications = !showNotifications">
+        <i class="pi pi-bell"></i>
+        @if (unreadCount > 0) {
+          <span class="notif-badge">{{ unreadCount }}</span>
+        }
+      </button>
+
+      @if (showNotifications) {
+        <div class="dropdown-menu notif-dropdown">
+          <div class="dropdown-header">
+            <span>Notifications</span>
+            <button class="mark-all-btn" (click)="markAllRead()">Tout lire</button>
+          </div>
+          <div class="notif-list">
+            @for (notif of notifications; track notif.id) {
+              <div class="notif-item" [class.unread]="!notif.read" (click)="readNotification(notif)">
+                <div class="notif-icon-wrap" [style.background]="notif.iconColor + '20'">
+                  <i class="pi {{ notif.icon }}" [style.color]="notif.iconColor"></i>
+                </div>
+                <div class="notif-content">
+                  <div class="notif-title">{{ notif.title }}</div>
+                  <div class="notif-msg">{{ notif.message }}</div>
+                  <div class="notif-time">{{ getTimeAgo(notif.time) }}</div>
+                </div>
+                @if (!notif.read) {
+                  <div class="notif-dot"></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- User menu -->
+    <div class="user-menu-wrapper">
+      <button class="user-menu-btn" (click)="showUserMenu = !showUserMenu">
+        <img
+          [src]="(authService.currentUser$ | async)?.avatarUrl"
+          alt="Avatar"
+          class="topbar-avatar"
+        />
+        <div class="user-info-topbar">
+          <span class="user-name-topbar">{{ (authService.currentUser$ | async)?.firstName }}</span>
+        </div>
+        <i class="pi pi-chevron-down" style="font-size:0.65rem; color:#94a3b8"></i>
+      </button>
+
+      @if (showUserMenu) {
+        <div class="dropdown-menu user-dropdown">
+          <div class="user-dropdown-header">
+            <img [src]="(authService.currentUser$ | async)?.avatarUrl" alt="Avatar" class="dropdown-avatar" />
+            <div>
+              <div class="dropdown-user-name">
+                {{ (authService.currentUser$ | async)?.firstName }} {{ (authService.currentUser$ | async)?.lastName }}
+              </div>
+              <div class="dropdown-user-email">{{ (authService.currentUser$ | async)?.email }}</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a routerLink="/settings" class="dropdown-item" (click)="showUserMenu = false">
+            <i class="pi pi-user"></i> Mon profil
+          </a>
+          <a routerLink="/settings" class="dropdown-item" (click)="showUserMenu = false">
+            <i class="pi pi-cog"></i> Paramètres
+          </a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item logout-item" (click)="logout()">
+            <i class="pi pi-sign-out"></i> Déconnexion
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<!-- Click outside overlay -->
+@if (showNotifications || showUserMenu || showActionMenu) {
+  <div class="overlay-dismiss" (click)="closeAll()"></div>
+}

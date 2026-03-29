@@ -1,0 +1,124 @@
+<div class="contacts-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Contacts</h1>
+      <p class="page-subtitle">{{ total() }} contact{{ total() > 1 ? 's' : '' }}</p>
+    </div>
+    <button class="btn-primary" routerLink="/contacts/new">
+      <i class="pi pi-user-plus"></i> Nouveau contact
+    </button>
+  </div>
+
+  <!-- Filters & search row -->
+  <div class="filters-row">
+    <div class="search-box">
+      <i class="pi pi-search"></i>
+      <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()"
+        placeholder="Nom, email, téléphone..." class="search-input" />
+    </div>
+    <div class="type-filters">
+      <button class="type-filter-btn" [class.active]="!activeType" (click)="setType(null)">Tous</button>
+      @for (type of contactTypes; track type.value) {
+        <button class="type-filter-btn" [class.active]="activeType === type.value"
+          (click)="setType(type.value)" [style.border-color]="activeType === type.value ? type.color : ''"
+          [style.color]="activeType === type.value ? type.color : ''">
+          {{ type.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Contact table -->
+  @if (isLoading()) {
+    <div class="table-loading">
+      @for (n of [1,2,3,4,5]; track n) {
+        <div class="skeleton-row skeleton-anim"></div>
+      }
+    </div>
+  } @else if (contacts().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-users"></i>
+      <h3>Aucun contact trouvé</h3>
+      <p>Créez votre premier contact ou modifiez vos filtres</p>
+      <button class="btn-primary" routerLink="/contacts/new">
+        <i class="pi pi-plus"></i> Nouveau contact
+      </button>
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table class="contacts-table">
+        <thead>
+          <tr>
+            <th>Contact</th>
+            <th>Type</th>
+            <th>Téléphone</th>
+            <th>Source</th>
+            <th>Dernière interaction</th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (contact of contacts(); track contact.id) {
+            <tr class="contact-row" (click)="viewContact(contact)">
+              <td>
+                <div class="contact-cell">
+                  <div class="contact-avatar" [style.background]="getAvatarColor(contact)">
+                    {{ contact.firstName[0] }}{{ contact.lastName[0] }}
+                  </div>
+                  <div class="contact-info">
+                    <div class="contact-name">
+                      {{ contact.civility }} {{ contact.firstName }} {{ contact.lastName }}
+                      @if (contact.isVip) { <span class="vip-badge">VIP</span> }
+                    </div>
+                    <div class="contact-email">{{ contact.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="type-badge" [style]="getTypeBadgeStyle(contact.type)">
+                  {{ getTypeLabel(contact.type) }}
+                </span>
+              </td>
+              <td class="phone-cell">{{ contact.mobilePhone || contact.phone || '—' }}</td>
+              <td class="source-cell">{{ contact.source || '—' }}</td>
+              <td class="date-cell">
+                {{ contact.lastInteractionAt ? (contact.lastInteractionAt | date:'dd/MM/yy') : '—' }}
+              </td>
+              <td>
+                <div class="rating-stars">
+                  @for (n of [1,2,3,4,5]; track n) {
+                    <i class="pi" [class.pi-star-fill]="n <= (contact.rating || 0)" [class.pi-star]="n > (contact.rating || 0)"
+                      [style.color]="n <= (contact.rating || 0) ? '#F39C12' : '#cbd5e1'"></i>
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="row-actions" (click)="$event.stopPropagation()">
+                  <button class="action-btn-sm" (click)="viewContact(contact)" title="Voir">
+                    <i class="pi pi-eye"></i>
+                  </button>
+                  <button class="action-btn-sm" (click)="editContact(contact)" title="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="action-btn-sm danger" (click)="deleteRequest(contact)" title="Supprimer">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<app-confirm-dialog
+  [(visible)]="showDeleteDialog"
+  title="Supprimer le contact ?"
+  [message]="'Voulez-vous vraiment supprimer ' + (contactToDelete()?.firstName || '') + ' ' + (contactToDelete()?.lastName || '') + ' ? Cette action est irréversible.'"
+  confirmLabel="Supprimer"
+  type="danger"
+  (confirm)="confirmDelete()"
+></app-confirm-dialog>

@@ -82,7 +82,8 @@ public class Transaction {
     private Boolean loanCondition;      // Condition suspensive de prêt
     private BigDecimal loanAmount;
     private Integer loanDurationMonths;
-    private Double loanRate;
+    @Column(precision = 5, scale = 3)
+    private BigDecimal loanRate;
 
     // Étapes
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)

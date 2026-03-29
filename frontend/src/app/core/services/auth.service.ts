@@ -1,10 +1,41 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { AuthRequest, AuthResponse } from '../models/auth.model';
 import { User } from '../models/user.model';
 import { Role } from '../models/enums';
+
+interface BackendUserResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobile?: string;
+  avatarUrl?: string;
+  title?: string;
+  role: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+}
+
+interface BackendAuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: BackendUserResponse;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -13,33 +44,13 @@ export class AuthService {
 
   private readonly TOKEN_KEY = 'imoblex_token';
   private readonly USER_KEY = 'imoblex_user';
+  private readonly apiUrl = '/api';
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.loadUserFromStorage());
   currentUser$ = this.currentUserSubject.asObservable();
 
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(!!this.loadUserFromStorage());
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
-
-  private readonly apiUrl = '/api';
-
-  // Mock user for development
-  private readonly mockUser: User = {
-    id: '1',
-    firstName: 'Sophie',
-    lastName: 'Moreau',
-    email: 'sophie.moreau@imoblex.fr',
-    phone: '+33 1 42 68 53 21',
-    mobilePhone: '+33 6 12 34 56 78',
-    role: Role.MANAGER,
-    avatarUrl: 'https://ui-avatars.com/api/?name=Sophie+Moreau&background=1B4F72&color=fff&size=128',
-    agencyId: 'agency_1',
-    agencyName: 'Imoblex Paris 8ème',
-    isActive: true,
-    lastLoginAt: new Date(),
-    createdAt: new Date('2023-01-15'),
-    updatedAt: new Date(),
-    get fullName() { return `${this.firstName} ${this.lastName}`; }
-  };
 
   get currentUser(): User | null {
     return this.currentUserSubject.value;
@@ -54,25 +65,28 @@ export class AuthService {
   }
 
   login(request: AuthRequest): Observable<AuthResponse> {
-    // Mock login for development
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (request.email && request.password) {
-          const response: AuthResponse = {
-            accessToken: 'mock_jwt_token_' + Date.now(),
-            refreshToken: 'mock_refresh_token',
-            expiresIn: 3600,
-            tokenType: 'Bearer',
-            user: this.mockUser
-          };
-          this.handleAuthSuccess(response);
-          observer.next(response);
-          observer.complete();
-        } else {
-          observer.error({ status: 401, message: 'Identifiants invalides' });
-        }
-      }, 800);
-    });
+    return this.http.post<ApiResponse<BackendAuthResponse>>(`${this.apiUrl}/auth/login`, {
+      email: request.email,
+      password: request.password
+    }).pipe(
+      map(response => {
+        const backendAuth = response.data;
+        const user = this.mapUser(backendAuth.user);
+        const authResponse: AuthResponse = {
+          accessToken: backendAuth.accessToken,
+          refreshToken: backendAuth.refreshToken,
+          expiresIn: backendAuth.expiresIn,
+          tokenType: backendAuth.tokenType,
+          user
+        };
+        this.handleAuthSuccess(authResponse);
+        return authResponse;
+      }),
+      catchError(err => {
+        const message = err.error?.message || 'Identifiants invalides. Vérifiez votre email et mot de passe.';
+        return throwError(() => ({ status: err.status, message }));
+      })
+    );
   }
 
   logout(): void {
@@ -81,6 +95,40 @@ export class AuthService {
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
     this.router.navigate(['/login']);
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/change-password`, {
+      currentPassword,
+      newPassword,
+      confirmPassword: newPassword
+    }).pipe(
+      map(() => undefined as void),
+      catchError(err => throwError(() => ({
+        status: err.status,
+        message: err.error?.message || 'Erreur lors du changement de mot de passe'
+      })))
+    );
+  }
+
+  private mapUser(u: BackendUserResponse): User {
+    return {
+      id: u.id,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      phone: u.phone,
+      mobilePhone: u.mobile,
+      role: u.role as Role,
+      avatarUrl: u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.firstName + '+' + u.lastName)}&background=1B4F72&color=fff&size=128`,
+      agencyId: undefined,
+      agencyName: 'Imoblex',
+      isActive: u.enabled,
+      lastLoginAt: u.lastLoginAt ? new Date(u.lastLoginAt) : new Date(),
+      createdAt: new Date(u.createdAt),
+      updatedAt: new Date(u.updatedAt),
+      get fullName() { return `${this.firstName} ${this.lastName}`; }
+    };
   }
 
   private handleAuthSuccess(response: AuthResponse): void {
@@ -95,15 +143,13 @@ export class AuthService {
       const stored = localStorage.getItem(this.USER_KEY);
       if (stored) {
         const user = JSON.parse(stored) as User;
-        // Re-add the getter
         Object.defineProperty(user, 'fullName', {
-          get() { return `${this.firstName} ${this.lastName}`; }
+          get() { return `${this.firstName} ${this.lastName}`; },
+          configurable: true
         });
         return user;
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
     return null;
   }
 

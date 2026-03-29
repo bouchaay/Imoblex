@@ -1,0 +1,56 @@
+<!-- Hero -->
+<div class="bg-gradient-to-br from-dark to-primary pt-28 pb-12">
+  <div class="container-fluid">
+    <app-breadcrumb [items]="breadcrumb" />
+    <h1 class="text-display text-white mt-4 mb-2">{{ page?.title }}</h1>
+    <p class="text-white/60 text-sm mt-2">Dernière mise à jour : {{ page?.updatedAt }}</p>
+  </div>
+</div>
+
+<div class="container-fluid py-14">
+  <div class="max-w-3xl mx-auto">
+
+    <!-- Tab navigation -->
+    <div class="flex flex-wrap gap-2 mb-10 p-1 bg-gray-100 rounded-xl w-fit">
+      <a routerLink="/mentions-legales"
+         class="tab-btn"
+         [class.active]="currentPath === 'mentions-legales'">
+        Mentions légales
+      </a>
+      <a routerLink="/politique-confidentialite"
+         class="tab-btn"
+         [class.active]="currentPath === 'politique-confidentialite'">
+        Confidentialité
+      </a>
+      <a routerLink="/cookies"
+         class="tab-btn"
+         [class.active]="currentPath === 'cookies'">
+        Cookies
+      </a>
+    </div>
+
+    <!-- Content -->
+    @if (page) {
+      <div class="space-y-10">
+        @for (section of page.sections; track section.title) {
+          <div>
+            <h2 class="font-heading font-bold text-xl text-primary mb-3 pb-2 border-b border-gray-100">
+              {{ section.title }}
+            </h2>
+            <div class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{{ section.content }}</div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Back link -->
+    <div class="mt-14 pt-6 border-t border-gray-100">
+      <a routerLink="/" class="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-accent transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>

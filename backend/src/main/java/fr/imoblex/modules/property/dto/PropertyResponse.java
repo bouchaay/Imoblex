@@ -29,8 +29,8 @@ public class PropertyResponse {
     private String postalCode;
     private String department;
     private String region;
-    private Double latitude;
-    private Double longitude;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private Boolean addressVisible;
 
     // Prix
@@ -44,9 +44,9 @@ public class PropertyResponse {
     private String agencyFeesInfo;
 
     // Surfaces & pièces
-    private Double livingArea;
-    private Double totalArea;
-    private Double landArea;
+    private BigDecimal livingArea;
+    private BigDecimal totalArea;
+    private BigDecimal landArea;
     private Integer rooms;
     private Integer bedrooms;
     private Integer bathrooms;
@@ -80,8 +80,8 @@ public class PropertyResponse {
     // DPE
     private String dpeClass;
     private String gesClass;
-    private Double dpeValue;
-    private Double gesValue;
+    private BigDecimal dpeValue;
+    private BigDecimal gesValue;
     private LocalDate dpeDoneDate;
     private Boolean dpeExempt;
 

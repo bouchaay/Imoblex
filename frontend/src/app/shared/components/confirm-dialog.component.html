@@ -1,0 +1,15 @@
+@if (visible) {
+  <div class="dialog-overlay" (click)="onCancel()">
+    <div class="dialog-box" (click)="$event.stopPropagation()">
+      <div class="dialog-icon" [class]="'dialog-icon--' + type">
+        <i class="pi" [class.pi-exclamation-triangle]="type === 'warning'" [class.pi-trash]="type === 'danger'" [class.pi-question-circle]="type === 'question'"></i>
+      </div>
+      <h3 class="dialog-title">{{ title }}</h3>
+      <p class="dialog-message">{{ message }}</p>
+      <div class="dialog-actions">
+        <button class="btn-cancel" (click)="onCancel()">{{ cancelLabel }}</button>
+        <button class="btn-confirm" [class]="'btn-confirm--' + type" (click)="onConfirm()">{{ confirmLabel }}</button>
+      </div>
+    </div>
+  </div>
+}

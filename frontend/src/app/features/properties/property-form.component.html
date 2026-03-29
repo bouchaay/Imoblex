@@ -1,0 +1,327 @@
+<div class="form-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/properties" class="breadcrumb-link">
+        <i class="pi pi-arrow-left"></i> Biens
+      </a>
+      <span>/</span>
+      <span>{{ isEdit ? 'Modifier le bien' : 'Nouveau bien' }}</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" routerLink="/properties">Annuler</button>
+      <button type="button" class="btn-primary" (click)="onSave()" [disabled]="isSaving()">
+        @if (isSaving()) {
+          <span class="spinner-sm"></span> Enregistrement...
+        } @else {
+          <i class="pi pi-save"></i> {{ isEdit ? 'Mettre à jour' : 'Créer le bien' }}
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="steps-bar">
+    @for (step of steps; track step.id; let i = $index) {
+      <div class="step" [class.active]="currentStep() === i" [class.completed]="currentStep() > i"
+        (click)="goToStep(i)">
+        <div class="step-number">
+          @if (currentStep() > i) { <i class="pi pi-check"></i> } @else { {{ i + 1 }} }
+        </div>
+        <span class="step-label">{{ step.label }}</span>
+      </div>
+      @if (i < steps.length - 1) { <div class="step-divider" [class.completed]="currentStep() > i"></div> }
+    }
+  </div>
+
+  <!-- Form content -->
+  <div class="form-content" [formGroup]="form">
+
+    <!-- Step 0: Informations générales -->
+    @if (currentStep() === 0) {
+      <div class="step-panel animate-fade">
+        <div class="form-grid-2">
+          <div class="card form-card">
+            <h3 class="card-section-title">Type de bien</h3>
+            <div class="type-selector">
+              @for (type of propertyTypes; track type.value) {
+                <div class="type-option"
+                  [class.selected]="form.get('type')?.value === type.value"
+                  (click)="form.get('type')?.setValue(type.value)">
+                  <i class="pi {{ type.icon }}"></i>
+                  <span>{{ type.label }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3 class="card-section-title">Transaction</h3>
+            <div class="transaction-toggle">
+              <div class="toggle-option"
+                [class.selected]="form.get('transactionType')?.value === 'SALE'"
+                (click)="form.get('transactionType')?.setValue('SALE')">
+                <i class="pi pi-home"></i>
+                <span>Vente</span>
+              </div>
+              <div class="toggle-option"
+                [class.selected]="form.get('transactionType')?.value === 'RENTAL'"
+                (click)="form.get('transactionType')?.setValue('RENTAL')">
+                <i class="pi pi-key"></i>
+                <span>Location</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.5rem">
+              <label class="form-label required">Titre de l'annonce *</label>
+              <input type="text" formControlName="title" class="form-input" placeholder="Ex: Appartement 3P lumineux - Paris 8ème" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Prix *</label>
+              <div class="input-with-suffix">
+                <input type="number" formControlName="price" class="form-input" placeholder="350000" />
+                <span class="input-suffix">€{{ form.get('transactionType')?.value === 'RENTAL' ? '/mois' : '' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card form-card">
+          <h3 class="card-section-title">Description</h3>
+          <textarea formControlName="description" class="form-textarea" rows="5"
+            placeholder="Décrivez le bien en détail : état, atouts, environnement..."></textarea>
+        </div>
+      </div>
+    }
+
+    <!-- Step 1: Localisation -->
+    @if (currentStep() === 1) {
+      <div class="step-panel animate-fade">
+        <div class="form-grid-2">
+          <div class="card form-card">
+            <h3 class="card-section-title">Adresse</h3>
+            <div class="form-group">
+              <label class="form-label">Numéro et rue</label>
+              <input type="text" formControlName="street" class="form-input" placeholder="14 Avenue Foch" />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Ville *</label>
+              <input type="text" formControlName="city" class="form-input" placeholder="Paris" />
+            </div>
+            <div class="form-grid-2-sm">
+              <div class="form-group">
+                <label class="form-label required">Code postal *</label>
+                <input type="text" formControlName="postalCode" class="form-input" placeholder="75008" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Département</label>
+                <input type="text" formControlName="department" class="form-input" placeholder="Paris" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3 class="card-section-title">Coordonnées GPS</h3>
+            <div class="map-placeholder">
+              <i class="pi pi-map-marker"></i>
+              <span>Entrez l'adresse pour géolocaliser automatiquement</span>
+            </div>
+            <div class="form-grid-2-sm" style="margin-top:1rem">
+              <div class="form-group">
+                <label class="form-label">Latitude</label>
+                <input type="number" formControlName="latitude" class="form-input" placeholder="48.8566" step="0.0001" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Longitude</label>
+                <input type="number" formControlName="longitude" class="form-input" placeholder="2.3522" step="0.0001" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Détails -->
+    @if (currentStep() === 2) {
+      <div class="step-panel animate-fade">
+        <div class="form-grid-2">
+          <div class="card form-card">
+            <h3 class="card-section-title">Surfaces et pièces</h3>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label required">Surface *</label>
+                <div class="input-with-suffix">
+                  <input type="number" formControlName="surface" class="form-input" placeholder="75" />
+                  <span class="input-suffix">m²</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Pièces *</label>
+                <input type="number" formControlName="rooms" class="form-input" placeholder="3" min="1" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Chambres</label>
+                <input type="number" formControlName="bedrooms" class="form-input" placeholder="2" min="0" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Salle de bains</label>
+                <input type="number" formControlName="bathrooms" class="form-input" placeholder="1" min="0" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Étage</label>
+                <input type="number" formControlName="floor" class="form-input" placeholder="3" min="0" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Année construction</label>
+                <input type="number" formControlName="constructionYear" class="form-input" placeholder="1980" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3 class="card-section-title">Équipements</h3>
+            <div class="amenities-checkboxes">
+              @for (amenity of amenityOptions; track amenity.key) {
+                <label class="amenity-check">
+                  <input type="checkbox" [formControlName]="amenity.key" />
+                  <span class="check-custom"></span>
+                  <i class="pi {{ amenity.icon }}"></i>
+                  {{ amenity.label }}
+                </label>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- DPE Selector -->
+        <div class="card form-card">
+          <h3 class="card-section-title">Diagnostic de Performance Énergétique (DPE)</h3>
+          <div class="dpe-selector">
+            @for (cls of dpeClasses; track cls) {
+              <div class="dpe-option"
+                [class.selected]="form.get('dpe')?.value === cls"
+                [style.border-color]="form.get('dpe')?.value === cls ? getDpeColor(cls) : 'transparent'"
+                (click)="form.get('dpe')?.setValue(cls)">
+                <div class="dpe-block" [style.background]="getDpeColor(cls)">
+                  <span>{{ cls }}</span>
+                </div>
+                <span class="dpe-label">{{ getDpeLabel(cls) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Photos -->
+    @if (currentStep() === 3) {
+      <div class="step-panel animate-fade">
+        <div class="card form-card">
+          <h3 class="card-section-title">Photos du bien</h3>
+          <p class="section-hint">Ajoutez des photos de qualité pour maximiser l'attractivité de votre annonce.</p>
+
+          <!-- Drop zone -->
+          <div class="dropzone"
+            [class.dragover]="isDragging()"
+            (dragover)="$event.preventDefault(); isDragging.set(true)"
+            (dragleave)="isDragging.set(false)"
+            (drop)="onDrop($event)"
+            (click)="fileInput.click()">
+            <i class="pi pi-cloud-upload"></i>
+            <div class="dropzone-text">
+              <strong>Glissez vos photos ici</strong>
+              <span>ou cliquez pour parcourir</span>
+            </div>
+            <span class="dropzone-hint">JPG, PNG, WEBP — Max 10 Mo par photo</span>
+          </div>
+          <input #fileInput type="file" multiple accept="image/*" (change)="onFilesSelected($event)" style="display:none" />
+
+          <!-- Photo previews -->
+          @if (photoFiles().length > 0) {
+            <div class="photo-grid">
+              @for (photo of photoFiles(); track photo.name; let i = $index) {
+                <div class="photo-preview-item" [class.primary]="i === 0">
+                  <img [src]="photo.preview" [alt]="photo.name" />
+                  <div class="photo-preview-overlay">
+                    @if (i === 0) { <span class="primary-badge">Photo principale</span> }
+                    <button class="remove-photo-btn" (click)="removePhoto(i)">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Step 4: Publication -->
+    @if (currentStep() === 4) {
+      <div class="step-panel animate-fade">
+        <div class="card form-card">
+          <h3 class="card-section-title">Options de publication</h3>
+
+          <div class="publish-options">
+            <div class="publish-option" [class.selected]="publishOption() === 'draft'" (click)="publishOption.set('draft')">
+              <div class="pub-icon"><i class="pi pi-file"></i></div>
+              <div class="pub-info">
+                <div class="pub-title">Sauvegarder en brouillon</div>
+                <div class="pub-desc">Le bien sera visible uniquement en back-office</div>
+              </div>
+              <div class="pub-radio" [class.checked]="publishOption() === 'draft'"></div>
+            </div>
+            <div class="publish-option" [class.selected]="publishOption() === 'publish'" (click)="publishOption.set('publish')">
+              <div class="pub-icon pub-icon-green"><i class="pi pi-eye"></i></div>
+              <div class="pub-info">
+                <div class="pub-title">Publier immédiatement</div>
+                <div class="pub-desc">Le bien sera visible sur tous les portails connectés</div>
+              </div>
+              <div class="pub-radio" [class.checked]="publishOption() === 'publish'"></div>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="publish-summary">
+            <h4>Récapitulatif</h4>
+            <div class="summary-grid">
+              <div><span>Titre :</span> {{ form.get('title')?.value || '—' }}</div>
+              <div><span>Type :</span> {{ getTypeLabel(form.get('type')?.value) }}</div>
+              <div><span>Prix :</span> {{ form.get('price')?.value ? (form.get('price')!.value | number:'1.0-0':'fr') + ' €' : '—' }}</div>
+              <div><span>Ville :</span> {{ form.get('city')?.value || '—' }}</div>
+              <div><span>Surface :</span> {{ form.get('surface')?.value ? form.get('surface')!.value + ' m²' : '—' }}</div>
+              <div><span>Pièces :</span> {{ form.get('rooms')?.value || '—' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Navigation buttons -->
+  <div class="form-nav">
+    @if (currentStep() > 0) {
+      <button type="button" class="btn-secondary" (click)="goToStep(currentStep() - 1)">
+        <i class="pi pi-chevron-left"></i> Précédent
+      </button>
+    } @else {
+      <div></div>
+    }
+    <div class="nav-right">
+      @if (currentStep() < steps.length - 1) {
+        <button type="button" class="btn-primary" (click)="goToStep(currentStep() + 1)">
+          Suivant <i class="pi pi-chevron-right"></i>
+        </button>
+      } @else {
+        <button type="button" class="btn-success" (click)="onSave()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <span class="spinner-sm"></span> Enregistrement...
+          } @else {
+            <i class="pi pi-check"></i> Confirmer
+          }
+        </button>
+      }
+    </div>
+  </div>
+</div>

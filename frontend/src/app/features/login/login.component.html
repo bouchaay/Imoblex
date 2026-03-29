@@ -1,0 +1,153 @@
+<div class="login-page">
+  <!-- Left panel - branding -->
+  <div class="login-left">
+    <div class="login-left-content">
+      <div class="brand-logo">
+        <div class="brand-icon">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+            <path d="M16 3L3 14h4v15h7v-9h4v9h7V14h4L16 3z" fill="#F39C12"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">IMOBLEX</span>
+          <span class="brand-tagline">Excellence Immobilière</span>
+        </div>
+      </div>
+
+      <div class="hero-content">
+        <h1 class="hero-title">Gérez votre agence<br/>avec <span class="highlight">élégance</span></h1>
+        <p class="hero-desc">Plateforme CRM complète pour les professionnels de l'immobilier. Mandats, biens, contacts et transactions en un seul endroit.</p>
+
+        <div class="features-list">
+          @for (feature of features; track feature.icon) {
+            <div class="feature-item">
+              <div class="feature-icon-wrap">
+                <i class="pi {{ feature.icon }}"></i>
+              </div>
+              <span>{{ feature.text }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="stats-row">
+        @for (stat of stats; track stat.label) {
+          <div class="stat-card">
+            <span class="stat-value">{{ stat.value }}</span>
+            <span class="stat-label">{{ stat.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Decorative shapes -->
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="deco-circle deco-3"></div>
+  </div>
+
+  <!-- Right panel - form -->
+  <div class="login-right">
+    <div class="login-form-wrapper">
+      <!-- Mobile logo -->
+      <div class="mobile-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 3L3 14h4v15h7v-9h4v9h7V14h4L16 3z" fill="#F39C12"/>
+        </svg>
+        <span class="brand-name-mobile">IMOBLEX</span>
+      </div>
+
+      <div class="form-header">
+        <h2 class="form-title">Bon retour !</h2>
+        <p class="form-subtitle">Connectez-vous à votre espace de gestion</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-alert">
+          <i class="pi pi-exclamation-circle"></i>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form class="login-form" (ngSubmit)="onSubmit()" #form="ngForm">
+        <div class="form-group">
+          <label class="form-label">Adresse email</label>
+          <div class="input-wrapper">
+            <i class="pi pi-envelope input-icon"></i>
+            <input
+              type="email"
+              name="email"
+              [(ngModel)]="credentials.email"
+              required
+              email
+              placeholder="votre@email.fr"
+              class="form-input"
+              [class.input-error]="form.submitted && !credentials.email"
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>Mot de passe</span>
+            <a href="#" class="forgot-link" (click)="$event.preventDefault()">Mot de passe oublié ?</a>
+          </label>
+          <div class="input-wrapper">
+            <i class="pi pi-lock input-icon"></i>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="credentials.password"
+              required
+              placeholder="••••••••"
+              class="form-input"
+              [class.input-error]="form.submitted && !credentials.password"
+              autocomplete="current-password"
+            />
+            <button type="button" class="toggle-password" (click)="showPassword.set(!showPassword())">
+              <i class="pi" [class.pi-eye]="!showPassword()" [class.pi-eye-slash]="showPassword()"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="credentials.rememberMe" name="rememberMe" />
+            <span class="checkbox-custom"></span>
+            <span>Se souvenir de moi</span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          class="submit-btn"
+          [class.loading]="isLoading()"
+          [disabled]="isLoading()"
+        >
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            <span>Connexion en cours...</span>
+          } @else {
+            <i class="pi pi-sign-in"></i>
+            <span>Se connecter</span>
+          }
+        </button>
+      </form>
+
+      <!-- Demo credentials hint -->
+      <div class="demo-hint">
+        <i class="pi pi-info-circle"></i>
+        <div>
+          <strong>Comptes de démo :</strong><br/>
+          Admin : <code>admin&#64;imoblex.fr</code> / <code>Admin&#64;2024</code><br/>
+          Agent : <code>agent&#64;imoblex.fr</code> / <code>Agent&#64;2024</code>
+        </div>
+      </div>
+
+      <p class="login-footer">
+        © 2024 Imoblex — Tous droits réservés
+      </p>
+    </div>
+  </div>
+</div>

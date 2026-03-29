@@ -6,24 +6,8 @@ import { DpeClass, DPE_COLORS } from '../../core/models/enums';
   selector: 'app-dpe-badge',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <span class="dpe-badge" [style.background]="getColor()" [style.color]="'#fff'" [title]="'DPE classe ' + dpe">
-      {{ dpe }}
-    </span>
-  `,
-  styles: [`
-    .dpe-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-  `]
+  templateUrl: './dpe-badge.component.html',
+  styleUrls: ['./dpe-badge.component.scss']
 })
 export class DpeBadgeComponent {
   @Input() dpe!: DpeClass | string;

@@ -1,0 +1,216 @@
+<div class="dashboard">
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tableau de bord</h1>
+      <p class="page-subtitle">Bienvenue sur Imoblex — {{ today | date:'EEEE d MMMM yyyy':'':'fr' }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary">
+        <i class="pi pi-download"></i> Rapport mensuel
+      </button>
+      <button class="btn-primary" routerLink="/properties/new">
+        <i class="pi pi-plus"></i> Nouveau bien
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  @if (stats()) {
+    <div class="kpi-grid">
+      @for (kpi of kpiCards(); track kpi.label) {
+        <div class="kpi-card" [style.border-top-color]="kpi.color">
+          <div class="kpi-top">
+            <div class="kpi-icon-wrap" [style.background]="kpi.color + '15'">
+              <i class="pi {{ kpi.icon }}" [style.color]="kpi.color"></i>
+            </div>
+            <div class="kpi-trend" [class.trend-up]="kpi.trend > 0" [class.trend-down]="kpi.trend < 0">
+              <i class="pi" [class.pi-arrow-up]="kpi.trend > 0" [class.pi-arrow-down]="kpi.trend < 0" [class.pi-minus]="kpi.trend === 0"></i>
+              <span>{{ kpi.trendLabel }}</span>
+            </div>
+          </div>
+          <div class="kpi-value">{{ kpi.value }}</div>
+          <div class="kpi-label">{{ kpi.label }}</div>
+          @if (kpi.subLabel) {
+            <div class="kpi-sublabel">{{ kpi.subLabel }}</div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Main content grid -->
+  <div class="dashboard-grid">
+
+    <!-- Left column -->
+    <div class="dashboard-left">
+
+      <!-- Properties by type chart (simulated) -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="pi pi-chart-pie"></i>
+            Répartition des biens
+          </h3>
+          <a routerLink="/properties" class="card-link">Voir tout</a>
+        </div>
+        <div class="property-types-list">
+          @for (item of propertyTypeStats; track item.label) {
+            <div class="type-row">
+              <div class="type-info">
+                <span class="type-dot" [style.background]="item.color"></span>
+                <span class="type-name">{{ item.label }}</span>
+              </div>
+              <div class="type-bar-wrap">
+                <div class="type-bar" [style.width.%]="item.pct" [style.background]="item.color"></div>
+              </div>
+              <span class="type-count">{{ item.count }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Transaction pipeline -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="pi pi-chart-line"></i>
+            Pipeline Transactions
+          </h3>
+          <a routerLink="/transactions" class="card-link">Voir tout</a>
+        </div>
+        <div class="pipeline-list">
+          @for (step of pipelineSteps; track step.label) {
+            <div class="pipeline-step">
+              <div class="pipeline-label-area">
+                <span class="pipeline-dot" [style.background]="step.color"></span>
+                <span class="pipeline-label">{{ step.label }}</span>
+              </div>
+              <div class="pipeline-bar-wrap">
+                <div class="pipeline-bar" [style.width.%]="step.pct" [style.background]="step.color"></div>
+              </div>
+              <span class="pipeline-count">{{ step.count }}</span>
+              <span class="pipeline-amount">{{ step.amount | priceFormatter }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Revenue trend (simulated chart) -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="pi pi-chart-bar"></i>
+            Commissions 2024
+          </h3>
+          <div class="legend-row">
+            <span class="legend-item"><span class="legend-dot" style="background:#1B4F72"></span>Réel</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#F39C12"></span>Objectif</span>
+          </div>
+        </div>
+        <div class="chart-bars">
+          @for (month of monthlyData; track month.label) {
+            <div class="chart-col">
+              <div class="chart-bar-group">
+                <div class="chart-bar-target" [style.height.px]="month.target / 1200" title="Objectif: {{ month.target | priceFormatter }}"></div>
+                <div class="chart-bar-real" [style.height.px]="month.real / 1200" [class.over-target]="month.real > month.target" title="Réel: {{ month.real | priceFormatter }}"></div>
+              </div>
+              <span class="chart-label">{{ month.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="dashboard-right">
+
+      <!-- Upcoming appointments -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="pi pi-calendar"></i>
+            Prochains rendez-vous
+          </h3>
+          <a routerLink="/agenda" class="card-link">Agenda</a>
+        </div>
+        @if (upcomingAppointments().length === 0) {
+          <div class="empty-state-small">
+            <i class="pi pi-calendar-times"></i>
+            <span>Aucun RDV à venir</span>
+          </div>
+        } @else {
+          <div class="appointments-list">
+            @for (apt of upcomingAppointments(); track apt.id) {
+              <div class="appointment-item">
+                <div class="apt-date-col">
+                  <span class="apt-day">{{ apt.startDate | date:'d' }}</span>
+                  <span class="apt-month">{{ apt.startDate | date:'MMM':'':'fr' }}</span>
+                </div>
+                <div class="apt-info">
+                  <div class="apt-title">{{ apt.title }}</div>
+                  <div class="apt-meta">
+                    <i class="pi pi-clock"></i>
+                    {{ apt.startDate | date:'HH:mm' }}
+                    @if (apt.location) { — {{ apt.location }} }
+                  </div>
+                </div>
+                <div class="apt-type-badge" [style]="getAptTypeStyle(apt.type)">
+                  {{ getAptTypeLabel(apt.type) }}
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Expiring mandates -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="pi pi-exclamation-triangle" style="color:#f59e0b"></i>
+            Mandats à renouveler
+          </h3>
+          <a routerLink="/mandates" class="card-link">Voir tout</a>
+        </div>
+        <div class="mandate-alerts">
+          @for (m of expiringMandates; track m.id) {
+            <div class="mandate-alert-item" [class.urgent]="m.days <= 7">
+              <div class="mandate-alert-info">
+                <span class="mandate-ref">{{ m.ref }}</span>
+                <span class="mandate-addr">{{ m.address }}</span>
+              </div>
+              <div class="mandate-days" [class.urgent]="m.days <= 7">
+                {{ m.days }}j
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="pi pi-history"></i>
+            Activité récente
+          </h3>
+        </div>
+        <div class="activity-feed">
+          @for (activity of recentActivity; track activity.id) {
+            <div class="activity-item">
+              <div class="activity-icon" [style.background]="activity.color + '15'" [style.color]="activity.color">
+                <i class="pi {{ activity.icon }}"></i>
+              </div>
+              <div class="activity-content">
+                <div class="activity-text" [innerHTML]="activity.text"></div>
+                <div class="activity-time">{{ activity.time }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

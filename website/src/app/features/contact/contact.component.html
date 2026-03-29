@@ -1,0 +1,186 @@
+<!-- Hero -->
+<div class="bg-gradient-to-br from-dark to-primary pt-28 pb-12">
+  <div class="container-fluid">
+    <app-breadcrumb [items]="[{label: 'Accueil', path: '/'}, {label: 'Contact'}]" />
+    <h1 class="text-display text-white mt-4 mb-2">Contactez-nous</h1>
+    <p class="text-white/70 text-lg max-w-xl">Notre équipe est à votre disposition pour répondre à toutes vos questions.</p>
+  </div>
+</div>
+
+<div class="container-fluid py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-12">
+
+    <!-- Left: Contact form -->
+    <div class="lg:col-span-3">
+      <div class="bg-white rounded-2xl shadow-premium p-8">
+        <h2 class="font-heading font-bold text-2xl text-primary mb-2">Envoyez-nous un message</h2>
+        <p class="text-gray-500 mb-8 text-sm">Nous vous répondons sous 24h ouvrées.</p>
+
+        @if (!submitted()) {
+          <form (ngSubmit)="onSubmit()" #form="ngForm" class="space-y-5">
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">Prénom *</label>
+                <input type="text" [(ngModel)]="formData.firstName" name="firstName" required class="form-input" placeholder="Jean">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nom *</label>
+                <input type="text" [(ngModel)]="formData.lastName" name="lastName" required class="form-input" placeholder="Dupont">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email *</label>
+              <input type="email" [(ngModel)]="formData.email" name="email" required class="form-input" placeholder="jean.dupont@email.fr">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Téléphone</label>
+              <input type="tel" [(ngModel)]="formData.phone" name="phone" class="form-input" placeholder="06 00 00 00 00">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Sujet *</label>
+              <select [(ngModel)]="formData.subject" name="subject" required class="form-input">
+                <option value="">Sélectionnez un sujet</option>
+                @for (subject of subjects; track subject) {
+                  <option [value]="subject">{{ subject }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Référence d'un bien (optionnel)</label>
+              <input type="text" [(ngModel)]="formData.propertyRef" name="propertyRef" class="form-input" placeholder="IMB-2024-XXX">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message *</label>
+              <textarea [(ngModel)]="formData.message" name="message" required rows="5"
+                        class="form-input resize-none" placeholder="Décrivez votre projet ou votre demande..."></textarea>
+            </div>
+
+            <div class="flex items-start gap-2">
+              <input type="checkbox" [(ngModel)]="formData.gdpr" name="gdpr" required id="contact-gdpr" class="mt-1 w-4 h-4">
+              <label for="contact-gdpr" class="text-xs text-gray-500 leading-relaxed">
+                J'accepte que mes données personnelles soient traitées par Imoblex dans le cadre de ma demande.
+                <a href="/politique-confidentialite" class="text-primary hover:underline">Politique de confidentialité</a>
+              </label>
+            </div>
+
+            <button type="submit" [disabled]="!form.valid" class="btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+              Envoyer mon message
+            </button>
+          </form>
+        } @else {
+          <div class="text-center py-12">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg class="w-10 h-10 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </div>
+            <h3 class="font-heading font-bold text-2xl text-primary mb-3">Message envoyé !</h3>
+            <p class="text-gray-600 max-w-sm mx-auto mb-6 leading-relaxed">
+              Merci <strong>{{ formData.firstName }}</strong> ! Nous avons bien reçu votre message et vous répondrons dans les 24h ouvrées.
+            </p>
+            <button (click)="reset()" class="btn-outline text-sm">Envoyer un nouveau message</button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right: Info -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Contact card -->
+      <div class="bg-white rounded-2xl shadow-card p-6">
+        <h3 class="font-heading font-bold text-lg text-primary mb-5">Informations de contact</h3>
+        <div class="space-y-4">
+          @for (info of contactDetails; track info.label) {
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                  <path [attr.d]="info.icon"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">{{ info.label }}</p>
+                @if (info.link) {
+                  <a [href]="info.link" class="text-gray-700 text-sm hover:text-primary transition-colors">{{ info.value }}</a>
+                } @else {
+                  <p class="text-gray-700 text-sm">{{ info.value }}</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Hours -->
+      <div class="bg-white rounded-2xl shadow-card p-6">
+        <h3 class="font-heading font-bold text-lg text-primary mb-4">Horaires d'ouverture</h3>
+        <div class="space-y-2">
+          @for (hours of openingHours; track hours.day) {
+            <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+              <span class="text-sm text-gray-600 font-medium">{{ hours.day }}</span>
+              <span class="text-sm" [class.text-primary]="hours.open" [class.text-gray-400]="!hours.open">
+                {{ hours.hours }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Map embed placeholder -->
+      <div class="bg-white rounded-2xl shadow-card overflow-hidden">
+        <div class="bg-blue-50 flex items-center justify-center" style="height: 220px;">
+          <div class="text-center text-gray-400">
+            <svg class="w-10 h-10 mx-auto mb-2 text-primary/20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            <p class="text-sm font-medium">22 Rue Hyères</p>
+            <p class="text-xs mt-1">31500 Toulouse</p>
+          </div>
+        </div>
+        <div class="p-4">
+          <a href="https://maps.google.com/?q=22+Rue+Hy%C3%A8res+31500+Toulouse" target="_blank" rel="noopener noreferrer"
+             class="flex items-center justify-center gap-2 text-primary text-sm font-medium hover:text-accent transition-colors">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            Ouvrir dans Google Maps
+          </a>
+        </div>
+      </div>
+
+      <!-- Emergency contact -->
+      <div class="bg-gradient-to-br from-accent to-accent-600 rounded-2xl p-6 text-white">
+        <h3 class="font-heading font-bold text-lg mb-2">Besoin urgent ?</h3>
+        <p class="text-white/80 text-sm mb-4">Appelez-nous directement, nous sommes disponibles du lundi au samedi.</p>
+        <a href="tel:+33561615738" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 rounded-xl px-4 py-3 transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+          </svg>
+          <span class="font-bold text-lg">05.61.61.57.38</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success toast -->
+@if (showToast()) {
+  <div class="toast toast-success">
+    <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+    </svg>
+    <div>
+      <p class="font-semibold text-sm text-gray-800">Message envoyé avec succès !</p>
+      <p class="text-xs text-gray-500">Nous vous répondons sous 24h ouvrées.</p>
+    </div>
+  </div>
+}

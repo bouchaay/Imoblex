@@ -1,0 +1,164 @@
+<div class="agenda-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Agenda</h1>
+      <p class="page-subtitle">{{ currentMonthLabel() }}</p>
+    </div>
+    <div class="header-actions">
+      <div class="view-toggle">
+        <button [class.active]="viewMode() === 'month'" (click)="viewMode.set('month')">Mois</button>
+        <button [class.active]="viewMode() === 'week'" (click)="viewMode.set('week')">Semaine</button>
+        <button [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')">Liste</button>
+      </div>
+      <button class="btn-primary" (click)="openNewAppointment()">
+        <i class="pi pi-plus"></i> Nouveau RDV
+      </button>
+    </div>
+  </div>
+
+  <!-- Calendar navigation -->
+  <div class="cal-nav">
+    <button class="nav-btn" (click)="prevMonth()"><i class="pi pi-chevron-left"></i></button>
+    <button class="today-btn" (click)="goToToday()">Aujourd'hui</button>
+    <button class="nav-btn" (click)="nextMonth()"><i class="pi pi-chevron-right"></i></button>
+    <h2 class="month-title">{{ currentMonthLabel() }}</h2>
+  </div>
+
+  @if (viewMode() === 'month') {
+    <!-- Month grid -->
+    <div class="calendar-wrapper card">
+      <!-- Day headers -->
+      <div class="cal-header">
+        @for (day of dayLabels; track day) {
+          <div class="cal-header-cell">{{ day }}</div>
+        }
+      </div>
+
+      <!-- Day cells -->
+      <div class="cal-grid">
+        @for (day of calendarDays(); track day.date.toISOString()) {
+          <div class="cal-cell"
+            [class.other-month]="!day.isCurrentMonth"
+            [class.today]="day.isToday"
+            [class.has-events]="day.appointments.length > 0"
+            (click)="selectDay(day)">
+            <div class="cal-day-num">{{ day.date.getDate() }}</div>
+            <div class="cal-events">
+              @for (apt of day.appointments.slice(0, 3); track apt.id) {
+                <div class="cal-event" [style]="getEventStyle(apt.type)" (click)="$event.stopPropagation(); selectAppointment(apt)">
+                  <span>{{ apt.startDate | date:'HH:mm' }} {{ apt.title }}</span>
+                </div>
+              }
+              @if (day.appointments.length > 3) {
+                <div class="cal-event more">+{{ day.appointments.length - 3 }} autres</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (viewMode() === 'list') {
+    <!-- List view -->
+    <div class="appointments-list-view">
+      @for (group of groupedAppointments(); track group.dateLabel) {
+        <div class="apt-group">
+          <div class="apt-group-header">
+            <span class="apt-group-date">{{ group.dateLabel }}</span>
+            <span class="apt-group-count">{{ group.appointments.length }} RDV</span>
+          </div>
+          @for (apt of group.appointments; track apt.id) {
+            <div class="apt-list-item card" (click)="selectAppointment(apt)">
+              <div class="apt-time-col">
+                <span class="apt-time-start">{{ apt.startDate | date:'HH:mm' }}</span>
+                <span class="apt-time-end">{{ apt.endDate | date:'HH:mm' }}</span>
+              </div>
+              <div class="apt-type-indicator" [style.background]="getEventColor(apt.type)"></div>
+              <div class="apt-details">
+                <div class="apt-name">{{ apt.title }}</div>
+                @if (apt.location) {
+                  <div class="apt-location"><i class="pi pi-map-marker"></i> {{ apt.location }}</div>
+                }
+              </div>
+              <div class="apt-status-badge" [class]="'status-' + apt.status">{{ getStatusLabel(apt.status) }}</div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Appointment detail drawer -->
+  @if (selectedAppointment()) {
+    <div class="apt-drawer-overlay" (click)="selectedAppointment.set(null)">
+      <div class="apt-drawer" (click)="$event.stopPropagation()">
+        <div class="drawer-header">
+          <h3>{{ selectedAppointment()!.title }}</h3>
+          <button class="close-btn" (click)="selectedAppointment.set(null)"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="drawer-body">
+          <div class="drawer-field"><i class="pi pi-calendar"></i> {{ selectedAppointment()!.startDate | date:'EEEE d MMMM':'':'fr' }}</div>
+          <div class="drawer-field"><i class="pi pi-clock"></i> {{ selectedAppointment()!.startDate | date:'HH:mm' }} — {{ selectedAppointment()!.endDate | date:'HH:mm' }}</div>
+          @if (selectedAppointment()!.location) {
+            <div class="drawer-field"><i class="pi pi-map-marker"></i> {{ selectedAppointment()!.location }}</div>
+          }
+          <div class="drawer-field">
+            <i class="pi pi-tag"></i>
+            <span class="apt-type-chip" [style]="getEventStyle(selectedAppointment()!.type)">{{ getTypeLabel(selectedAppointment()!.type) }}</span>
+          </div>
+          <div class="drawer-actions">
+            <button class="btn-primary"><i class="pi pi-pencil"></i> Modifier</button>
+            <button class="btn-danger"><i class="pi pi-times-circle"></i> Annuler le RDV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- New appointment dialog -->
+  @if (showNewDialog()) {
+    <div class="apt-drawer-overlay" (click)="showNewDialog.set(false)">
+      <div class="apt-drawer" (click)="$event.stopPropagation()">
+        <div class="drawer-header">
+          <h3>Nouveau rendez-vous</h3>
+          <button class="close-btn" (click)="showNewDialog.set(false)"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="drawer-body">
+          <div class="form-group">
+            <label class="form-label">Titre</label>
+            <input type="text" [(ngModel)]="newApt.title" class="form-input" placeholder="Visite appartement..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select [(ngModel)]="newApt.type" class="form-input">
+              <option value="VISIT">Visite</option>
+              <option value="MEETING">Réunion</option>
+              <option value="ESTIMATION">Estimation</option>
+              <option value="SIGNING">Signature</option>
+              <option value="NOTARY">Notaire</option>
+            </select>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" [(ngModel)]="newApt.date" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Heure</label>
+              <input type="time" [(ngModel)]="newApt.time" class="form-input" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lieu</label>
+            <input type="text" [(ngModel)]="newApt.location" class="form-input" placeholder="Adresse..." />
+          </div>
+          <div class="drawer-actions">
+            <button class="btn-secondary" (click)="showNewDialog.set(false)">Annuler</button>
+            <button class="btn-primary" (click)="saveNewAppointment()"><i class="pi pi-check"></i> Créer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

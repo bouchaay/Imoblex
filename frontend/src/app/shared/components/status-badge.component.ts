@@ -6,30 +6,8 @@ import { PropertyStatus, MandateStatus, TransactionStatus, PROPERTY_STATUS_LABEL
   selector: 'app-status-badge',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <span class="status-badge" [style]="getBadgeStyle()">
-      <span class="status-dot"></span>
-      {{ getLabel() }}
-    </span>
-  `,
-  styles: [`
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 100px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-  `]
+  templateUrl: './status-badge.component.html',
+  styleUrls: ['./status-badge.component.scss']
 })
 export class StatusBadgeComponent {
   @Input() status!: PropertyStatus | MandateStatus | TransactionStatus | string;

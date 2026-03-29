@@ -17,8 +17,8 @@ public class PropertySearchRequest {
     private String postalCode;
     private BigDecimal priceMin;
     private BigDecimal priceMax;
-    private Double areaMin;
-    private Double areaMax;
+    private BigDecimal areaMin;
+    private BigDecimal areaMax;
     private Integer roomsMin;
     private Integer roomsMax;
     private Integer bedroomsMin;

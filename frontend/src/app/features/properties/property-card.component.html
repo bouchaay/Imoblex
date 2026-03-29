@@ -1,0 +1,110 @@
+<div class="property-card" [class.list-view]="viewMode === 'list'">
+  <!-- Photo section -->
+  <div class="card-photo" [routerLink]="['/properties', property.id]">
+    <img
+      [src]="property.photos[0]?.url || 'https://via.placeholder.com/400x250/f1f5f9/94a3b8?text=Pas+de+photo'"
+      [alt]="property.title"
+      class="photo-img"
+      loading="lazy"
+    />
+    <!-- Overlay badges -->
+    <div class="photo-top-badges">
+      <app-status-badge [status]="property.status"></app-status-badge>
+      @if (property.transactionType === TransactionType.RENTAL) {
+        <span class="rental-badge">Location</span>
+      }
+    </div>
+    @if (!property.isPublished) {
+      <div class="unpublished-overlay">
+        <i class="pi pi-eye-slash"></i>
+        <span>Non publié</span>
+      </div>
+    }
+    <div class="photo-hover-actions">
+      <button class="photo-action-btn" (click)="$event.preventDefault(); onEdit()" title="Modifier">
+        <i class="pi pi-pencil"></i>
+      </button>
+      <button class="photo-action-btn" (click)="$event.preventDefault(); onDelete()" title="Supprimer">
+        <i class="pi pi-trash"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content section -->
+  <div class="card-content">
+    <div class="card-top">
+      <!-- Price -->
+      <div class="price-block">
+        <span class="price-main">
+          {{ property.price | priceFormatter:'€':isRental }}
+        </span>
+        @if (!isRental && property.pricePerSqm) {
+          <span class="price-sqm">{{ property.pricePerSqm | priceFormatter }}/m²</span>
+        }
+      </div>
+      <!-- DPE -->
+      @if (property.dpe) {
+        <app-dpe-badge [dpe]="property.dpe"></app-dpe-badge>
+      }
+    </div>
+
+    <!-- Title & ref -->
+    <a [routerLink]="['/properties', property.id]" class="card-title-link">
+      <h3 class="card-title">{{ property.title }}</h3>
+    </a>
+    <div class="card-address">
+      <i class="pi pi-map-marker"></i>
+      {{ property.address.streetNumber }} {{ property.address.street }}, {{ property.address.city }}
+    </div>
+
+    <!-- Features row -->
+    <div class="features-row">
+      <span class="feature-chip">
+        <i class="pi pi-th-large"></i>
+        {{ property.features.rooms }} pièce{{ property.features.rooms > 1 ? 's' : '' }}
+      </span>
+      <span class="feature-chip">
+        <i class="pi pi-moon"></i>
+        {{ property.features.bedrooms }} ch.
+      </span>
+      <span class="feature-chip">
+        <i class="pi pi-expand"></i>
+        {{ property.features.surface }} m²
+      </span>
+      @if (property.features.landSurface) {
+        <span class="feature-chip">
+          <i class="pi pi-map"></i>
+          {{ property.features.landSurface }} m² terrain
+        </span>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <div class="card-meta">
+        <span class="card-ref">{{ property.reference }}</span>
+        @if (property.visitCount) {
+          <span class="card-visits">
+            <i class="pi pi-eye"></i> {{ property.visitCount }}
+          </span>
+        }
+      </div>
+      <div class="card-actions">
+        <button
+          class="action-icon-btn"
+          [class.published]="property.isPublished"
+          (click)="onTogglePublish()"
+          [title]="property.isPublished ? 'Dépublier' : 'Publier'"
+        >
+          <i class="pi" [class.pi-eye]="!property.isPublished" [class.pi-eye-slash]="property.isPublished"></i>
+        </button>
+        <button class="action-icon-btn edit" (click)="onEdit()" title="Modifier">
+          <i class="pi pi-pencil"></i>
+        </button>
+        <button class="action-icon-btn delete" (click)="onDelete()" title="Supprimer">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

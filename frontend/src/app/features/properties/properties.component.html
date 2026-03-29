@@ -1,0 +1,221 @@
+<div class="properties-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Biens immobiliers</h1>
+      <p class="page-subtitle">{{ totalItems() }} bien{{ totalItems() > 1 ? 's' : '' }} trouvé{{ totalItems() > 1 ? 's' : '' }}</p>
+    </div>
+    <button class="btn-primary" routerLink="/properties/new">
+      <i class="pi pi-plus"></i> Ajouter un bien
+    </button>
+  </div>
+
+  <div class="properties-layout">
+    <!-- Sidebar filters -->
+    <aside class="filters-sidebar" [class.open]="filterSidebarOpen()">
+      <div class="filters-header">
+        <h3>Filtres</h3>
+        <button class="reset-btn" (click)="resetFilters()">Réinitialiser</button>
+      </div>
+
+      <!-- Transaction type -->
+      <div class="filter-section">
+        <label class="filter-label">Type de transaction</label>
+        <div class="radio-group">
+          <label class="radio-item" [class.active]="!filters.transactionType" (click)="setTransactionType(null)">
+            Tous
+          </label>
+          <label class="radio-item" [class.active]="filters.transactionType === 'SALE'" (click)="setTransactionType('SALE')">
+            Vente
+          </label>
+          <label class="radio-item" [class.active]="filters.transactionType === 'RENTAL'" (click)="setTransactionType('RENTAL')">
+            Location
+          </label>
+        </div>
+      </div>
+
+      <!-- Status filter -->
+      <div class="filter-section">
+        <label class="filter-label">Statut</label>
+        <div class="checkbox-filters">
+          @for (status of statusOptions; track status.value) {
+            <label class="check-item">
+              <input type="checkbox" [checked]="isStatusSelected(status.value)"
+                (change)="toggleStatus(status.value)" />
+              <span class="status-dot-small" [style.background]="status.color"></span>
+              {{ status.label }}
+            </label>
+          }
+        </div>
+      </div>
+
+      <!-- Property type filter -->
+      <div class="filter-section">
+        <label class="filter-label">Type de bien</label>
+        <div class="checkbox-filters">
+          @for (type of typeOptions; track type.value) {
+            <label class="check-item">
+              <input type="checkbox" [checked]="isTypeSelected(type.value)"
+                (change)="toggleType(type.value)" />
+              <i class="pi {{ type.icon }}"></i>
+              {{ type.label }}
+            </label>
+          }
+        </div>
+      </div>
+
+      <!-- Price range -->
+      <div class="filter-section">
+        <label class="filter-label">Prix</label>
+        <div class="range-inputs">
+          <input type="number" [(ngModel)]="filters.minPrice" placeholder="Min €"
+            class="range-input" (ngModelChange)="applyFilters()" />
+          <span>—</span>
+          <input type="number" [(ngModel)]="filters.maxPrice" placeholder="Max €"
+            class="range-input" (ngModelChange)="applyFilters()" />
+        </div>
+      </div>
+
+      <!-- Surface -->
+      <div class="filter-section">
+        <label class="filter-label">Surface (m²)</label>
+        <div class="range-inputs">
+          <input type="number" [(ngModel)]="filters.minSurface" placeholder="Min"
+            class="range-input" (ngModelChange)="applyFilters()" />
+          <span>—</span>
+          <input type="number" [(ngModel)]="filters.maxSurface" placeholder="Max"
+            class="range-input" (ngModelChange)="applyFilters()" />
+        </div>
+      </div>
+
+      <button class="apply-filters-btn" (click)="applyFilters()">
+        <i class="pi pi-search"></i> Appliquer
+      </button>
+    </aside>
+
+    <!-- Main content -->
+    <div class="properties-main">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="filter-toggle-btn" (click)="filterSidebarOpen.set(!filterSidebarOpen())">
+            <i class="pi pi-filter"></i>
+            Filtres
+            @if (activeFilterCount() > 0) {
+              <span class="filter-badge">{{ activeFilterCount() }}</span>
+            }
+          </button>
+
+          <div class="search-box">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              [(ngModel)]="filters.query"
+              (input)="applyFilters()"
+              placeholder="Rechercher par référence, titre, ville..."
+              class="search-input"
+            />
+          </div>
+        </div>
+
+        <div class="toolbar-right">
+          <select class="sort-select" [(ngModel)]="sortBy" (ngModelChange)="applyFilters()">
+            <option value="createdAt_desc">Plus récents</option>
+            <option value="price_asc">Prix croissant</option>
+            <option value="price_desc">Prix décroissant</option>
+            <option value="surface_desc">Surface décroissante</option>
+          </select>
+
+          <div class="view-toggle">
+            <button
+              class="view-btn"
+              [class.active]="viewMode() === 'grid'"
+              (click)="viewMode.set('grid')"
+              title="Vue grille"
+            >
+              <i class="pi pi-th-large"></i>
+            </button>
+            <button
+              class="view-btn"
+              [class.active]="viewMode() === 'list'"
+              (click)="viewMode.set('list')"
+              title="Vue liste"
+            >
+              <i class="pi pi-list"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Properties grid/list -->
+      @if (isLoading()) {
+        <div class="loading-grid">
+          @for (n of [1,2,3,4,5,6]; track n) {
+            <div class="skeleton-card">
+              <div class="skeleton-photo skeleton-anim"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-anim" style="width:60%; height:20px"></div>
+                <div class="skeleton-line skeleton-anim" style="width:90%; height:14px; margin-top:8px"></div>
+                <div class="skeleton-line skeleton-anim" style="width:40%; height:14px; margin-top:6px"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (properties().length === 0) {
+        <div class="empty-state">
+          <i class="pi pi-building"></i>
+          <h3>Aucun bien trouvé</h3>
+          <p>Modifiez vos filtres ou ajoutez un nouveau bien</p>
+          <button class="btn-primary" routerLink="/properties/new">
+            <i class="pi pi-plus"></i> Ajouter un bien
+          </button>
+        </div>
+      } @else {
+        <div class="properties-grid" [class.list-view]="viewMode() === 'list'">
+          @for (property of properties(); track property.id) {
+            <app-property-card
+              [property]="property"
+              [viewMode]="viewMode()"
+              (edit)="onEdit($event)"
+              (delete)="onDeleteRequest($event)"
+              (togglePublish)="onTogglePublish($event)"
+            ></app-property-card>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button class="page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+              <i class="pi pi-chevron-left"></i>
+            </button>
+            @for (page of getPages(); track page) {
+              <button
+                class="page-btn"
+                [class.active]="page === currentPage()"
+                [class.ellipsis]="page === -1"
+                [disabled]="page === -1"
+                (click)="page !== -1 && goToPage(page)"
+              >
+                {{ page === -1 ? '...' : page }}
+              </button>
+            }
+            <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+              <i class="pi pi-chevron-right"></i>
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete dialog -->
+<app-confirm-dialog
+  [(visible)]="showDeleteDialog"
+  title="Supprimer le bien ?"
+  [message]="'Voulez-vous vraiment supprimer le bien ' + (propertyToDelete()?.reference || '') + ' ? Cette action est irréversible.'"
+  confirmLabel="Supprimer"
+  type="danger"
+  (confirm)="confirmDelete()"
+></app-confirm-dialog>

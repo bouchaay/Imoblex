@@ -1,0 +1,30 @@
+<div class="shell-wrapper" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <!-- Sidebar -->
+  <app-sidebar
+    [collapsed]="sidebarCollapsed()"
+    (toggleCollapse)="toggleSidebar()"
+  ></app-sidebar>
+
+  <!-- Main content area -->
+  <div class="main-area">
+    <!-- Topbar -->
+    <app-topbar
+      (toggleSidebar)="toggleSidebar()"
+    ></app-topbar>
+
+    <!-- Page content -->
+    <main class="page-content">
+      <div class="content-wrapper animate-fade-in">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile overlay -->
+  @if (!sidebarCollapsed()) {
+    <div
+      class="mobile-overlay lg:hidden"
+      (click)="toggleSidebar()"
+    ></div>
+  }
+</div>

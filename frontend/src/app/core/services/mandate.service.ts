@@ -1,76 +1,143 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { Mandate } from '../models/mandate.model';
 import { MandateType, MandateStatus, TransactionType } from '../models/enums';
 
+interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface BackendMandateResponse {
+  id: string;
+  mandateNumber: string;
+  type: string;
+  status: string;
+  propertyId?: string;
+  propertyReference?: string;
+  propertyAddress?: string;
+  mandatorId?: string;
+  mandatorName?: string;
+  agentId?: string;
+  agentName?: string;
+  agreedPrice?: number;
+  agencyFees?: number;
+  agencyFeesPercent?: number;
+  feesChargedTo?: string;
+  startDate?: string;
+  endDate?: string;
+  renewalDate?: string;
+  signedAt?: string;
+  signedAtPlace?: string;
+  notes?: string;
+  expired?: boolean;
+  expiringSoon?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MandateService {
-  private mockMandates: Mandate[] = this.generateMockMandates();
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = '/api/mandates';
 
   getAll(): Observable<Mandate[]> {
-    return of(this.mockMandates).pipe(delay(300));
+    const params = new HttpParams()
+      .set('page', '0')
+      .set('size', '100')
+      .set('sortBy', 'createdAt')
+      .set('sortDir', 'DESC');
+    return this.http.get<PageResponse<BackendMandateResponse>>(this.apiUrl, { params }).pipe(
+      map(r => r.content.map(m => this.mapMandate(m))),
+      catchError(() => of([]))
+    );
   }
 
   getById(id: string): Observable<Mandate> {
-    return of(this.mockMandates.find(m => m.id === id) || this.mockMandates[0]).pipe(delay(200));
+    return this.http.get<ApiResponse<BackendMandateResponse>>(`${this.apiUrl}/${id}`).pipe(
+      map(r => this.mapMandate(r.data)),
+      catchError(() => of(null as any))
+    );
   }
 
   create(data: Partial<Mandate>): Observable<Mandate> {
-    const mandate = { ...this.mockMandates[0], ...data, id: 'mandate_' + Date.now(), createdAt: new Date(), updatedAt: new Date() } as Mandate;
-    this.mockMandates.unshift(mandate);
-    return of(mandate).pipe(delay(400));
+    return this.http.post<ApiResponse<BackendMandateResponse>>(this.apiUrl, this.mapToRequest(data)).pipe(
+      map(r => this.mapMandate(r.data))
+    );
   }
 
   update(id: string, data: Partial<Mandate>): Observable<Mandate> {
-    const idx = this.mockMandates.findIndex(m => m.id === id);
-    if (idx >= 0) this.mockMandates[idx] = { ...this.mockMandates[idx], ...data, updatedAt: new Date() };
-    return of(this.mockMandates[idx >= 0 ? idx : 0]).pipe(delay(300));
+    return this.http.put<ApiResponse<BackendMandateResponse>>(`${this.apiUrl}/${id}`, this.mapToRequest(data)).pipe(
+      map(r => this.mapMandate(r.data))
+    );
   }
 
   delete(id: string): Observable<void> {
-    this.mockMandates = this.mockMandates.filter(m => m.id !== id);
-    return of(undefined).pipe(delay(300));
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   getExpiringMandates(days = 30): Observable<Mandate[]> {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-    return of(this.mockMandates.filter(m =>
-      m.status === MandateStatus.ACTIVE && new Date(m.endDate) <= cutoff
-    )).pipe(delay(200));
+    return this.http.get<ApiResponse<BackendMandateResponse[]>>(`${this.apiUrl}/expiring`, {
+      params: new HttpParams().set('days', days.toString())
+    }).pipe(
+      map(r => r.data.map(m => this.mapMandate(m))),
+      catchError(() => of([]))
+    );
   }
 
-  private generateMockMandates(): Mandate[] {
-    const types = [MandateType.EXCLUSIVE, MandateType.SIMPLE, MandateType.SEMI_EXCLUSIVE];
-    const statuses = [MandateStatus.ACTIVE, MandateStatus.ACTIVE, MandateStatus.ACTIVE, MandateStatus.EXPIRED, MandateStatus.COMPLETED];
-    return Array.from({ length: 20 }, (_, i) => {
-      const startDate = new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000);
-      const endDate = new Date(startDate.getTime() + (Math.random() * 60 + 30) * 24 * 60 * 60 * 1000);
-      const daysRemaining = Math.round((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-      const status = statuses[i % statuses.length];
-      return {
-        id: `mandate_${i + 1}`,
-        reference: `MND-${10000 + i}`,
-        type: types[i % types.length],
-        status,
-        transactionType: i % 3 === 0 ? TransactionType.RENTAL : TransactionType.SALE,
-        propertyId: `prop_${i + 1}`,
-        mandatorId: `contact_${i + 1}`,
-        agentId: '1',
-        price: Math.floor(Math.random() * 800000) + 150000,
-        agencyFeePercent: [3, 4, 5, 6][i % 4],
-        agencyFeeAmount: 0,
-        startDate,
-        endDate,
-        signedAt: startDate,
-        isRenewable: Math.random() > 0.4,
-        renewalCount: Math.floor(Math.random() * 3),
-        daysRemaining,
-        isExpiringSoon: daysRemaining > 0 && daysRemaining <= 15,
-        createdAt: startDate,
-        updatedAt: new Date()
-      };
-    });
+  private mapMandate(m: BackendMandateResponse): Mandate {
+    const endDate = m.endDate ? new Date(m.endDate) : new Date();
+    const daysRemaining = Math.round((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+    return {
+      id: m.id,
+      reference: m.mandateNumber || `MND-${m.id.substring(0, 8).toUpperCase()}`,
+      type: m.type as MandateType,
+      status: m.status as MandateStatus,
+      transactionType: TransactionType.SALE,
+      propertyId: m.propertyId || '',
+      mandatorId: m.mandatorId || '',
+      agentId: m.agentId || '',
+      price: m.agreedPrice || 0,
+      agencyFeePercent: m.agencyFeesPercent || 0,
+      agencyFeeAmount: m.agencyFees || 0,
+      startDate: m.startDate ? new Date(m.startDate) : new Date(),
+      endDate,
+      signedAt: m.signedAt ? new Date(m.signedAt) : undefined,
+      isRenewable: true,
+      renewalCount: 0,
+      daysRemaining,
+      isExpiringSoon: m.expiringSoon || (daysRemaining > 0 && daysRemaining <= 15),
+      createdAt: m.createdAt ? new Date(m.createdAt) : new Date(),
+      updatedAt: m.updatedAt ? new Date(m.updatedAt) : new Date()
+    };
+  }
+
+  private mapToRequest(data: Partial<Mandate>): any {
+    return {
+      type: data.type,
+      propertyId: data.propertyId || undefined,
+      mandatorId: data.mandatorId || undefined,
+      agentId: data.agentId || undefined,
+      agreedPrice: data.price,
+      agencyFeesPercent: data.agencyFeePercent,
+      startDate: data.startDate instanceof Date
+        ? (data.startDate as Date).toISOString().split('T')[0]
+        : data.startDate,
+      endDate: data.endDate instanceof Date
+        ? (data.endDate as Date).toISOString().split('T')[0]
+        : data.endDate,
+      notes: (data as any).notes
+    };
   }
 }

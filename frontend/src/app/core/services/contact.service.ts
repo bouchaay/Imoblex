@@ -1,116 +1,144 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { Contact } from '../models/contact.model';
-import { ContactType, PropertyType, TransactionType } from '../models/enums';
+import { ContactType } from '../models/enums';
+
+interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface BackendContactResponse {
+  id: string;
+  salutation?: string;
+  firstName: string;
+  lastName: string;
+  fullName?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  type: string;
+  status?: string;
+  assignedAgent?: { id: string; firstName: string; lastName: string; };
+  notes?: string;
+  source?: string;
+  acceptsEmail?: boolean;
+  acceptsSms?: boolean;
+  interactionCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ContactService {
-  private mockContacts: Contact[] = this.generateMockContacts();
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = '/api/contacts';
 
   getAll(filters?: Partial<{ query: string; type: ContactType; page: number; pageSize: number }>): Observable<{ items: Contact[]; total: number }> {
-    let items = [...this.mockContacts];
-    if (filters?.query) {
-      const q = filters.query.toLowerCase();
-      items = items.filter(c =>
-        c.firstName.toLowerCase().includes(q) ||
-        c.lastName.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.phone?.includes(q)
-      );
-    }
-    if (filters?.type) {
-      items = items.filter(c => c.type === filters.type || c.types?.includes(filters.type as ContactType));
-    }
-    const page = filters?.page || 1;
-    const pageSize = filters?.pageSize || 20;
-    const start = (page - 1) * pageSize;
-    return of({ items: items.slice(start, start + pageSize), total: items.length }).pipe(delay(250));
+    let params = new HttpParams()
+      .set('page', Math.max(0, (filters?.page || 1) - 1).toString())
+      .set('size', (filters?.pageSize || 20).toString());
+
+    if (filters?.query) params = params.set('query', filters.query);
+    if (filters?.type) params = params.set('type', filters.type);
+
+    return this.http.get<PageResponse<BackendContactResponse>>(this.apiUrl, { params }).pipe(
+      map(response => ({
+        items: response.content.map(c => this.mapContact(c)),
+        total: response.totalElements
+      })),
+      catchError(() => of({ items: [], total: 0 }))
+    );
   }
 
   getById(id: string): Observable<Contact> {
-    const contact = this.mockContacts.find(c => c.id === id) || this.mockContacts[0];
-    return of(contact).pipe(delay(200));
+    return this.http.get<ApiResponse<BackendContactResponse>>(`${this.apiUrl}/${id}`).pipe(
+      map(r => this.mapContact(r.data)),
+      catchError(() => of(null as any))
+    );
   }
 
   create(data: Partial<Contact>): Observable<Contact> {
-    const newContact: Contact = {
-      ...this.mockContacts[0],
-      ...data,
-      id: 'contact_' + Date.now(),
-      reference: 'CTT-' + Math.floor(Math.random() * 90000 + 10000),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      interactions: []
-    } as Contact;
-    this.mockContacts.unshift(newContact);
-    return of(newContact).pipe(delay(400));
+    return this.http.post<ApiResponse<BackendContactResponse>>(this.apiUrl, this.mapToRequest(data)).pipe(
+      map(r => this.mapContact(r.data))
+    );
   }
 
   update(id: string, data: Partial<Contact>): Observable<Contact> {
-    const index = this.mockContacts.findIndex(c => c.id === id);
-    if (index >= 0) {
-      this.mockContacts[index] = { ...this.mockContacts[index], ...data, updatedAt: new Date() };
-    }
-    return of(this.mockContacts[index >= 0 ? index : 0]).pipe(delay(300));
+    return this.http.put<ApiResponse<BackendContactResponse>>(`${this.apiUrl}/${id}`, this.mapToRequest(data)).pipe(
+      map(r => this.mapContact(r.data))
+    );
   }
 
   delete(id: string): Observable<void> {
-    this.mockContacts = this.mockContacts.filter(c => c.id !== id);
-    return of(undefined).pipe(delay(300));
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  private generateMockContacts(): Contact[] {
-    const firstNames = ['Jean', 'Marie', 'Pierre', 'Sophie', 'Thomas', 'Isabelle', 'Luc', 'Camille', 'François', 'Julie', 'Nicolas', 'Emma', 'Antoine', 'Laure', 'Mathieu'];
-    const lastNames = ['Martin', 'Dubois', 'Leroy', 'Bernard', 'Moreau', 'Simon', 'Laurent', 'Michel', 'Garcia', 'David', 'Bertrand', 'Roux', 'Vincent', 'Fournier', 'Morel'];
-    const types = [ContactType.BUYER, ContactType.SELLER, ContactType.TENANT, ContactType.LANDLORD, ContactType.PROSPECT];
-    const cities = ['Paris', 'Boulogne', 'Neuilly', 'Levallois', 'Vincennes'];
+  private mapContact(c: BackendContactResponse): Contact {
+    return {
+      id: c.id,
+      reference: `CTT-${c.id.substring(0, 8).toUpperCase()}`,
+      civility: (c.salutation as 'M' | 'Mme') || undefined,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      email: c.email,
+      phone: c.phone,
+      mobilePhone: c.mobile,
+      type: c.type as ContactType,
+      types: [c.type as ContactType],
+      address: c.city ? {
+        city: c.city,
+        postalCode: c.postalCode || '',
+        country: 'France'
+      } : undefined,
+      company: c.company,
+      agentId: c.assignedAgent?.id,
+      source: c.source,
+      rating: 3,
+      isVip: false,
+      gdprConsent: c.acceptsEmail || false,
+      gdprConsentDate: c.createdAt ? new Date(c.createdAt) : undefined,
+      notes: c.notes || '',
+      tags: [],
+      interactions: [],
+      interactionCount: c.interactionCount || 0,
+      lastInteractionAt: undefined,
+      createdAt: new Date(c.createdAt),
+      updatedAt: new Date(c.updatedAt)
+    };
+  }
 
-    return Array.from({ length: 60 }, (_, i) => {
-      const type = types[i % types.length];
-      const fn = firstNames[i % firstNames.length];
-      const ln = lastNames[Math.floor(i / firstNames.length) % lastNames.length];
-      return {
-        id: `contact_${i + 1}`,
-        reference: `CTT-${10000 + i}`,
-        civility: i % 3 === 0 ? 'M' : 'Mme' as 'M' | 'Mme',
-        firstName: fn,
-        lastName: ln,
-        email: `${fn.toLowerCase()}.${ln.toLowerCase()}@email.fr`,
-        phone: `+33 1 ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)}`,
-        mobilePhone: `+33 6 ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)}`,
-        type,
-        types: [type],
-        address: {
-          city: cities[i % cities.length],
-          postalCode: `750${Math.floor(i % 20 + 1).toString().padStart(2, '0')}`,
-          country: 'France'
-        },
-        company: i % 5 === 0 ? 'Entreprise SAS' : undefined,
-        searchCriteria: type === ContactType.BUYER || type === ContactType.TENANT ? {
-          transactionType: type === ContactType.TENANT ? TransactionType.RENTAL : TransactionType.SALE,
-          propertyTypes: [PropertyType.APARTMENT, PropertyType.HOUSE],
-          minBudget: 200000 + i * 5000,
-          maxBudget: 600000 + i * 10000,
-          minSurface: 40,
-          maxSurface: 120,
-          minRooms: 2,
-          cities: [cities[i % cities.length]]
-        } : undefined,
-        agentId: '1',
-        source: ['Site web', 'Recommandation', 'Portail', 'Agence'][i % 4],
-        rating: Math.floor(Math.random() * 5) + 1,
-        isVip: i % 10 === 0,
-        gdprConsent: true,
-        gdprConsentDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
-        notes: '',
-        tags: [],
-        interactions: [],
-        interactionCount: Math.floor(Math.random() * 15),
-        lastInteractionAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000)
-      };
-    });
+  private mapToRequest(data: Partial<Contact>): any {
+    return {
+      salutation: data.civility,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      mobile: data.mobilePhone,
+      type: data.type,
+      company: data.company,
+      notes: data.notes,
+      source: data.source,
+      city: data.address?.city,
+      postalCode: data.address?.postalCode,
+      acceptsEmail: data.gdprConsent,
+      acceptsSms: data.gdprConsent
+    };
   }
 }

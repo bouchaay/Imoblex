@@ -1,0 +1,53 @@
+<div class="documents-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Documents</h1>
+      <p class="page-subtitle">Gestion documentaire de l'agence</p>
+    </div>
+    <button class="btn-primary"><i class="pi pi-upload"></i> Importer</button>
+  </div>
+
+  <div class="docs-layout">
+    <!-- Categories sidebar -->
+    <aside class="docs-sidebar">
+      <div class="category-list">
+        @for (cat of categories; track cat.label) {
+          <div class="cat-item" [class.active]="activeCategory === cat.key" (click)="activeCategory = cat.key">
+            <i class="pi {{ cat.icon }}" [style.color]="cat.color"></i>
+            <span>{{ cat.label }}</span>
+            <span class="cat-count">{{ cat.count }}</span>
+          </div>
+        }
+      </div>
+    </aside>
+
+    <!-- Documents grid -->
+    <div class="docs-main">
+      <div class="docs-toolbar">
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher un document..." class="search-input" />
+        <div class="view-btns">
+          <button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'"><i class="pi pi-th-large"></i></button>
+          <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"><i class="pi pi-list"></i></button>
+        </div>
+      </div>
+
+      <div class="docs-grid" [class.list-mode]="viewMode === 'list'">
+        @for (doc of filteredDocs; track doc.id) {
+          <div class="doc-card">
+            <div class="doc-icon-wrap" [style.background]="doc.iconColor + '15'">
+              <i class="pi {{ doc.icon }}" [style.color]="doc.iconColor"></i>
+            </div>
+            <div class="doc-info">
+              <div class="doc-name">{{ doc.name }}</div>
+              <div class="doc-meta">{{ doc.size }} • {{ doc.date | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="doc-actions">
+              <button class="doc-action-btn" title="Télécharger" (click)="downloadDoc(doc)"><i class="pi pi-download"></i></button>
+              <button class="doc-action-btn danger" title="Supprimer" (click)="deleteDoc(doc.id)"><i class="pi pi-trash"></i></button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

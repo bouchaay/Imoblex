@@ -6,21 +6,8 @@ import { PropertyType, PROPERTY_TYPE_LABELS } from '../../core/models/enums';
   selector: 'app-property-type-icon',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <span class="type-icon" [title]="getLabel()">
-      <i class="pi {{ getIcon() }}"></i>
-      @if (showLabel) { <span>{{ getLabel() }}</span> }
-    </span>
-  `,
-  styles: [`
-    .type-icon {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      color: #64748b;
-      font-size: 0.8rem;
-    }
-  `]
+  templateUrl: './property-type-icon.component.html',
+  styleUrls: ['./property-type-icon.component.scss']
 })
 export class PropertyTypeIconComponent {
   @Input() type!: PropertyType | string;

@@ -1,0 +1,107 @@
+<div class="reporting-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Statistiques & Reporting</h1>
+      <p class="page-subtitle">Vue d'ensemble de la performance de l'agence</p>
+    </div>
+    <div class="header-actions">
+      <select class="period-select">
+        <option>Ce mois</option>
+        <option>Ce trimestre</option>
+        <option>Cette année</option>
+      </select>
+      <button class="btn-primary"><i class="pi pi-download"></i> Exporter</button>
+    </div>
+  </div>
+
+  <!-- KPI Summary cards -->
+  <div class="kpi-summary">
+    @for (kpi of kpis; track kpi.label) {
+      <div class="kpi-card" [style.border-top-color]="kpi.color">
+        <div class="kpi-icon" [style.background]="kpi.color + '15'" [style.color]="kpi.color">
+          <i class="pi {{ kpi.icon }}"></i>
+        </div>
+        <div class="kpi-data">
+          <div class="kpi-val">{{ kpi.value }}</div>
+          <div class="kpi-label">{{ kpi.label }}</div>
+        </div>
+        <div class="kpi-trend" [class.up]="kpi.up">
+          <i class="pi" [class.pi-arrow-up]="kpi.up" [class.pi-arrow-down]="!kpi.up"></i>
+          {{ kpi.trend }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Charts section -->
+  <div class="charts-grid">
+    <!-- Revenue bar chart (simulated) -->
+    <div class="card chart-card">
+      <h3 class="chart-title">Commissions mensuelles (€)</h3>
+      <div class="bar-chart">
+        @for (month of monthlyRevenue; track month.label) {
+          <div class="bar-col">
+            <div class="bar-tooltip">{{ month.amount.toLocaleString('fr-FR') }} €</div>
+            <div class="bar-fill" [style.height.%]="(month.amount / maxRevenue) * 100" [style.background]="month.amount >= 50000 ? '#10b981' : '#1B4F72'"></div>
+            <div class="bar-label">{{ month.label }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Property types donut (simulated) -->
+    <div class="card chart-card">
+      <h3 class="chart-title">Biens par type</h3>
+      <div class="donut-chart">
+        <div class="donut-center">
+          <span class="donut-total">48</span>
+          <span class="donut-label">biens</span>
+        </div>
+      </div>
+      <div class="donut-legend">
+        @for (item of propertyTypeData; track item.label) {
+          <div class="legend-item">
+            <span class="legend-dot" [style.background]="item.color"></span>
+            <span class="legend-label">{{ item.label }}</span>
+            <span class="legend-value">{{ item.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Contacts by type -->
+    <div class="card chart-card">
+      <h3 class="chart-title">Contacts par profil</h3>
+      <div class="horizontal-bars">
+        @for (item of contactTypeData; track item.label) {
+          <div class="h-bar-row">
+            <span class="h-bar-label">{{ item.label }}</span>
+            <div class="h-bar-track">
+              <div class="h-bar-fill" [style.width.%]="(item.count / 25) * 100" [style.background]="item.color"></div>
+            </div>
+            <span class="h-bar-count">{{ item.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Agent performance -->
+    <div class="card chart-card">
+      <h3 class="chart-title">Performance équipe</h3>
+      <div class="agent-list">
+        @for (agent of agentPerformance; track agent.name) {
+          <div class="agent-row">
+            <div class="agent-avatar" [style.background]="agent.color">{{ agent.initials }}</div>
+            <div class="agent-info">
+              <div class="agent-name">{{ agent.name }}</div>
+              <div class="agent-stats">{{ agent.transactions }} transactions • {{ agent.revenue.toLocaleString('fr-FR') }} €</div>
+            </div>
+            <div class="agent-bar-wrap">
+              <div class="agent-bar" [style.width.%]="(agent.revenue / 80000) * 100"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

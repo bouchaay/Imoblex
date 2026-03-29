@@ -1,0 +1,72 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <!-- Logo area -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+        <path d="M16 3L3 14h4v15h7v-9h4v9h7V14h4L16 3z" fill="#F39C12"/>
+        <rect x="12" y="18" width="8" height="11" rx="1" fill="rgba(255,255,255,0.15)"/>
+      </svg>
+    </div>
+    @if (!collapsed) {
+      <div class="logo-text">
+        <span class="logo-name">IMOBLEX</span>
+        <span class="logo-subtitle">Back-Office CRM</span>
+      </div>
+    }
+    <button class="collapse-btn" (click)="toggleCollapse.emit()">
+      <i class="pi" [class.pi-chevron-left]="!collapsed" [class.pi-chevron-right]="collapsed"></i>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    @for (group of navGroups; track group.title) {
+      <div class="nav-group">
+        @if (!collapsed) {
+          <span class="nav-group-title">{{ group.title }}</span>
+        }
+        @for (item of group.items; track item.route) {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+            class="nav-item"
+            [title]="collapsed ? item.label : ''"
+          >
+            <i class="pi {{ item.icon }} nav-icon"></i>
+            @if (!collapsed) {
+              <span class="nav-label">{{ item.label }}</span>
+              @if (item.badge) {
+                <span class="nav-badge" [style.background]="item.badgeColor || '#F39C12'">
+                  {{ item.badge }}
+                </span>
+              }
+            } @else if (item.badge) {
+              <span class="nav-badge-dot" [style.background]="item.badgeColor || '#F39C12'"></span>
+            }
+          </a>
+        }
+      </div>
+    }
+  </nav>
+
+  <!-- User profile at bottom -->
+  <div class="sidebar-footer">
+    <div class="user-card" [class.collapsed]="collapsed">
+      <img
+        [src]="(authService.currentUser$ | async)?.avatarUrl || 'https://ui-avatars.com/api/?name=User&background=1B4F72&color=fff'"
+        alt="Avatar"
+        class="user-avatar"
+      />
+      @if (!collapsed) {
+        <div class="user-info">
+          <span class="user-name">{{ (authService.currentUser$ | async)?.firstName }} {{ (authService.currentUser$ | async)?.lastName }}</span>
+          <span class="user-role">{{ getRoleLabel((authService.currentUser$ | async)?.role) }}</span>
+        </div>
+        <button class="logout-btn" (click)="logout()" title="Déconnexion">
+          <i class="pi pi-sign-out"></i>
+        </button>
+      }
+    </div>
+  </div>
+</aside>

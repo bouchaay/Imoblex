@@ -11,18 +11,7 @@ export interface BreadcrumbItem {
   selector: 'app-breadcrumb',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  template: `
-    <nav class="breadcrumb" aria-label="Fil d'Ariane">
-      @for (item of items; track item.label; let last = $last) {
-        @if (!last && item.path) {
-          <a [routerLink]="item.path">{{ item.label }}</a>
-          <span class="separator">›</span>
-        } @else {
-          <span class="current">{{ item.label }}</span>
-        }
-      }
-    </nav>
-  `
+  templateUrl: './breadcrumb.component.html'
 })
 export class BreadcrumbComponent {
   @Input() items: BreadcrumbItem[] = [];

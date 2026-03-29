@@ -1,0 +1,138 @@
+@if (property()) {
+  <div class="detail-page">
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="breadcrumb">
+        <a routerLink="/properties" class="breadcrumb-link">
+          <i class="pi pi-arrow-left"></i> Biens
+        </a>
+        <span>/</span>
+        <span>{{ property()!.reference }}</span>
+      </div>
+      <div class="header-actions">
+        <app-status-badge [status]="property()!.status"></app-status-badge>
+        <button class="btn-secondary" [routerLink]="['/properties', property()!.id, 'edit']">
+          <i class="pi pi-pencil"></i> Modifier
+        </button>
+      </div>
+    </div>
+
+    <!-- Photo gallery -->
+    <div class="photo-gallery">
+      <div class="main-photo">
+        <img [src]="property()!.photos[0]?.url" [alt]="property()!.title" />
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Main info -->
+      <div class="detail-main">
+        <div class="card">
+          <div class="prop-price-title">
+            <div>
+              <div class="prop-price">{{ property()!.price | priceFormatter:'€':(property()!.transactionType === TransactionType.RENTAL) }}</div>
+              <h1 class="prop-title">{{ property()!.title }}</h1>
+              <div class="prop-address">
+                <i class="pi pi-map-marker"></i>
+                {{ property()!.address.streetNumber }} {{ property()!.address.street }}, {{ property()!.address.city }} {{ property()!.address.postalCode }}
+              </div>
+            </div>
+            <div class="prop-badges">
+              @if (property()!.dpe) { <app-dpe-badge [dpe]="property()!.dpe!"></app-dpe-badge> }
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="card">
+          <h3 class="card-title">Description</h3>
+          <p class="prop-description">{{ property()!.description }}</p>
+        </div>
+
+        <!-- Features -->
+        <div class="card">
+          <h3 class="card-title">Caractéristiques</h3>
+          <div class="features-grid">
+            <div class="feature-item">
+              <i class="pi pi-th-large"></i>
+              <span class="feat-label">Pièces</span>
+              <span class="feat-value">{{ property()!.features.rooms }}</span>
+            </div>
+            <div class="feature-item">
+              <i class="pi pi-moon"></i>
+              <span class="feat-label">Chambres</span>
+              <span class="feat-value">{{ property()!.features.bedrooms }}</span>
+            </div>
+            <div class="feature-item">
+              <i class="pi pi-expand"></i>
+              <span class="feat-label">Surface</span>
+              <span class="feat-value">{{ property()!.features.surface }} m²</span>
+            </div>
+            <div class="feature-item">
+              <i class="pi pi-angle-double-up"></i>
+              <span class="feat-label">Étage</span>
+              <span class="feat-value">{{ property()!.features.floor ?? 'RDC' }}</span>
+            </div>
+            <div class="feature-item">
+              <i class="pi pi-calendar"></i>
+              <span class="feat-label">Construction</span>
+              <span class="feat-value">{{ property()!.features.constructionYear ?? '—' }}</span>
+            </div>
+            <div class="feature-item">
+              <i class="pi pi-compass"></i>
+              <span class="feat-label">Orientation</span>
+              <span class="feat-value">{{ property()!.features.orientation ?? '—' }}</span>
+            </div>
+          </div>
+          <div class="amenities-list">
+            @if (property()!.features.hasParking) { <span class="amenity"><i class="pi pi-check"></i> Parking</span> }
+            @if (property()!.features.hasGarage) { <span class="amenity"><i class="pi pi-check"></i> Garage</span> }
+            @if (property()!.features.hasGarden) { <span class="amenity"><i class="pi pi-check"></i> Jardin</span> }
+            @if (property()!.features.hasPool) { <span class="amenity"><i class="pi pi-check"></i> Piscine</span> }
+            @if (property()!.features.hasBalcony) { <span class="amenity"><i class="pi pi-check"></i> Balcon</span> }
+            @if (property()!.features.hasTerrace) { <span class="amenity"><i class="pi pi-check"></i> Terrasse</span> }
+            @if (property()!.features.hasElevator) { <span class="amenity"><i class="pi pi-check"></i> Ascenseur</span> }
+            @if (property()!.features.hasCellar) { <span class="amenity"><i class="pi pi-check"></i> Cave</span> }
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="detail-sidebar">
+        <div class="card">
+          <h3 class="card-title">Informations</h3>
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-key">Référence</span>
+              <span class="info-val">{{ property()!.reference }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Type</span>
+              <span class="info-val">{{ getTypeLabel(property()!.type) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Transaction</span>
+              <span class="info-val">{{ property()!.transactionType === TransactionType.RENTAL ? 'Location' : 'Vente' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Statut</span>
+              <app-status-badge [status]="property()!.status"></app-status-badge>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Visites</span>
+              <span class="info-val">{{ property()!.visitCount ?? 0 }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Publié le</span>
+              <span class="info-val">{{ property()!.publishedAt | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="loading-detail">
+    <div class="spinner-large"></div>
+  </div>
+}
