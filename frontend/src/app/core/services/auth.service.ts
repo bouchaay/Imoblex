@@ -1,11 +1,53 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AuthRequest, AuthResponse } from '../models/auth.model';
 import { User } from '../models/user.model';
 import { Role } from '../models/enums';
+
+// ─── Comptes de démo (fallback si backend indisponible) ───────────────────────
+const MOCK_USERS: Array<{ email: string; password: string; user: Omit<User, 'fullName'> }> = [
+  {
+    email: 'admin@imoblex.fr',
+    password: 'Admin@2024',
+    user: {
+      id: 'mock-admin-001',
+      firstName: 'Admin',
+      lastName: 'Imoblex',
+      email: 'admin@imoblex.fr',
+      phone: '05.61.61.57.38',
+      mobilePhone: '06.81.76.30.94',
+      role: Role.ADMIN,
+      avatarUrl: 'https://ui-avatars.com/api/?name=Admin+Imoblex&background=1B4F72&color=fff&size=128',
+      agencyName: 'Imoblex',
+      isActive: true,
+      lastLoginAt: new Date(),
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date(),
+    }
+  },
+  {
+    email: 'agent@imoblex.fr',
+    password: 'Agent@2024',
+    user: {
+      id: 'mock-agent-001',
+      firstName: 'Sophie',
+      lastName: 'Moreau',
+      email: 'agent@imoblex.fr',
+      phone: '05.61.61.57.38',
+      mobilePhone: '06.81.76.30.94',
+      role: Role.AGENT,
+      avatarUrl: 'https://ui-avatars.com/api/?name=Sophie+Moreau&background=2E86C1&color=fff&size=128',
+      agencyName: 'Imoblex',
+      isActive: true,
+      lastLoginAt: new Date(),
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date(),
+    }
+  }
+];
 
 interface BackendUserResponse {
   id: string;
@@ -83,10 +125,38 @@ export class AuthService {
         return authResponse;
       }),
       catchError(err => {
+        // Backend indisponible → fallback sur les comptes de démo
+        // 0 = pas de connexion, 404 = proxy sans backend, 502/503/504 = gateway errors
+        if (err.status !== 401 && err.status !== 403) {
+          return this.loginWithMock(request);
+        }
         const message = err.error?.message || 'Identifiants invalides. Vérifiez votre email et mot de passe.';
         return throwError(() => ({ status: err.status, message }));
       })
     );
+  }
+
+  private loginWithMock(request: AuthRequest): Observable<AuthResponse> {
+    const found = MOCK_USERS.find(
+      u => u.email.toLowerCase() === request.email.toLowerCase() && u.password === request.password
+    );
+    if (!found) {
+      return throwError(() => ({ status: 401, message: 'Identifiants invalides. Vérifiez votre email et mot de passe.' }));
+    }
+    const user: User = {
+      ...found.user,
+      lastLoginAt: new Date(),
+      get fullName() { return `${this.firstName} ${this.lastName}`; }
+    };
+    const authResponse: AuthResponse = {
+      accessToken: 'mock-token-' + Date.now(),
+      refreshToken: 'mock-refresh-' + Date.now(),
+      expiresIn: 86400,
+      tokenType: 'Bearer',
+      user
+    };
+    this.handleAuthSuccess(authResponse);
+    return of(authResponse);
   }
 
   logout(): void {

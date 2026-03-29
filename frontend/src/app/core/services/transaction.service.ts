@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Transaction, TransactionStep } from '../models/transaction.model';
 import { TransactionType, TransactionStatus } from '../models/enums';
+import { MOCK_TRANSACTIONS } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -70,15 +71,15 @@ export class TransactionService {
   getAll(): Observable<Transaction[]> {
     const params = new HttpParams().set('page', '0').set('size', '100');
     return this.http.get<PageResponse<BackendTransactionResponse>>(this.apiUrl, { params }).pipe(
-      map(r => r.content.map(t => this.mapTransaction(t))),
-      catchError(() => of([]))
+      map(r => r.content.length > 0 ? r.content.map(t => this.mapTransaction(t)) : MOCK_TRANSACTIONS),
+      catchError(() => of(MOCK_TRANSACTIONS))
     );
   }
 
   getById(id: string): Observable<Transaction> {
     return this.http.get<ApiResponse<BackendTransactionResponse>>(`${this.apiUrl}/${id}`).pipe(
       map(r => this.mapTransaction(r.data)),
-      catchError(() => of(null as any))
+      catchError(() => of(MOCK_TRANSACTIONS.find(t => t.id === id) ?? null as any))
     );
   }
 

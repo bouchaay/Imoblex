@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Property, PropertySearchRequest, PropertySearchResponse, PropertyPhoto } from '../models/property.model';
 import { PropertyType, PropertyStatus, TransactionType, DpeClass } from '../models/enums';
+import { MOCK_PROPERTIES } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -120,14 +121,14 @@ export class PropertyService {
         pageSize: response.size,
         totalPages: response.totalPages
       })),
-      catchError(() => of({ items: [], total: 0, page: 1, pageSize: 12, totalPages: 0 }))
+      catchError(() => of({ items: MOCK_PROPERTIES, total: MOCK_PROPERTIES.length, page: 1, pageSize: 12, totalPages: 1 }))
     );
   }
 
   getById(id: string): Observable<Property> {
     return this.http.get<ApiResponse<BackendPropertyResponse>>(`${this.apiUrl}/${id}`).pipe(
       map(r => this.mapProperty(r.data)),
-      catchError(() => of(null as any))
+      catchError(() => of(MOCK_PROPERTIES.find(p => p.id === id) ?? null as any))
     );
   }
 

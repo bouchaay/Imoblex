@@ -1,0 +1,183 @@
+<div class="settings-page">
+      <div class="page-header">
+        <h1 class="page-title">Paramètres</h1>
+        <p class="page-subtitle">Gestion du compte et préférences</p>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Settings nav -->
+        <nav class="settings-nav">
+          @for (item of navItems; track item.key) {
+            <button class="nav-item" [class.active]="activeSection === item.key" (click)="activeSection = item.key">
+              <i class="pi {{ item.icon }}"></i>
+              {{ item.label }}
+            </button>
+          }
+        </nav>
+
+        <!-- Settings content -->
+        <div class="settings-content">
+
+          @if (activeSection === 'profile') {
+            <div class="settings-card">
+              <h3 class="settings-section-title">Profil utilisateur</h3>
+
+              @if (profileMessage()) {
+                <div class="alert" [class.alert-success]="profileSuccess()" [class.alert-error]="!profileSuccess()">
+                  <i class="pi" [class.pi-check-circle]="profileSuccess()" [class.pi-exclamation-circle]="!profileSuccess()"></i>
+                  {{ profileMessage() }}
+                </div>
+              }
+
+              <div class="avatar-section">
+                <img [src]="profileForm.avatarUrl || 'https://ui-avatars.com/api/?name=User&background=1B4F72&color=fff&size=128'" alt="Avatar" class="settings-avatar" />
+                <div>
+                  <button class="btn-secondary"><i class="pi pi-camera"></i> Changer la photo</button>
+                  <p class="hint">JPG, PNG — Max 2 Mo</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Prénom</label>
+                  <input type="text" class="form-input" [(ngModel)]="profileForm.firstName" name="firstName" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nom</label>
+                  <input type="text" class="form-input" [(ngModel)]="profileForm.lastName" name="lastName" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-input" [(ngModel)]="profileForm.email" name="email" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Téléphone</label>
+                  <input type="tel" class="form-input" [(ngModel)]="profileForm.phone" name="phone" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mobile</label>
+                  <input type="tel" class="form-input" [(ngModel)]="profileForm.mobile" name="mobile" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Rôle</label>
+                  <input type="text" class="form-input" [value]="profileForm.role" readonly style="background:#f1f5f9; color:#64748b;" />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" (click)="saveProfile()" [disabled]="profileLoading()">
+                  <i class="pi" [class.pi-spin]="profileLoading()" [class.pi-spinner]="profileLoading()" [class.pi-save]="!profileLoading()"></i>
+                  {{ profileLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (activeSection === 'agency') {
+            <div class="settings-card">
+              <h3 class="settings-section-title">Informations de l'agence</h3>
+              <div class="form-grid">
+                <div class="form-group" style="grid-column: 1/-1">
+                  <label class="form-label">Nom de l'agence</label>
+                  <input type="text" class="form-input" [(ngModel)]="agencyForm.name" name="agencyName" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">N° SIRET</label>
+                  <input type="text" class="form-input" [(ngModel)]="agencyForm.siret" name="siret" placeholder="XXX XXX XXX XXXXX" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Carte professionnelle</label>
+                  <input type="text" class="form-input" [(ngModel)]="agencyForm.proCard" name="proCard" placeholder="CPI XXXXX-XXXX" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Adresse</label>
+                  <input type="text" class="form-input" [(ngModel)]="agencyForm.address" name="agencyAddress" placeholder="123 Rue de la Paix" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ville</label>
+                  <input type="text" class="form-input" [(ngModel)]="agencyForm.city" name="agencyCity" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email agence</label>
+                  <input type="email" class="form-input" [(ngModel)]="agencyForm.email" name="agencyEmail" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Téléphone agence</label>
+                  <input type="tel" class="form-input" [(ngModel)]="agencyForm.phone" name="agencyPhone" />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" (click)="saveAgency()">
+                  <i class="pi pi-save"></i> Enregistrer
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (activeSection === 'notifications') {
+            <div class="settings-card">
+              <h3 class="settings-section-title">Préférences de notifications</h3>
+              <div class="notif-options">
+                @for (notif of notificationOptions; track notif.key) {
+                  <div class="notif-row">
+                    <div class="notif-info">
+                      <div class="notif-label">{{ notif.label }}</div>
+                      <div class="notif-desc">{{ notif.desc }}</div>
+                    </div>
+                    <div class="toggle-switches">
+                      <label class="toggle-label">
+                        <span class="toggle-name">Email</span>
+                        <input type="checkbox" [(ngModel)]="notif.email" />
+                        <span class="toggle-track" [class.on]="notif.email"></span>
+                      </label>
+                      <label class="toggle-label">
+                        <span class="toggle-name">Push</span>
+                        <input type="checkbox" [(ngModel)]="notif.push" />
+                        <span class="toggle-track" [class.on]="notif.push"></span>
+                      </label>
+                    </div>
+                  </div>
+                }
+              </div>
+              <div class="form-actions" style="margin-top:1rem">
+                <button class="btn-primary" (click)="saveNotifications()">
+                  <i class="pi pi-save"></i> Enregistrer les préférences
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (activeSection === 'security') {
+            <div class="settings-card">
+              <h3 class="settings-section-title">Sécurité du compte</h3>
+
+              @if (securityMessage()) {
+                <div class="alert" [class.alert-success]="securitySuccess()" [class.alert-error]="!securitySuccess()">
+                  <i class="pi" [class.pi-check-circle]="securitySuccess()" [class.pi-exclamation-circle]="!securitySuccess()"></i>
+                  {{ securityMessage() }}
+                </div>
+              }
+
+              <div class="form-group" style="margin-bottom:1rem">
+                <label class="form-label">Mot de passe actuel</label>
+                <input type="password" class="form-input" [(ngModel)]="securityForm.current" name="currentPwd" placeholder="••••••••" />
+              </div>
+              <div class="form-group" style="margin-bottom:1rem">
+                <label class="form-label">Nouveau mot de passe</label>
+                <input type="password" class="form-input" [(ngModel)]="securityForm.newPwd" name="newPwd" placeholder="••••••••" />
+                <span class="hint">Minimum 8 caractères avec majuscule, chiffre et caractère spécial</span>
+              </div>
+              <div class="form-group" style="margin-bottom:1.5rem">
+                <label class="form-label">Confirmer le nouveau mot de passe</label>
+                <input type="password" class="form-input" [(ngModel)]="securityForm.confirm" name="confirmPwd" placeholder="••••••••" />
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" (click)="savePassword()" [disabled]="securityLoading()">
+                  <i class="pi" [class.pi-spin]="securityLoading()" [class.pi-spinner]="securityLoading()" [class.pi-lock]="!securityLoading()"></i>
+                  {{ securityLoading() ? 'Modification...' : 'Changer le mot de passe' }}
+                </button>
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+    </div>

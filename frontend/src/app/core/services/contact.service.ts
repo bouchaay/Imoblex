@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Contact } from '../models/contact.model';
 import { ContactType } from '../models/enums';
+import { MOCK_CONTACTS } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -62,14 +63,14 @@ export class ContactService {
         items: response.content.map(c => this.mapContact(c)),
         total: response.totalElements
       })),
-      catchError(() => of({ items: [], total: 0 }))
+      catchError(() => of({ items: MOCK_CONTACTS, total: MOCK_CONTACTS.length }))
     );
   }
 
   getById(id: string): Observable<Contact> {
     return this.http.get<ApiResponse<BackendContactResponse>>(`${this.apiUrl}/${id}`).pipe(
       map(r => this.mapContact(r.data)),
-      catchError(() => of(null as any))
+      catchError(() => of(MOCK_CONTACTS.find(c => c.id === id) ?? null as any))
     );
   }
 

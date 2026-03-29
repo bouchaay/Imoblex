@@ -1,0 +1,44 @@
+.settings-page { animation: fadeIn 0.3s ease; max-width: 960px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0 0 0.2rem; }
+    .page-subtitle { font-size: 0.875rem; color: #64748b; margin: 0; }
+    .settings-layout { display: grid; grid-template-columns: 200px 1fr; gap: 1.25rem; }
+    @media (max-width: 768px) { .settings-layout { grid-template-columns: 1fr; } }
+    .settings-nav { background: #fff; border-radius: 12px; padding: 0.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); height: fit-content; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem 0.875rem; border-radius: 8px; border: none; background: none; font-size: 0.875rem; font-weight: 500; color: #475569; cursor: pointer; width: 100%; text-align: left; transition: all 0.15s; }
+    .nav-item:hover { background: #f8fafc; }
+    .nav-item.active { background: rgba(27,79,114,0.08); color: #1B4F72; font-weight: 600; }
+    .nav-item i { font-size: 0.9rem; }
+    .settings-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .settings-section-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1.5rem; }
+    .alert { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+    .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .avatar-section { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem; }
+    .settings-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; }
+    .hint { font-size: 0.75rem; color: #94a3b8; margin: 0.35rem 0 0; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+    .form-input { padding: 0.625rem 0.875rem; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; outline: none; background: #f8fafc; font-family: inherit; transition: border-color 0.15s; }
+    .form-input:focus { border-color: #1B4F72; background: #fff; box-shadow: 0 0 0 3px rgba(27,79,114,0.08); }
+    .form-actions { display: flex; justify-content: flex-end; }
+    .btn-primary { display: flex; align-items: center; gap: 0.4rem; background: #1B4F72; color: #fff; border: none; padding: 0.625rem 1.25rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-primary:hover:not(:disabled) { background: #154060; }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary { display: flex; align-items: center; gap: 0.4rem; background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+    .notif-options { display: flex; flex-direction: column; gap: 0; }
+    .notif-row { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #f1f5f9; }
+    .notif-row:last-child { border-bottom: none; }
+    .notif-label { font-size: 0.875rem; font-weight: 600; color: #1e293b; }
+    .notif-desc { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+    .toggle-switches { display: flex; gap: 1.25rem; }
+    .toggle-label { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; }
+    .toggle-label input { display: none; }
+    .toggle-name { font-size: 0.75rem; color: #64748b; }
+    .toggle-track { width: 36px; height: 20px; border-radius: 10px; background: #e2e8f0; position: relative; transition: background 0.2s; }
+    .toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .toggle-track.on { background: #1B4F72; }
+    .toggle-track.on::after { transform: translateX(16px); }

@@ -1,0 +1,40 @@
+<div class="transactions-page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Transactions</h1>
+          <p class="page-subtitle">{{ transactions().length }} transactions en cours</p>
+        </div>
+        <button class="btn-primary"><i class="pi pi-plus"></i> Nouvelle transaction</button>
+      </div>
+
+      <!-- Pipeline Kanban -->
+      <div class="pipeline-board">
+        @for (stage of pipelineStages; track stage.status) {
+          <div class="pipeline-col">
+            <div class="col-header" [style.border-top-color]="stage.color">
+              <span class="col-title">{{ stage.label }}</span>
+              <span class="col-count">{{ getStageTransactions(stage.status).length }}</span>
+            </div>
+            <div class="col-body">
+              @for (tx of getStageTransactions(stage.status); track tx.id) {
+                <div class="tx-card">
+                  <div class="tx-ref">{{ tx.reference }}</div>
+                  <div class="tx-price">{{ tx.agreedPrice | priceFormatter }}</div>
+                  <div class="tx-commission">Commission: {{ tx.commissionAmount | priceFormatter }}</div>
+                  <div class="tx-progress">
+                    <div class="progress-bar" [style.width.%]="getProgress(tx.status)" [style.background]="stage.color"></div>
+                  </div>
+                  <div class="tx-actions">
+                    <button class="tx-action-btn"><i class="pi pi-eye"></i></button>
+                    <button class="tx-action-btn"><i class="pi pi-arrow-right"></i></button>
+                  </div>
+                </div>
+              }
+              @if (getStageTransactions(stage.status).length === 0) {
+                <div class="col-empty"><i class="pi pi-inbox"></i></div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>

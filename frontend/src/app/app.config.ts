@@ -8,6 +8,7 @@ import localeFr from '@angular/common/locales/fr';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { loggingInterceptor } from './core/interceptors/logging.interceptor';
 
 // Enregistrement de la locale française
 registerLocaleData(localeFr, 'fr');
@@ -21,7 +22,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimations(),
     provideHttpClient(
-      withInterceptors([authInterceptor, errorInterceptor])
+      withInterceptors([loggingInterceptor, authInterceptor, errorInterceptor])
     ),
     { provide: LOCALE_ID, useValue: 'fr' }
   ]

@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Mandate } from '../models/mandate.model';
 import { MandateType, MandateStatus, TransactionType } from '../models/enums';
+import { MOCK_MANDATES } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -59,15 +60,15 @@ export class MandateService {
       .set('sortBy', 'createdAt')
       .set('sortDir', 'DESC');
     return this.http.get<PageResponse<BackendMandateResponse>>(this.apiUrl, { params }).pipe(
-      map(r => r.content.map(m => this.mapMandate(m))),
-      catchError(() => of([]))
+      map(r => r.content.length > 0 ? r.content.map(m => this.mapMandate(m)) : MOCK_MANDATES),
+      catchError(() => of(MOCK_MANDATES))
     );
   }
 
   getById(id: string): Observable<Mandate> {
     return this.http.get<ApiResponse<BackendMandateResponse>>(`${this.apiUrl}/${id}`).pipe(
       map(r => this.mapMandate(r.data)),
-      catchError(() => of(null as any))
+      catchError(() => of(MOCK_MANDATES.find(m => m.id === id) ?? null as any))
     );
   }
 
@@ -92,7 +93,7 @@ export class MandateService {
       params: new HttpParams().set('days', days.toString())
     }).pipe(
       map(r => r.data.map(m => this.mapMandate(m))),
-      catchError(() => of([]))
+      catchError(() => of(MOCK_MANDATES.filter(m => m.isExpiringSoon)))
     );
   }
 

@@ -99,12 +99,16 @@ const MOCK_PHOTOS = [
   'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
   'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
   'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80',
+  'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
+  'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
+  'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80',
+  'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80',
 ];
 
 const MOCK_PROPERTIES: Property[] = [
   {
-    id: '1', reference: 'IMB-2024-001', title: 'Appartement lumineux - Capitole',
-    description: `Superbe appartement entièrement rénové situé au cœur de Toulouse, à deux pas du Capitole. Lumineux et spacieux, il offre une belle vue sur les toits de la Ville Rose.`,
+    id: '1', reference: 'IMB-2024-001', title: 'Appartement lumineux – Capitole',
+    description: `Superbe appartement entièrement rénové au cœur de Toulouse, à deux pas du Capitole. Très lumineux, il bénéficie d'une belle hauteur sous plafond, de parquet en chêne massif et d'une cuisine ouverte équipée haut de gamme. Vue dégagée sur les toits de la Ville Rose depuis le 4ème étage.`,
     type: 'apartment', transactionType: 'sale', status: 'active',
     price: 385000, pricePerSqm: 6417, area: 60, rooms: 3, bedrooms: 2, bathrooms: 1, floor: 4, totalFloors: 6,
     location: { address: '12 Rue Saint-Rome', addressVisible: true, city: 'Toulouse', postalCode: '31000', district: 'Capitole', lat: 43.6043, lng: 1.4437 },
@@ -113,26 +117,82 @@ const MOCK_PROPERTIES: Property[] = [
     features: ['Ascenseur', 'Gardien', 'Cave', 'Parquet', 'Double vitrage'],
     amenities: ['Métro à 5min', 'Commerces à 2min', 'Capitole à 10min à pied'],
     isNew: true, isExclusive: true, isFeatured: true, isPriceReduced: false,
-    publishedAt: new Date('2024-11-15'), updatedAt: new Date('2024-11-20'),
+    publishedAt: new Date('2025-02-15'), updatedAt: new Date('2025-03-01'),
     agent: { id: 'a1', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
   },
   {
-    id: '2', reference: 'IMB-2024-002', title: 'Villa contemporaine avec piscine',
-    description: `Magnifique villa contemporaine de 180m² sur un terrain de 800m² entièrement clôturé avec piscine chauffée.`,
+    id: '2', reference: 'IMB-2024-002', title: 'Villa prestige – Piscine & Jardin',
+    description: `Magnifique villa contemporaine de 180m² sur terrain de 800m² entièrement clôturé. Piscine chauffée, garage double, domotique complète et panneaux solaires. Prestations haut de gamme dans un quartier résidentiel calme et recherché.`,
     type: 'villa', transactionType: 'sale', status: 'active',
     price: 895000, pricePerSqm: 4972, area: 180, landArea: 800, rooms: 7, bedrooms: 4, bathrooms: 3,
     location: { addressVisible: false, city: 'Toulouse', postalCode: '31400', district: 'Rangueil', lat: 43.5672, lng: 1.4621 },
-    photos: [MOCK_PHOTOS[5], MOCK_PHOTOS[6], MOCK_PHOTOS[7], MOCK_PHOTOS[0]],
+    photos: [MOCK_PHOTOS[9], MOCK_PHOTOS[5], MOCK_PHOTOS[6], MOCK_PHOTOS[0]],
     dpe: 'B', ges: 'A', dpeValue: 85, gesValue: 12,
     features: ['Piscine', 'Garage double', 'Domotique', 'Panneaux solaires', 'Terrasse', 'Jardin'],
     amenities: ['Écoles à 5min', 'Accès A61 à 10min'],
     isNew: false, isExclusive: true, isFeatured: true, isPriceReduced: false,
-    publishedAt: new Date('2024-10-01'), updatedAt: new Date('2024-11-18'),
+    publishedAt: new Date('2025-01-10'), updatedAt: new Date('2025-03-10'),
     agent: { id: 'a2', name: 'Imoblex', phone: '06.81.76.30.94', email: 'contact@imoblex.fr' }
   },
   {
-    id: '3', reference: 'IMB-2024-003', title: 'Studio meublé - Université Paul Sabatier',
-    description: `Studio entièrement meublé et équipé, idéal pour étudiant ou investissement locatif.`,
+    id: '4', reference: 'IMB-2024-004', title: 'Maison de ville – Saint-Cyprien',
+    description: `Charmante maison de ville toulousaine de 130m² entièrement rénovée avec goût dans le quartier prisé de Saint-Cyprien. Cour privative, cave voûtée, parquet et poutres apparentes pour un charme de caractère exceptionnel à deux pas de la Garonne.`,
+    type: 'house', transactionType: 'sale', status: 'active',
+    price: 620000, pricePerSqm: 4769, area: 130, landArea: 40, rooms: 5, bedrooms: 3, bathrooms: 2,
+    location: { address: '8 Rue des Fontaines', addressVisible: true, city: 'Toulouse', postalCode: '31300', district: 'Saint-Cyprien', lat: 43.5987, lng: 1.4298 },
+    photos: [MOCK_PHOTOS[10], MOCK_PHOTOS[7], MOCK_PHOTOS[0], MOCK_PHOTOS[1]],
+    dpe: 'C', ges: 'C', dpeValue: 175, gesValue: 28,
+    features: ['Terrasse', 'Cour privative', 'Cave', 'Parquet', 'Poutres apparentes'],
+    amenities: ['Garonne à 5min', 'Commerces à 2min'],
+    isNew: true, isExclusive: false, isFeatured: true, isPriceReduced: true,
+    publishedAt: new Date('2025-02-20'), updatedAt: new Date('2025-03-15'),
+    agent: { id: 'a3', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
+  },
+  {
+    id: '6', reference: 'IMB-2024-006', title: 'Loft de caractère – Compans-Caffarelli',
+    description: `Loft d'exception de 95m² au 5ème étage d'un immeuble rénové avec ascenseur. Style industriel chic avec verrière, hauts plafonds de 4m, béton ciré et acier. Grande terrasse privative avec vue panoramique sur la ville.`,
+    type: 'loft', transactionType: 'sale', status: 'active',
+    price: 450000, pricePerSqm: 4737, area: 95, rooms: 2, bedrooms: 1, bathrooms: 1, floor: 5, totalFloors: 6,
+    location: { addressVisible: true, city: 'Toulouse', postalCode: '31000', district: 'Compans-Caffarelli', lat: 43.6128, lng: 1.4282 },
+    photos: [MOCK_PHOTOS[11], MOCK_PHOTOS[4], MOCK_PHOTOS[5], MOCK_PHOTOS[6]],
+    dpe: 'D', ges: 'D', dpeValue: 220, gesValue: 52,
+    features: ['Terrasse', 'Verrière', 'Hauts plafonds', 'Ascenseur', 'Béton ciré'],
+    amenities: ['Métro à 3min', 'Parc Compans à 5min'],
+    isNew: true, isExclusive: true, isFeatured: true, isPriceReduced: false,
+    publishedAt: new Date('2025-03-01'), updatedAt: new Date('2025-03-20'),
+    agent: { id: 'a3', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
+  },
+  {
+    id: '8', reference: 'IMB-2024-008', title: 'Maison familiale – Colomiers',
+    description: `Belle maison de 160m² avec jardin arboré de 500m² dans un quartier résidentiel calme de Colomiers. Piscine, garage double, terrasse sud, pompe à chaleur récente. Idéale pour famille, proche des écoles et de l'axe Airbus.`,
+    type: 'house', transactionType: 'sale', status: 'active',
+    price: 520000, pricePerSqm: 3250, area: 160, landArea: 500, rooms: 6, bedrooms: 4, bathrooms: 2,
+    location: { addressVisible: false, city: 'Colomiers', postalCode: '31770', lat: 43.6108, lng: 1.3372 },
+    photos: [MOCK_PHOTOS[8], MOCK_PHOTOS[7], MOCK_PHOTOS[0], MOCK_PHOTOS[1]],
+    dpe: 'B', ges: 'B', dpeValue: 90, gesValue: 15,
+    features: ['Jardin', 'Piscine', 'Garage double', 'Terrasse', 'Pompe à chaleur'],
+    amenities: ['Écoles à 5min', 'Commerces à 3min', 'Airbus à 10min'],
+    isNew: false, isExclusive: false, isFeatured: true, isPriceReduced: false,
+    publishedAt: new Date('2025-01-15'), updatedAt: new Date('2025-02-28'),
+    agent: { id: 'a2', name: 'Imoblex', phone: '06.81.76.30.94', email: 'contact@imoblex.fr' }
+  },
+  {
+    id: '5', reference: 'IMB-2024-005', title: 'Appartement T4 – Les Minimes',
+    description: `Bel appartement familial de 90m² au 3ème étage avec ascenseur dans une résidence récente sécurisée. Balcon filant, parking privatif, cave. Quartier des Minimes calme et bien desservi, à 10min du Canal du Midi.`,
+    type: 'apartment', transactionType: 'sale', status: 'active',
+    price: 295000, pricePerSqm: 3278, area: 90, rooms: 4, bedrooms: 3, bathrooms: 2, floor: 3, totalFloors: 5,
+    location: { addressVisible: false, city: 'Toulouse', postalCode: '31200', district: 'Les Minimes', lat: 43.6321, lng: 1.4489 },
+    photos: [MOCK_PHOTOS[2], MOCK_PHOTOS[3], MOCK_PHOTOS[4]],
+    dpe: 'C', ges: 'C', dpeValue: 155, gesValue: 29,
+    features: ['Ascenseur', 'Parking', 'Cave', 'Balcon', 'Interphone'],
+    amenities: ['Canal du Midi à 10min', 'Écoles à 5min'],
+    isNew: false, isExclusive: false, isFeatured: true, isPriceReduced: true,
+    publishedAt: new Date('2025-02-01'), updatedAt: new Date('2025-03-05'),
+    agent: { id: 'a2', name: 'Imoblex', phone: '06.81.76.30.94', email: 'contact@imoblex.fr' }
+  },
+  {
+    id: '3', reference: 'IMB-2024-003', title: 'Studio meublé – Rangueil',
+    description: `Studio entièrement meublé et équipé de 22m², idéal investissement locatif ou étudiant. Proche université Paul Sabatier, métro à 5min. Rendement locatif attractif dans un secteur très demandé.`,
     type: 'studio', transactionType: 'rent', status: 'active',
     price: 590, charges: 60, area: 22, rooms: 1, bedrooms: 0, bathrooms: 1, floor: 2, totalFloors: 4,
     location: { addressVisible: true, city: 'Toulouse', postalCode: '31400', district: 'Rangueil', lat: 43.5601, lng: 1.4691 },
@@ -141,78 +201,22 @@ const MOCK_PROPERTIES: Property[] = [
     features: ['Meublé', 'Équipé', 'Double vitrage'],
     amenities: ['Métro à 5min', 'Université à 5min'],
     isNew: false, isExclusive: false, isFeatured: false, isPriceReduced: false,
-    publishedAt: new Date('2024-11-01'), updatedAt: new Date('2024-11-10'),
+    publishedAt: new Date('2025-01-01'), updatedAt: new Date('2025-02-10'),
     agent: { id: 'a1', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
   },
   {
-    id: '4', reference: 'IMB-2024-004', title: 'Maison de ville - Saint-Cyprien',
-    description: `Charmante maison de ville toulousaine de 130m² entièrement rénovée avec goût dans le quartier prisé de Saint-Cyprien.`,
-    type: 'house', transactionType: 'sale', status: 'active',
-    price: 620000, pricePerSqm: 4769, area: 130, landArea: 40, rooms: 5, bedrooms: 3, bathrooms: 2,
-    location: { address: '8 Rue des Fontaines', addressVisible: true, city: 'Toulouse', postalCode: '31300', district: 'Saint-Cyprien', lat: 43.5987, lng: 1.4298 },
-    photos: [MOCK_PHOTOS[6], MOCK_PHOTOS[7], MOCK_PHOTOS[0], MOCK_PHOTOS[1]],
-    dpe: 'C', ges: 'C', dpeValue: 175, gesValue: 28,
-    features: ['Terrasse', 'Cour privative', 'Cave', 'Rénovée', 'Parquet'],
-    amenities: ['Garonne à 5min', 'Commerces à 2min'],
-    isNew: true, isExclusive: false, isFeatured: true, isPriceReduced: true,
-    publishedAt: new Date('2024-09-20'), updatedAt: new Date('2024-11-22'),
-    agent: { id: 'a3', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
-  },
-  {
-    id: '5', reference: 'IMB-2024-005', title: 'Appartement T4 - Les Minimes',
-    description: `Bel appartement familial de 90m² au 3ème étage avec ascenseur dans une résidence récente sécurisée.`,
-    type: 'apartment', transactionType: 'sale', status: 'active',
-    price: 295000, pricePerSqm: 3278, area: 90, rooms: 4, bedrooms: 3, bathrooms: 2, floor: 3, totalFloors: 5,
-    location: { addressVisible: false, city: 'Toulouse', postalCode: '31200', district: 'Les Minimes', lat: 43.6321, lng: 1.4489 },
-    photos: [MOCK_PHOTOS[2], MOCK_PHOTOS[3], MOCK_PHOTOS[4]],
-    dpe: 'C', ges: 'C', dpeValue: 155, gesValue: 29,
-    features: ['Ascenseur', 'Parking', 'Cave', 'Balcon', 'Interphone'],
-    amenities: ['Canal du Midi à 10min', 'Écoles à 5min'],
-    isNew: false, isExclusive: false, isFeatured: false, isPriceReduced: true,
-    publishedAt: new Date('2024-08-15'), updatedAt: new Date('2024-11-05'),
-    agent: { id: 'a2', name: 'Imoblex', phone: '06.81.76.30.94', email: 'contact@imoblex.fr' }
-  },
-  {
-    id: '6', reference: 'IMB-2024-006', title: 'Loft industriel - Compans-Caffarelli',
-    description: `Magnifique loft de caractère de 95m² entièrement refait dans le style industriel chic.`,
-    type: 'loft', transactionType: 'sale', status: 'active',
-    price: 450000, pricePerSqm: 4737, area: 95, rooms: 2, bedrooms: 1, bathrooms: 1, floor: 5, totalFloors: 6,
-    location: { addressVisible: true, city: 'Toulouse', postalCode: '31000', district: 'Compans-Caffarelli', lat: 43.6128, lng: 1.4282 },
-    photos: [MOCK_PHOTOS[4], MOCK_PHOTOS[5], MOCK_PHOTOS[6]],
-    dpe: 'D', ges: 'D', dpeValue: 220, gesValue: 52,
-    features: ['Terrasse', 'Verrière', 'Hauts plafonds', 'Ascenseur'],
-    amenities: ['Métro à 3min'],
-    isNew: true, isExclusive: true, isFeatured: true, isPriceReduced: false,
-    publishedAt: new Date('2024-11-10'), updatedAt: new Date('2024-11-21'),
-    agent: { id: 'a3', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
-  },
-  {
-    id: '7', reference: 'IMB-2024-007', title: 'Appartement T2 - Carmes',
-    description: `Charmant appartement de 48m² situé dans une maison de maître du quartier des Carmes.`,
+    id: '7', reference: 'IMB-2024-007', title: 'Appartement T2 – Carmes',
+    description: `Charmant appartement de 48m² dans une maison de maître du quartier des Carmes. Parquet, moulures et hauts plafonds pour un cachet historique exceptionnel.`,
     type: 'apartment', transactionType: 'rent', status: 'active',
     price: 980, charges: 80, area: 48, rooms: 2, bedrooms: 1, bathrooms: 1, floor: 2, totalFloors: 3,
     location: { addressVisible: false, city: 'Toulouse', postalCode: '31000', district: 'Carmes', lat: 43.5988, lng: 1.4476 },
     photos: [MOCK_PHOTOS[1], MOCK_PHOTOS[2]],
     dpe: 'E', ges: 'E', dpeValue: 260, gesValue: 55,
-    features: ['Parquet', 'Moulures', 'Cave'],
+    features: ['Parquet', 'Moulures', 'Cave', 'Hauts plafonds'],
     amenities: ['Marché des Carmes à 2min', 'Garonne à 10min'],
     isNew: true, isExclusive: false, isFeatured: false, isPriceReduced: false,
-    publishedAt: new Date('2024-11-18'), updatedAt: new Date('2024-11-18'),
+    publishedAt: new Date('2025-03-18'), updatedAt: new Date('2025-03-18'),
     agent: { id: 'a1', name: 'Imoblex', phone: '05.61.61.57.38', email: 'contact@imoblex.fr' }
-  },
-  {
-    id: '8', reference: 'IMB-2024-008', title: 'Maison familiale - Colomiers',
-    description: `Belle maison de 160m² avec jardin de 500m² dans un quartier résidentiel calme de Colomiers.`,
-    type: 'house', transactionType: 'sale', status: 'active',
-    price: 520000, pricePerSqm: 3250, area: 160, landArea: 500, rooms: 6, bedrooms: 4, bathrooms: 2,
-    location: { addressVisible: false, city: 'Colomiers', postalCode: '31770', lat: 43.6108, lng: 1.3372 },
-    photos: [MOCK_PHOTOS[7], MOCK_PHOTOS[0], MOCK_PHOTOS[1]],
-    dpe: 'B', ges: 'B', dpeValue: 90, gesValue: 15,
-    features: ['Jardin', 'Garage', 'Piscine', 'Terrasse', 'Pompe à chaleur'],
-    amenities: ['Écoles à 5min', 'Commerces à 3min', 'Airbus à 10min'],
-    isNew: false, isExclusive: false, isFeatured: true, isPriceReduced: false,
-    publishedAt: new Date('2024-10-15'), updatedAt: new Date('2024-11-01'),
-    agent: { id: 'a2', name: 'Imoblex', phone: '06.81.76.30.94', email: 'contact@imoblex.fr' }
   },
 ];
 
@@ -237,8 +241,9 @@ export class PropertyService {
   };
 
   getFeaturedProperties(): Observable<Property[]> {
+    const mockFeatured = MOCK_PROPERTIES.filter(p => p.isFeatured).slice(0, 6);
     if (this.useMockData) {
-      return of(MOCK_PROPERTIES.filter(p => p.isFeatured).slice(0, 6));
+      return of(mockFeatured);
     }
     const params = new HttpParams()
       .set('publicSearch', 'true')
@@ -247,8 +252,12 @@ export class PropertyService {
       .set('sortBy', 'createdAt')
       .set('sortDir', 'DESC');
     return this.http.get<BackendPageResponse<BackendPropertyResponse>>(`${this.apiBase}/properties`, { params }).pipe(
-      map(r => r.content.map(p => this.mapBackendProperty(p))),
-      catchError(() => of(MOCK_PROPERTIES.filter(p => p.isFeatured).slice(0, 6)))
+      map(r => {
+        const mapped = r.content.map(p => this.mapBackendProperty(p));
+        // Si le backend répond vide (base non peuplée), afficher les mocks
+        return mapped.length > 0 ? mapped : mockFeatured;
+      }),
+      catchError(() => of(mockFeatured))
     );
   }
 

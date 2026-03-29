@@ -1,67 +1,32 @@
-<header class="header" [class.header--transparent]="isTransparent() && isHomePage()" [class.header--solid]="!isTransparent() || !isHomePage()">
+<header class="header header--solid">
   <div class="container-fluid">
     <div class="flex items-center justify-between h-24">
 
       <!-- Logo -->
       <a routerLink="/" class="flex items-center group">
-        <div class="transition-all duration-300 rounded-xl px-3 py-1.5 group-hover:scale-105"
-             [class.bg-white]="isTransparent() && isHomePage()"
-             [class.shadow-md]="isTransparent() && isHomePage()">
+        <div class="transition-all duration-300 group-hover:scale-105">
           <img src="assets/logo.png" alt="Imoblex" class="h-16 w-auto" />
         </div>
       </a>
 
       <!-- Desktop Navigation -->
       <nav class="hidden lg:flex items-center gap-8">
-        <a routerLink="/vente" routerLinkActive="active" class="nav-link"
-           [class.text-white]="isTransparent() && isHomePage()"
-           [class.text-primary]="!isTransparent() || !isHomePage()">
-          Vente
-        </a>
-        <a routerLink="/location" routerLinkActive="active" class="nav-link"
-           [class.text-white]="isTransparent() && isHomePage()"
-           [class.text-primary]="!isTransparent() || !isHomePage()">
-          Location
-        </a>
-        <a routerLink="/estimation" routerLinkActive="active" class="nav-link"
-           [class.text-white]="isTransparent() && isHomePage()"
-           [class.text-primary]="!isTransparent() || !isHomePage()">
-          Estimation
-        </a>
-        <a routerLink="/simulateur-pret" routerLinkActive="active" class="nav-link"
-           [class.text-white]="isTransparent() && isHomePage()"
-           [class.text-primary]="!isTransparent() || !isHomePage()">
-          Simulateur
-        </a>
-        <a routerLink="/agence" routerLinkActive="active" class="nav-link"
-           [class.text-white]="isTransparent() && isHomePage()"
-           [class.text-primary]="!isTransparent() || !isHomePage()">
-          L'agence
-        </a>
-        <a routerLink="/contact" class="btn-accent text-sm px-5 py-2.5 rounded-lg">
-          Contact
-        </a>
+        <a routerLink="/vente" routerLinkActive="active" class="nav-link text-primary">Vente</a>
+        <a routerLink="/location" routerLinkActive="active" class="nav-link text-primary">Location</a>
+        <a routerLink="/estimation" routerLinkActive="active" class="nav-link text-primary">Estimation</a>
+        <a routerLink="/simulateur-pret" routerLinkActive="active" class="nav-link text-primary">Simulateur</a>
+        <a routerLink="/agence" routerLinkActive="active" class="nav-link text-primary">L'agence</a>
+        <a routerLink="/contact" class="btn-accent text-sm px-5 py-2.5 rounded-lg">Contact</a>
       </nav>
 
       <!-- Mobile Menu Toggle -->
-      <button
-        class="lg:hidden flex flex-col gap-1.5 p-2 group"
-        (click)="toggleMobileMenu()"
-        aria-label="Menu">
-        <span class="block w-6 h-0.5 transition-all duration-300"
-              [class.bg-white]="isTransparent() && isHomePage()"
-              [class.bg-primary]="!isTransparent() || !isHomePage()"
-              [class.rotate-45]="mobileMenuOpen()"
-              [class.translate-y-2]="mobileMenuOpen()"></span>
-        <span class="block w-6 h-0.5 transition-all duration-300"
-              [class.bg-white]="isTransparent() && isHomePage()"
-              [class.bg-primary]="!isTransparent() || !isHomePage()"
+      <button class="lg:hidden flex flex-col gap-1.5 p-2 group" (click)="toggleMobileMenu()" aria-label="Menu">
+        <span class="block w-6 h-0.5 bg-primary transition-all duration-300"
+              [class.rotate-45]="mobileMenuOpen()" [class.translate-y-2]="mobileMenuOpen()"></span>
+        <span class="block w-6 h-0.5 bg-primary transition-all duration-300"
               [class.opacity-0]="mobileMenuOpen()"></span>
-        <span class="block w-6 h-0.5 transition-all duration-300"
-              [class.bg-white]="isTransparent() && isHomePage()"
-              [class.bg-primary]="!isTransparent() || !isHomePage()"
-              [class.-rotate-45]="mobileMenuOpen()"
-              [class.-translate-y-2]="mobileMenuOpen()"></span>
+        <span class="block w-6 h-0.5 bg-primary transition-all duration-300"
+              [class.-rotate-45]="mobileMenuOpen()" [class.-translate-y-2]="mobileMenuOpen()"></span>
       </button>
     </div>
   </div>

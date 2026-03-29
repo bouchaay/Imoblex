@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Appointment } from '../models/appointment.model';
 import { AppointmentType } from '../models/enums';
+import { MOCK_APPOINTMENTS } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -72,20 +73,20 @@ export class AgendaService {
         .set('end', end.toISOString());
       return this.http.get<ApiResponse<BackendAppointmentResponse[]>>(`${this.apiUrl}/range`, { params }).pipe(
         map(r => r.data.map(a => this.mapAppointment(a))),
-        catchError(() => of([]))
+        catchError(() => of(MOCK_APPOINTMENTS))
       );
     }
     const params = new HttpParams().set('page', '0').set('size', '200');
     return this.http.get<PageResponse<BackendAppointmentResponse>>(this.apiUrl, { params }).pipe(
-      map(r => r.content.map(a => this.mapAppointment(a))),
-      catchError(() => of([]))
+      map(r => r.content.length > 0 ? r.content.map(a => this.mapAppointment(a)) : MOCK_APPOINTMENTS),
+      catchError(() => of(MOCK_APPOINTMENTS))
     );
   }
 
   getById(id: string): Observable<Appointment> {
     return this.http.get<ApiResponse<BackendAppointmentResponse>>(`${this.apiUrl}/${id}`).pipe(
       map(r => this.mapAppointment(r.data)),
-      catchError(() => of(null as any))
+      catchError(() => of(MOCK_APPOINTMENTS.find(a => a.id === id) ?? null as any))
     );
   }
 
@@ -110,7 +111,7 @@ export class AgendaService {
       params: new HttpParams().set('limit', limit.toString())
     }).pipe(
       map(r => r.data.map(a => this.mapAppointment(a))),
-      catchError(() => of([]))
+      catchError(() => of(MOCK_APPOINTMENTS.slice(0, limit).sort((a, b) => a.startDate.getTime() - b.startDate.getTime())))
     );
   }
 

@@ -116,6 +116,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.propertyService.getFeaturedProperties().subscribe(props => {
       this.featuredProperties.set(props);
+      // Re-observe après rendu des cartes (async data → DOM update)
+      setTimeout(() => this.initScrollAnimations(), 50);
     });
   }
 

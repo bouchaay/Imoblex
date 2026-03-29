@@ -1,7 +1,7 @@
 <div class="reporting-page">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Statistiques & Reporting</h1>
+      <h1 class="page-title">Statistiques &amp; Reporting</h1>
       <p class="page-subtitle">Vue d'ensemble de la performance de l'agence</p>
     </div>
     <div class="header-actions">
@@ -14,7 +14,6 @@
     </div>
   </div>
 
-  <!-- KPI Summary cards -->
   <div class="kpi-summary">
     @for (kpi of kpis; track kpi.label) {
       <div class="kpi-card" [style.border-top-color]="kpi.color">
@@ -33,23 +32,23 @@
     }
   </div>
 
-  <!-- Charts section -->
   <div class="charts-grid">
-    <!-- Revenue bar chart (simulated) -->
     <div class="card chart-card">
       <h3 class="chart-title">Commissions mensuelles (€)</h3>
       <div class="bar-chart">
         @for (month of monthlyRevenue; track month.label) {
           <div class="bar-col">
             <div class="bar-tooltip">{{ month.amount.toLocaleString('fr-FR') }} €</div>
-            <div class="bar-fill" [style.height.%]="(month.amount / maxRevenue) * 100" [style.background]="month.amount >= 50000 ? '#10b981' : '#1B4F72'"></div>
+            <div class="bar-fill"
+              [style.height.%]="(month.amount / maxRevenue) * 100"
+              [style.background]="month.amount >= 50000 ? '#10b981' : '#1B4F72'">
+            </div>
             <div class="bar-label">{{ month.label }}</div>
           </div>
         }
       </div>
     </div>
 
-    <!-- Property types donut (simulated) -->
     <div class="card chart-card">
       <h3 class="chart-title">Biens par type</h3>
       <div class="donut-chart">
@@ -69,7 +68,6 @@
       </div>
     </div>
 
-    <!-- Contacts by type -->
     <div class="card chart-card">
       <h3 class="chart-title">Contacts par profil</h3>
       <div class="horizontal-bars">
@@ -77,7 +75,10 @@
           <div class="h-bar-row">
             <span class="h-bar-label">{{ item.label }}</span>
             <div class="h-bar-track">
-              <div class="h-bar-fill" [style.width.%]="(item.count / 25) * 100" [style.background]="item.color"></div>
+              <div class="h-bar-fill"
+                [style.width.%]="(item.count / 25) * 100"
+                [style.background]="item.color">
+              </div>
             </div>
             <span class="h-bar-count">{{ item.count }}</span>
           </div>
@@ -85,7 +86,6 @@
       </div>
     </div>
 
-    <!-- Agent performance -->
     <div class="card chart-card">
       <h3 class="chart-title">Performance équipe</h3>
       <div class="agent-list">
