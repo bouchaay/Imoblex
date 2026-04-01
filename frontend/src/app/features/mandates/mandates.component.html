@@ -2,14 +2,14 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Mandats</h1>
-      <p class="page-subtitle">{{ mandates().length }} mandats</p>
+      <p class="page-subtitle">{{ mandates().length }} mandat{{ mandates().length > 1 ? 's' : '' }}</p>
     </div>
     <button class="btn-primary" routerLink="/mandates/new">
       <i class="pi pi-plus"></i> Nouveau mandat
     </button>
   </div>
 
-  <!-- Alert bar for expiring mandates -->
+  <!-- Alert bar pour les mandats qui expirent -->
   @if (expiringCount() > 0) {
     <div class="alert-bar">
       <i class="pi pi-exclamation-triangle"></i>
@@ -18,7 +18,7 @@
     </div>
   }
 
-  <!-- Status tabs -->
+  <!-- Tabs -->
   <div class="status-tabs">
     @for (tab of tabs; track tab.value) {
       <button class="tab-btn" [class.active]="activeTab === tab.value" (click)="setTab(tab.value)">
@@ -28,53 +28,121 @@
     }
   </div>
 
-  <!-- Mandate cards grid -->
-  <div class="mandates-grid">
-    @for (mandate of filteredMandates(); track mandate.id) {
-      <div class="mandate-card" [class.expiring]="mandate.isExpiringSoon">
-        <div class="mandate-card-top">
-          <div class="mandate-ref">{{ mandate.reference }}</div>
-          <app-status-badge [status]="mandate.status" type="mandate"></app-status-badge>
-        </div>
+  <!-- Chargement -->
+  @if (loading()) {
+    <div class="loading-center">
+      <i class="pi pi-spin pi-spinner"></i> Chargement...
+    </div>
+  }
 
-        <div class="mandate-type-badge">
-          <i class="pi pi-file-edit"></i>
-          {{ getMandateTypeLabel(mandate.type) }}
-        </div>
+  <!-- Vide -->
+  @if (!loading() && filteredMandates().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-file-edit"></i>
+      <p>Aucun mandat{{ activeTab !== 'ALL' ? ' dans cette catégorie' : '' }}</p>
+      @if (activeTab === 'ALL') {
+        <button class="btn-primary" routerLink="/mandates/new">
+          <i class="pi pi-plus"></i> Créer un mandat
+        </button>
+      }
+    </div>
+  }
 
-        <div class="mandate-price">{{ mandate.price | priceFormatter }}</div>
-        <div class="mandate-fees">
-          Commission: {{ mandate.agencyFeePercent }}% — {{ mandate.agencyFeeAmount > 0 ? (mandate.agencyFeeAmount | priceFormatter) : (mandate.price * mandate.agencyFeePercent / 100 | priceFormatter) }}
-        </div>
-
-        <div class="mandate-dates">
-          <div class="date-item">
-            <span>Début</span>
-            <strong>{{ mandate.startDate | date:'dd/MM/yyyy' }}</strong>
+  <!-- Grille des mandats -->
+  @if (!loading()) {
+    <div class="mandates-grid">
+      @for (mandate of filteredMandates(); track mandate.id) {
+        <div class="mandate-card" [class.expiring]="mandate.isExpiringSoon">
+          <div class="mandate-card-top">
+            <div class="mandate-ref">{{ mandate.reference }}</div>
+            <app-status-badge [status]="mandate.status" type="mandate"></app-status-badge>
           </div>
-          <div class="date-separator"><i class="pi pi-arrow-right"></i></div>
-          <div class="date-item">
-            <span>Fin</span>
-            <strong [class.text-red]="mandate.isExpiringSoon">{{ mandate.endDate | date:'dd/MM/yyyy' }}</strong>
+
+          <div class="mandate-type-badge">
+            <i class="pi pi-file-edit"></i>
+            {{ getMandateTypeLabel(mandate.type) }}
+          </div>
+
+          <!-- Bien lié -->
+          @if (mandate.propertyReference || mandate.propertyAddress) {
+            <div class="mandate-property">
+              <i class="pi pi-home"></i>
+              <div>
+                @if (mandate.propertyReference) {
+                  <span class="property-ref">{{ mandate.propertyReference }}</span>
+                }
+                <span class="property-addr">{{ mandate.propertyAddress }}</span>
+              </div>
+            </div>
+          }
+
+          <!-- Mandant -->
+          @if (mandate.mandatorName) {
+            <div class="mandate-mandator">
+              <i class="pi pi-user"></i>
+              {{ mandate.mandatorName }}
+            </div>
+          }
+
+          <div class="mandate-price">{{ mandate.price | priceFormatter }}</div>
+          <div class="mandate-fees">
+            Commission : {{ mandate.agencyFeePercent }}% —
+            {{ (mandate.agencyFeeAmount > 0 ? mandate.agencyFeeAmount : mandate.price * mandate.agencyFeePercent / 100) | priceFormatter }}
+          </div>
+
+          <div class="mandate-dates">
+            <div class="date-item">
+              <span>Début</span>
+              <strong>{{ mandate.startDate | date:'dd/MM/yyyy' }}</strong>
+            </div>
+            <div class="date-separator"><i class="pi pi-arrow-right"></i></div>
+            <div class="date-item">
+              <span>Fin</span>
+              <strong [class.text-red]="mandate.isExpiringSoon">{{ mandate.endDate | date:'dd/MM/yyyy' }}</strong>
+            </div>
+          </div>
+
+          @if (mandate.daysRemaining !== undefined && mandate.status === 'ACTIVE') {
+            <div class="days-remaining"
+              [class.urgent]="(mandate.daysRemaining || 0) <= 7"
+              [class.warning]="(mandate.daysRemaining || 0) <= 15 && (mandate.daysRemaining || 0) > 7">
+              @if ((mandate.daysRemaining || 0) < 0) {
+                <i class="pi pi-exclamation-circle"></i> Expiré
+              } @else {
+                <i class="pi pi-clock"></i> {{ mandate.daysRemaining }}j restants
+              }
+            </div>
+          }
+
+          <div class="mandate-card-footer">
+            <button class="action-btn-sm" title="Modifier"
+              (click)="editMandate(mandate.id)">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button class="action-btn-sm danger" title="Supprimer"
+              [disabled]="deletingId() === mandate.id"
+              (click)="requestDelete(mandate)">
+              <i class="pi"
+                 [class.pi-spin]="deletingId() === mandate.id"
+                 [class.pi-spinner]="deletingId() === mandate.id"
+                 [class.pi-trash]="deletingId() !== mandate.id"></i>
+            </button>
           </div>
         </div>
-
-        @if (mandate.daysRemaining !== undefined && mandate.status === 'ACTIVE') {
-          <div class="days-remaining" [class.urgent]="(mandate.daysRemaining || 0) <= 7" [class.warning]="(mandate.daysRemaining || 0) <= 15 && (mandate.daysRemaining || 0) > 7">
-            @if ((mandate.daysRemaining || 0) < 0) {
-              <i class="pi pi-exclamation-circle"></i> Expiré
-            } @else {
-              <i class="pi pi-clock"></i> {{ mandate.daysRemaining }}j restants
-            }
-          </div>
-        }
-
-        <div class="mandate-card-footer">
-          <button class="action-btn-sm"><i class="pi pi-pencil"></i></button>
-          <button class="action-btn-sm"><i class="pi pi-refresh"></i></button>
-          <button class="action-btn-sm danger"><i class="pi pi-times"></i></button>
-        </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </div>
+
+<!-- Modal suppression -->
+<app-confirm-dialog
+  [visible]="showDeleteDialog()"
+  (visibleChange)="showDeleteDialog.set($event)"
+  title="Supprimer le mandat"
+  [message]="'Supprimer le mandat ' + (mandateToDelete()?.reference || '') + ' ? Cette action est irréversible.'"
+  confirmLabel="Supprimer"
+  cancelLabel="Annuler"
+  type="danger"
+  (confirm)="confirmDelete()"
+  (cancel)="cancelDelete()"
+></app-confirm-dialog>

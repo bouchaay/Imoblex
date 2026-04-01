@@ -1,5 +1,7 @@
 package fr.imoblex.modules.property.service;
 
+import fr.imoblex.modules.contact.entity.Contact;
+import fr.imoblex.modules.contact.repository.ContactRepository;
 import fr.imoblex.modules.property.dto.PropertyCreateRequest;
 import fr.imoblex.modules.property.dto.PropertyResponse;
 import fr.imoblex.modules.property.dto.PropertySearchRequest;
@@ -30,6 +32,7 @@ public class PropertyService {
     private final PropertyMapper propertyMapper;
     private final PropertyReferenceService referenceService;
     private final PhotoStorageService photoStorageService;
+    private final ContactRepository contactRepository;
 
     @Transactional(readOnly = true)
     public Page<PropertyResponse> search(PropertySearchRequest req) {
@@ -56,6 +59,10 @@ public class PropertyService {
     public PropertyResponse create(PropertyCreateRequest request) {
         Property property = propertyMapper.toEntity(request);
         property.setReference(referenceService.generateNext());
+        if (request.getOwnerId() != null) {
+            Contact owner = contactRepository.findById(request.getOwnerId()).orElse(null);
+            property.setOwner(owner);
+        }
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
 
@@ -63,6 +70,13 @@ public class PropertyService {
         Property property = propertyRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Bien introuvable: " + id));
         propertyMapper.updateFromRequest(request, property);
+        // Mise à jour du propriétaire
+        if (request.getOwnerId() != null) {
+            Contact owner = contactRepository.findById(request.getOwnerId()).orElse(null);
+            property.setOwner(owner);
+        } else {
+            property.setOwner(null);
+        }
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
 

@@ -1,5 +1,6 @@
 package fr.imoblex.modules.property.entity;
 
+import fr.imoblex.modules.contact.entity.Contact;
 import fr.imoblex.modules.property.enums.*;
 import fr.imoblex.modules.user.entity.User;
 import jakarta.persistence.*;
@@ -139,6 +140,11 @@ public class Property {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agent_id")
     private User agent;
+
+    // ===== PROPRIÉTAIRE / CONTACT ASSOCIÉ =====
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private Contact owner;
 
     // ===== DATES =====
     private LocalDate availableFrom;     // Disponible à partir de

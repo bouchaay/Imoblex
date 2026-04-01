@@ -54,6 +54,11 @@ export const routes: Routes = [
           import('./features/mandates/mandate-form.component').then(m => m.MandateFormComponent)
       },
       {
+        path: 'mandates/:id/edit',
+        loadComponent: () =>
+          import('./features/mandates/mandate-form.component').then(m => m.MandateFormComponent)
+      },
+      {
         path: 'contacts',
         loadComponent: () =>
           import('./features/contacts/contacts.component').then(m => m.ContactsComponent)

@@ -79,6 +79,14 @@
       }
     </div>
 
+    <!-- Propriétaire associé -->
+    @if (property.ownerName) {
+      <div class="card-owner">
+        <i class="pi pi-user"></i>
+        <span>{{ property.ownerName }}</span>
+      </div>
+    }
+
     <!-- Footer -->
     <div class="card-footer">
       <div class="card-meta">
@@ -90,6 +98,13 @@
         }
       </div>
       <div class="card-actions">
+        <button
+          class="action-icon-btn mandate"
+          (click)="onCreateMandate()"
+          title="Créer un mandat"
+        >
+          <i class="pi pi-file-edit"></i>
+        </button>
         <button
           class="action-icon-btn"
           [class.published]="property.isPublished"

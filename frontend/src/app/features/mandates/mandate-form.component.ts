@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MandateService } from '../../core/services/mandate.service';
 import { PropertyService } from '../../core/services/property.service';
 import { ContactService } from '../../core/services/contact.service';
+import { AuthService } from '../../core/services/auth.service';
 import { MandateType, MandateStatus } from '../../core/models/enums';
 import { Property } from '../../core/models/property.model';
 import { Contact } from '../../core/models/contact.model';
@@ -20,6 +21,7 @@ export class MandateFormComponent implements OnInit {
   private readonly mandateService = inject(MandateService);
   private readonly propertyService = inject(PropertyService);
   private readonly contactService = inject(ContactService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -80,7 +82,8 @@ export class MandateFormComponent implements OnInit {
     if (!q) return this.properties().slice(0, 10);
     return this.properties().filter(p =>
       p.title?.toLowerCase().includes(q) ||
-      p.address?.toLowerCase().includes(q) ||
+      p.address?.street?.toLowerCase().includes(q) ||
+      p.address?.city?.toLowerCase().includes(q) ||
       p.reference?.toLowerCase().includes(q)
     ).slice(0, 10);
   });
@@ -97,21 +100,44 @@ export class MandateFormComponent implements OnInit {
   });
 
   isEdit = computed(() => !!this.editId());
-  isValid = computed(() => !!(
-    this.formData.type &&
-    this.formData.price > 0 &&
-    this.formData.startDate &&
-    this.formData.endDate
-  ));
+
+  isValid(): boolean {
+    return !!(
+      this.formData.type &&
+      this.formData.price > 0 &&
+      this.formData.startDate &&
+      this.formData.endDate
+    );
+  }
 
   ngOnInit(): void {
     // Charger biens et contacts en parallèle
     this.propertyService.getAll({ page: 0, pageSize: 200 }).subscribe(page => {
-      this.properties.set(page.properties);
+      this.properties.set(page.items);
     });
-    this.contactService.getAll().subscribe(contacts => {
-      this.contacts.set(contacts);
+    this.contactService.getAll({ pageSize: 200 }).subscribe(result => {
+      this.contacts.set(result.items);
     });
+
+    // Pré-remplissage depuis query params (ex : depuis une carte bien)
+    const qp = this.route.snapshot.queryParamMap;
+    const qPropertyId = qp.get('propertyId');
+    const qPropertyLabel = qp.get('propertyLabel');
+    const qPrice = qp.get('price');
+    const qMandatorId = qp.get('mandatorId');
+    const qMandatorLabel = qp.get('mandatorLabel');
+
+    if (qPropertyId) {
+      this.formData.propertyId = qPropertyId;
+      this.propertySearch.set(qPropertyLabel || qPropertyId);
+    }
+    if (qPrice) {
+      this.formData.price = +qPrice;
+    }
+    if (qMandatorId) {
+      this.formData.mandatorId = qMandatorId;
+      this.contactSearch.set(qMandatorLabel || qMandatorId);
+    }
 
     // Mode édition ?
     const id = this.route.snapshot.paramMap.get('id');
@@ -158,9 +184,14 @@ export class MandateFormComponent implements OnInit {
   }
 
   // Sélection d'un bien
+  propertyLabel(p: Property): string {
+    const addr = p.address ? `${p.address.street || ''}, ${p.address.city || ''}`.trim().replace(/^,\s*/, '') : '';
+    return `${p.reference ? '[' + p.reference + '] ' : ''}${p.title || addr}`;
+  }
+
   selectProperty(p: Property): void {
     this.formData.propertyId = p.id;
-    this.propertySearch.set(`${p.reference ? '[' + p.reference + '] ' : ''}${p.title || p.address}`);
+    this.propertySearch.set(this.propertyLabel(p));
     this.selectedProperty.set(p);
     this.showPropertyDropdown.set(false);
     // Pré-remplir le prix depuis le bien
@@ -215,6 +246,7 @@ export class MandateFormComponent implements OnInit {
     const payload: any = {
       type: this.formData.type as MandateType,
       status: this.formData.status,
+      agentId: this.authService.currentUser?.id,
       price: this.formData.price,
       agencyFeePercent: this.formData.agencyFeesPercent,
       startDate: new Date(this.formData.startDate),

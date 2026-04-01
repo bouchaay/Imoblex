@@ -104,6 +104,9 @@ public class PropertyCreateRequest {
     // Agent assigné
     private UUID agentId;
 
+    // Propriétaire / contact associé (vendeur, bailleur...)
+    private UUID ownerId;
+
     // Dates
     private LocalDate availableFrom;
     private LocalDate constructionYear;

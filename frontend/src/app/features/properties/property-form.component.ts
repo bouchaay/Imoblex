@@ -1,12 +1,14 @@
-import { Component, inject, OnInit, signal, Input } from '@angular/core';
+import { Component, inject, OnInit, signal, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Observable, switchMap, of, forkJoin } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PropertyService } from '../../core/services/property.service';
+import { ContactService } from '../../core/services/contact.service';
 import { PropertyType, PropertyStatus, TransactionType, DpeClass, PROPERTY_TYPE_LABELS, DPE_COLORS } from '../../core/models/enums';
 import { DpeBadgeComponent } from '../../shared/components/dpe-badge.component';
+import { Contact } from '../../core/models/contact.model';
 
 @Component({
   selector: 'app-property-form',
@@ -21,6 +23,7 @@ export class PropertyFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly propertyService = inject(PropertyService);
+  private readonly contactService = inject(ContactService);
   private readonly http = inject(HttpClient);
 
   form!: FormGroup;
@@ -43,6 +46,23 @@ export class PropertyFormComponent implements OnInit {
   isEdit = false;
   isGeocoding = signal(false);
   geocodeError = signal<string | null>(null);
+
+  // Propriétaire / contact associé
+  contacts = signal<Contact[]>([]);
+  ownerSearch = signal('');
+  showOwnerDropdown = signal(false);
+  selectedOwner = signal<Contact | null>(null);
+  ownerId = signal<string>('');
+
+  filteredContacts = computed(() => {
+    const q = this.ownerSearch().toLowerCase();
+    if (!q) return this.contacts().slice(0, 8);
+    return this.contacts().filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.phone?.toLowerCase().includes(q)
+    ).slice(0, 8);
+  });
 
   // Champs requis par étape (pour naviguer vers l'étape en erreur)
   private readonly stepFields: string[][] = [
@@ -83,6 +103,9 @@ export class PropertyFormComponent implements OnInit {
   ngOnInit(): void {
     const routeId = this.id || this.route.snapshot.paramMap.get('id');
     this.isEdit = !!routeId && !this.route.snapshot.url.some(s => s.path === 'new');
+
+    // Charger les contacts pour le sélecteur propriétaire
+    this.contactService.getAll({ pageSize: 200 }).subscribe(r => this.contacts.set(r.items));
 
     this.form = this.fb.group({
       type: ['APARTMENT', Validators.required],
@@ -132,6 +155,11 @@ export class PropertyFormComponent implements OnInit {
         });
         // Restaurer le statut
         if (p.status) this.selectedStatus.set(p.status as PropertyStatus);
+        // Restaurer le propriétaire
+        if (p.ownerId) {
+          this.ownerId.set(p.ownerId);
+          if (p.ownerName) this.ownerSearch.set(p.ownerName);
+        }
         // Charger les photos existantes
         const existingPhotos = [...(p.photos || [])]
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -148,6 +176,22 @@ export class PropertyFormComponent implements OnInit {
   goToStep(step: number): void {
     this.currentStep.set(Math.max(0, Math.min(step, this.steps.length - 1)));
   }
+
+  selectOwner(c: Contact): void {
+    this.ownerId.set(c.id);
+    this.ownerSearch.set(`${c.firstName} ${c.lastName}${c.email ? ' — ' + c.email : ''}`);
+    this.selectedOwner.set(c);
+    this.showOwnerDropdown.set(false);
+  }
+
+  clearOwner(): void {
+    this.ownerId.set('');
+    this.ownerSearch.set('');
+    this.selectedOwner.set(null);
+  }
+
+  onOwnerFocus(): void { this.showOwnerDropdown.set(true); }
+  onOwnerBlur(): void { setTimeout(() => this.showOwnerDropdown.set(false), 200); }
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
@@ -226,6 +270,7 @@ export class PropertyFormComponent implements OnInit {
       dpe: fv.dpe,
       isPublished: this.selectedStatus() === PropertyStatus.AVAILABLE,
       status: this.selectedStatus(),
+      ownerId: this.ownerId() || undefined,
       photos: []
     };
 

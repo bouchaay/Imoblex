@@ -103,6 +103,10 @@ public class PropertyResponse {
     private UUID agentId;
     private String agentName;
 
+    // Propriétaire / contact associé
+    private UUID ownerId;
+    private String ownerName;
+
     // Dates
     private LocalDate availableFrom;
     private LocalDate constructionYear;

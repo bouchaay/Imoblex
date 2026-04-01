@@ -165,4 +165,16 @@ export class PropertiesComponent implements OnInit {
       this.applyFilters();
     });
   }
+
+  onCreateMandate(p: Property): void {
+    this.router.navigate(['/mandates/new'], {
+      queryParams: {
+        propertyId: p.id,
+        propertyLabel: `${p.reference ? '[' + p.reference + '] ' : ''}${p.title}`,
+        price: p.price,
+        mandatorId: p.ownerId || '',
+        mandatorLabel: p.ownerName || ''
+      }
+    });
+  }
 }

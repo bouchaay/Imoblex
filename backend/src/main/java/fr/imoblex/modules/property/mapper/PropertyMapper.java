@@ -83,6 +83,8 @@ public class PropertyMapper {
             .publishedAt(p.getPublishedAt())
             .agentId(p.getAgent() != null ? p.getAgent().getId() : null)
             .agentName(p.getAgent() != null ? p.getAgent().getFirstName() + " " + p.getAgent().getLastName() : null)
+            .ownerId(p.getOwner() != null ? p.getOwner().getId() : null)
+            .ownerName(p.getOwner() != null ? p.getOwner().getFirstName() + " " + p.getOwner().getLastName() : null)
             .availableFrom(p.getAvailableFrom())
             .constructionYear(p.getConstructionYear())
             .createdAt(p.getCreatedAt())

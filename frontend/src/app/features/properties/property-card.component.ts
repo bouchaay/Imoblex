@@ -20,6 +20,7 @@ export class PropertyCardComponent {
   @Output() edit = new EventEmitter<Property>();
   @Output() delete = new EventEmitter<Property>();
   @Output() togglePublish = new EventEmitter<Property>();
+  @Output() createMandate = new EventEmitter<Property>();
 
   readonly TransactionType = TransactionType;
 
@@ -34,4 +35,5 @@ export class PropertyCardComponent {
   onEdit(): void { this.edit.emit(this.property); }
   onDelete(): void { this.delete.emit(this.property); }
   onTogglePublish(): void { this.togglePublish.emit(this.property); }
+  onCreateMandate(): void { this.createMandate.emit(this.property); }
 }

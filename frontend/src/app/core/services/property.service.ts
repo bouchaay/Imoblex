@@ -75,6 +75,8 @@ interface BackendPropertyResponse {
   publishedAt?: string;
   agentId?: string;
   agentName?: string;
+  ownerId?: string;
+  ownerName?: string;
   createdAt?: string;
   updatedAt?: string;
   viewCount?: number;
@@ -234,6 +236,8 @@ export class PropertyService {
       isPublished: p.publishedWebsite || false,
       publishedAt: p.publishedAt ? new Date(p.publishedAt) : undefined,
       agentId: p.agentId,
+      ownerId: p.ownerId,
+      ownerName: p.ownerName,
       createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
       updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(),
       visitCount: p.visitCount || 0,
@@ -278,7 +282,8 @@ export class PropertyService {
       pool: data.features?.hasPool,
       dpeClass: data.dpe,
       gesClass: data.ges,
-      publishedWebsite: data.isPublished
+      publishedWebsite: data.isPublished,
+      ownerId: data.ownerId || undefined
     };
   }
 }

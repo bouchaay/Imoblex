@@ -70,6 +70,8 @@ export interface Property {
   publishedAt?: Date;
   assignedAgent?: User;
   agentId?: string;
+  ownerId?: string;
+  ownerName?: string;
   createdAt: Date;
   updatedAt: Date;
   visitCount?: number;

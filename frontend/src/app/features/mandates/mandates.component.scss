@@ -35,3 +35,14 @@
 .action-btn-sm { width: 30px; height: 30px; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: #64748b; transition: all 0.15s; }
 .action-btn-sm:hover { border-color: #1B4F72; color: #1B4F72; }
 .action-btn-sm.danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+.action-btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+.mandate-property { display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.8rem; color: #475569; margin-bottom: 0.4rem; background: #f8fafc; border-radius: 6px; padding: 5px 8px; }
+.mandate-property i { color: #94a3b8; font-size: 0.75rem; margin-top: 1px; flex-shrink: 0; }
+.property-ref { font-family: monospace; font-size: 0.72rem; background: rgba(27,79,114,0.1); color: #1B4F72; padding: 1px 5px; border-radius: 4px; margin-right: 4px; }
+.property-addr { color: #475569; }
+.mandate-mandator { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #475569; margin-bottom: 0.5rem; }
+.mandate-mandator i { color: #94a3b8; font-size: 0.75rem; }
+.loading-center { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 3rem; color: #64748b; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 4rem 2rem; color: #94a3b8; text-align: center; }
+.empty-state i { font-size: 2.5rem; }
+.empty-state p { font-size: 1rem; color: #64748b; margin: 0; }

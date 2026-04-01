@@ -57,9 +57,9 @@
                       @if (p.reference) {
                         <span class="item-ref">{{ p.reference }}</span>
                       }
-                      {{ p.title || p.address }}
+                      {{ p.title }}
                     </div>
-                    <div class="autocomplete-item-sub">{{ p.city }} — {{ p.price | number:'1.0-0' }} €</div>
+                    <div class="autocomplete-item-sub">{{ p.address?.city }} — {{ p.price | number:'1.0-0' }} €</div>
                   </div>
                 }
               </div>
@@ -67,8 +67,7 @@
             @if (formData.propertyId && selectedProperty()) {
               <div class="selected-chip">
                 <i class="pi pi-check-circle"></i>
-                {{ selectedProperty()!.reference ? '[' + selectedProperty()!.reference + '] ' : '' }}
-                {{ selectedProperty()!.title || selectedProperty()!.address }}
+                {{ propertyLabel(selectedProperty()!) }}
               </div>
             }
           </div>

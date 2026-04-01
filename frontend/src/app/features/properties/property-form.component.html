@@ -110,6 +110,51 @@
           <textarea formControlName="description" class="form-textarea" rows="5"
             placeholder="Décrivez le bien en détail : état, atouts, environnement..."></textarea>
         </div>
+
+        <!-- Sélecteur propriétaire / contact associé -->
+        <div class="card form-card">
+          <h3 class="card-section-title">Propriétaire / Contact associé <span class="optional-label">(optionnel)</span></h3>
+          <p class="card-section-subtitle">Associez un contact CRM comme vendeur, bailleur ou propriétaire de ce bien.</p>
+          <div class="autocomplete-wrap">
+            <div class="autocomplete-input-row">
+              <i class="pi pi-user input-icon-abs"></i>
+              <input type="text" class="form-input with-icon-pad"
+                [value]="ownerSearch()"
+                (input)="ownerSearch.set($any($event.target).value)"
+                (focus)="onOwnerFocus()"
+                (blur)="onOwnerBlur()"
+                placeholder="Rechercher un contact par nom, email ou téléphone..." />
+              @if (ownerId()) {
+                <button class="clear-btn-abs" (click)="clearOwner()" type="button" title="Retirer">
+                  <i class="pi pi-times"></i>
+                </button>
+              }
+            </div>
+            @if (showOwnerDropdown() && filteredContacts().length > 0) {
+              <div class="autocomplete-dropdown">
+                @for (c of filteredContacts(); track c.id) {
+                  <div class="autocomplete-item" (mousedown)="selectOwner(c)">
+                    <div class="autocomplete-item-main">{{ c.firstName }} {{ c.lastName }}</div>
+                    <div class="autocomplete-item-sub">{{ c.email }}{{ c.phone ? ' — ' + c.phone : '' }}</div>
+                  </div>
+                }
+              </div>
+            }
+            @if (ownerId() && selectedOwner()) {
+              <div class="owner-chip">
+                <i class="pi pi-check-circle"></i>
+                {{ selectedOwner()!.firstName }} {{ selectedOwner()!.lastName }}
+                @if (selectedOwner()!.email) { <span>— {{ selectedOwner()!.email }}</span> }
+              </div>
+            }
+            @if (ownerId() && !selectedOwner() && ownerSearch()) {
+              <div class="owner-chip">
+                <i class="pi pi-user"></i>
+                {{ ownerSearch() }}
+              </div>
+            }
+          </div>
+        </div>
       </div>
     }
 
