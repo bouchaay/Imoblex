@@ -54,6 +54,11 @@ export const routes: Routes = [
           import('./features/mandates/mandate-form.component').then(m => m.MandateFormComponent)
       },
       {
+        path: 'mandates/:id',
+        loadComponent: () =>
+          import('./features/mandates/mandate-detail.component').then(m => m.MandateDetailComponent)
+      },
+      {
         path: 'mandates/:id/edit',
         loadComponent: () =>
           import('./features/mandates/mandate-form.component').then(m => m.MandateFormComponent)
@@ -65,6 +70,11 @@ export const routes: Routes = [
       },
       {
         path: 'contacts/new',
+        loadComponent: () =>
+          import('./features/contacts/contact-form.component').then(m => m.ContactFormComponent)
+      },
+      {
+        path: 'contacts/:id/edit',
         loadComponent: () =>
           import('./features/contacts/contact-form.component').then(m => m.ContactFormComponent)
       },

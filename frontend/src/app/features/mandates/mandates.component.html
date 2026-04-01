@@ -9,6 +9,17 @@
     </button>
   </div>
 
+  <!-- Filtre contact actif -->
+  @if (contactFilter()) {
+    <div class="contact-filter-chip">
+      <i class="pi pi-user"></i>
+      Mandant : <strong>{{ contactFilter()!.name }}</strong>
+      <button class="chip-clear" (click)="clearContactFilter()" title="Retirer le filtre">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  }
+
   <!-- Alert bar pour les mandats qui expirent -->
   @if (expiringCount() > 0) {
     <div class="alert-bar">
@@ -115,6 +126,10 @@
           }
 
           <div class="mandate-card-footer">
+            <button class="action-btn-sm" title="Voir le détail"
+              [routerLink]="['/mandates', mandate.id]">
+              <i class="pi pi-eye"></i>
+            </button>
             <button class="action-btn-sm" title="Modifier"
               (click)="editMandate(mandate.id)">
               <i class="pi pi-pencil"></i>

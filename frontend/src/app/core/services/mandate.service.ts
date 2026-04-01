@@ -69,6 +69,14 @@ export class MandateService {
     );
   }
 
+  getCount(): Observable<number> {
+    const params = new HttpParams().set('page', '0').set('size', '1');
+    return this.http.get<PageResponse<BackendMandateResponse>>(this.apiUrl, { params }).pipe(
+      map(r => r.totalElements),
+      catchError(() => of(0))
+    );
+  }
+
   getById(id: string): Observable<Mandate> {
     return this.http.get<ApiResponse<BackendMandateResponse>>(`${this.apiUrl}/${id}`).pipe(
       map(r => this.mapMandate(r.data))

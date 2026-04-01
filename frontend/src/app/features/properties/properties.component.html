@@ -10,6 +10,17 @@
     </button>
   </div>
 
+  <!-- Filtre contact actif -->
+  @if (contactFilter()) {
+    <div class="contact-filter-chip">
+      <i class="pi pi-user"></i>
+      Propriétaire : <strong>{{ contactFilter()!.name }}</strong>
+      <button class="chip-clear" (click)="clearContactFilter()" title="Retirer le filtre">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  }
+
   <div class="properties-layout">
     <!-- Sidebar filters -->
     <aside class="filters-sidebar" [class.open]="filterSidebarOpen()">

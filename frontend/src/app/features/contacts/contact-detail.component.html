@@ -1,8 +1,17 @@
-@if (contact()) {
+@if (isLoading()) {
+  <div class="loading-wrap"><i class="pi pi-spin pi-spinner"></i> Chargement...</div>
+} @else if (contact()) {
   <div class="detail-page">
+
+    <!-- Header -->
     <div class="page-header">
       <a routerLink="/contacts" class="breadcrumb-link"><i class="pi pi-arrow-left"></i> Contacts</a>
+      <div class="header-actions">
+        <button class="btn-secondary" (click)="edit()"><i class="pi pi-pencil"></i> Modifier</button>
+      </div>
     </div>
+
+    <!-- Hero -->
     <div class="contact-hero card">
       <div class="avatar-large" [style.background]="getAvatarColor()">
         {{ contact()!.firstName[0] }}{{ contact()!.lastName[0] }}
@@ -12,49 +21,185 @@
         <div class="hero-meta">
           <span class="type-badge-lg">{{ getTypeLabel(contact()!.type) }}</span>
           @if (contact()!.isVip) { <span class="vip-badge-lg">⭐ VIP</span> }
+          @if (contact()!.company) { <span class="company-badge"><i class="pi pi-building"></i> {{ contact()!.company }}</span> }
         </div>
         <div class="hero-contacts">
-          @if (contact()!.email) { <a [href]="'mailto:' + contact()!.email" class="contact-link"><i class="pi pi-envelope"></i> {{ contact()!.email }}</a> }
-          @if (contact()!.mobilePhone) { <a [href]="'tel:' + contact()!.mobilePhone" class="contact-link"><i class="pi pi-phone"></i> {{ contact()!.mobilePhone }}</a> }
+          @if (contact()!.email) {
+            <a [href]="'mailto:' + contact()!.email" class="contact-link"><i class="pi pi-envelope"></i> {{ contact()!.email }}</a>
+          }
+          @if (contact()!.phone) {
+            <a [href]="'tel:' + contact()!.phone" class="contact-link"><i class="pi pi-phone"></i> {{ contact()!.phone }}</a>
+          }
+          @if (contact()!.mobilePhone) {
+            <a [href]="'tel:' + contact()!.mobilePhone" class="contact-link"><i class="pi pi-mobile"></i> {{ contact()!.mobilePhone }}</a>
+          }
         </div>
       </div>
-      <div class="hero-actions">
-        <button class="btn-primary"><i class="pi pi-phone"></i> Appeler</button>
-        <button class="btn-secondary"><i class="pi pi-envelope"></i> Email</button>
+      <div class="hero-quick-links">
+        <a class="quick-link-btn" routerLink="/properties"
+           [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
+          <i class="pi pi-building"></i>
+          <span class="quick-count">{{ relatedProperties().length }}</span>
+          <span>Bien{{ relatedProperties().length > 1 ? 's' : '' }}</span>
+        </a>
+        <a class="quick-link-btn" routerLink="/mandates"
+           [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
+          <i class="pi pi-file-edit"></i>
+          <span class="quick-count">{{ relatedMandates().length }}</span>
+          <span>Mandat{{ relatedMandates().length > 1 ? 's' : '' }}</span>
+        </a>
       </div>
     </div>
 
     <div class="detail-grid">
+      <!-- Colonne principale -->
       <div class="detail-main">
+
+        <!-- Biens associés -->
+        <div class="card">
+          <div class="card-header-row">
+            <h3 class="card-title"><i class="pi pi-building"></i> Biens associés</h3>
+            @if (relatedProperties().length > 0) {
+              <a routerLink="/properties" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+            }
+          </div>
+          @if (relatedProperties().length === 0) {
+            <div class="empty-state-small">
+              <i class="pi pi-building"></i>
+              <span>Aucun bien associé à ce contact</span>
+            </div>
+          } @else {
+            <div class="related-properties">
+              @for (prop of relatedProperties(); track prop.id) {
+                <a [routerLink]="['/properties', prop.id]" class="related-prop-card">
+                  @if (prop.photos && prop.photos.length > 0) {
+                    <img [src]="prop.photos[0].url" [alt]="prop.title" class="prop-thumb" />
+                  } @else {
+                    <div class="prop-thumb prop-thumb-empty"><i class="pi pi-image"></i></div>
+                  }
+                  <div class="prop-info">
+                    <div class="prop-ref">{{ prop.reference }}</div>
+                    <div class="prop-title">{{ prop.title }}</div>
+                    <div class="prop-address"><i class="pi pi-map-marker"></i> {{ prop.address?.city }}</div>
+                  </div>
+                  <div class="prop-price">
+                    {{ prop.price | number:'1.0-0' }} €{{ isRental(prop.transactionType) ? '/mois' : '' }}
+                  </div>
+                  <i class="pi pi-chevron-right prop-arrow"></i>
+                </a>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Mandats associés -->
+        <div class="card">
+          <div class="card-header-row">
+            <h3 class="card-title"><i class="pi pi-file-edit"></i> Mandats associés</h3>
+            @if (relatedMandates().length > 0) {
+              <a routerLink="/mandates" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+            }
+          </div>
+          @if (relatedMandates().length === 0) {
+            <div class="empty-state-small">
+              <i class="pi pi-file-edit"></i>
+              <span>Aucun mandat associé à ce contact</span>
+            </div>
+          } @else {
+            <div class="related-mandates">
+              @for (mandate of relatedMandates(); track mandate.id) {
+                <a [routerLink]="['/mandates', mandate.id]" class="related-mandate-row">
+                  <div class="mandate-status-dot" [style.background]="getMandateStatusColor(mandate.status)"></div>
+                  <div class="mandate-info">
+                    <div class="mandate-ref">{{ mandate.reference }}</div>
+                    <div class="mandate-desc">{{ getMandateTypeLabel(mandate.type) }} — {{ mandate.propertyAddress || mandate.propertyReference }}</div>
+                  </div>
+                  <div class="mandate-price">{{ mandate.price | number:'1.0-0' }} €</div>
+                  <div class="mandate-dates">
+                    {{ mandate.startDate | date:'dd/MM/yy' }} → {{ mandate.endDate | date:'dd/MM/yy' }}
+                  </div>
+                  <i class="pi pi-chevron-right mandate-arrow"></i>
+                </a>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Critères de recherche -->
         @if (contact()!.searchCriteria) {
           <div class="card">
-            <h3 class="card-title">Critères de recherche</h3>
+            <h3 class="card-title"><i class="pi pi-search"></i> Critères de recherche</h3>
             <div class="criteria-grid">
-              <div class="criterion"><span>Budget max</span><strong>{{ contact()!.searchCriteria!.maxBudget?.toLocaleString('fr-FR') }} €</strong></div>
-              <div class="criterion"><span>Surface min</span><strong>{{ contact()!.searchCriteria!.minSurface }} m²</strong></div>
-              <div class="criterion"><span>Pièces min</span><strong>{{ contact()!.searchCriteria!.minRooms }}</strong></div>
-              <div class="criterion"><span>Villes</span><strong>{{ contact()!.searchCriteria!.cities?.join(', ') || '—' }}</strong></div>
+              @if (contact()!.searchCriteria!.maxBudget) {
+                <div class="criterion"><span>Budget max</span><strong>{{ contact()!.searchCriteria!.maxBudget!.toLocaleString('fr-FR') }} €</strong></div>
+              }
+              @if (contact()!.searchCriteria!.minSurface) {
+                <div class="criterion"><span>Surface min</span><strong>{{ contact()!.searchCriteria!.minSurface }} m²</strong></div>
+              }
+              @if (contact()!.searchCriteria!.minRooms) {
+                <div class="criterion"><span>Pièces min</span><strong>{{ contact()!.searchCriteria!.minRooms }}</strong></div>
+              }
+              @if (contact()!.searchCriteria!.cities?.length) {
+                <div class="criterion"><span>Villes</span><strong>{{ contact()!.searchCriteria!.cities!.join(', ') }}</strong></div>
+              }
             </div>
           </div>
         }
-        <div class="card">
-          <h3 class="card-title">Historique des interactions</h3>
-          <div class="empty-state-small">
-            <i class="pi pi-clock"></i>
-            <span>Aucune interaction enregistrée</span>
-          </div>
-        </div>
+
       </div>
+
+      <!-- Colonne sidebar -->
       <div class="detail-sidebar">
+
+        <!-- Informations -->
         <div class="card">
           <h3 class="card-title">Informations</h3>
           <div class="info-list">
-            <div class="info-row"><span>Référence</span><span>{{ contact()!.reference }}</span></div>
-            <div class="info-row"><span>Source</span><span>{{ contact()!.source || '—' }}</span></div>
+            <div class="info-row"><span>Référence</span><span class="mono">{{ contact()!.reference }}</span></div>
+            <div class="info-row"><span>Type</span><span>{{ getTypeLabel(contact()!.type) }}</span></div>
+            @if (contact()!.source) {
+              <div class="info-row"><span>Source</span><span>{{ contact()!.source }}</span></div>
+            }
             <div class="info-row"><span>Interactions</span><span>{{ contact()!.interactionCount || 0 }}</span></div>
             <div class="info-row"><span>Créé le</span><span>{{ contact()!.createdAt | date:'dd/MM/yyyy' }}</span></div>
+            @if (contact()!.updatedAt) {
+              <div class="info-row"><span>Modifié le</span><span>{{ contact()!.updatedAt | date:'dd/MM/yyyy' }}</span></div>
+            }
           </div>
         </div>
+
+        <!-- Coordonnées -->
+        <div class="card">
+          <h3 class="card-title">Coordonnées</h3>
+          <div class="info-list">
+            @if (contact()!.email) {
+              <div class="info-row-link">
+                <span><i class="pi pi-envelope"></i> Email</span>
+                <a [href]="'mailto:' + contact()!.email">{{ contact()!.email }}</a>
+              </div>
+            }
+            @if (contact()!.phone) {
+              <div class="info-row-link">
+                <span><i class="pi pi-phone"></i> Téléphone</span>
+                <a [href]="'tel:' + contact()!.phone">{{ contact()!.phone }}</a>
+              </div>
+            }
+            @if (contact()!.mobilePhone) {
+              <div class="info-row-link">
+                <span><i class="pi pi-mobile"></i> Mobile</span>
+                <a [href]="'tel:' + contact()!.mobilePhone">{{ contact()!.mobilePhone }}</a>
+              </div>
+            }
+            @if (contact()!.address?.street || contact()!.address?.city) {
+              <div class="info-row">
+                <span><i class="pi pi-map-marker"></i> Adresse</span>
+                <span>{{ contact()!.address?.street }}<br>{{ contact()!.address?.postalCode }} {{ contact()!.address?.city }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+
       </div>
     </div>
   </div>

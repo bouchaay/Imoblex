@@ -91,9 +91,12 @@ public class AgendaService {
         User agent = userRepository.findById(req.getAgentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Agent introuvable: " + req.getAgentId()));
         a.setAgent(agent);
+        // null explicite = effacer le contact ; présent = charger le contact
         if (req.getContactId() != null) {
             Contact contact = contactRepository.findById(req.getContactId()).orElse(null);
             a.setContact(contact);
+        } else {
+            a.setContact(null);
         }
         if (req.getPropertyId() != null) {
             Property property = propertyRepository.findById(req.getPropertyId()).orElse(null);

@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PropertyService } from '../../core/services/property.service';
 import { Property, PropertySearchRequest } from '../../core/models/property.model';
@@ -18,6 +18,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.c
 export class PropertiesComponent implements OnInit {
   private readonly propertyService = inject(PropertyService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   properties = signal<Property[]>([]);
   totalItems = signal(0);
@@ -37,6 +38,7 @@ export class PropertiesComponent implements OnInit {
   };
 
   sortBy = 'createdAt_desc';
+  contactFilter = signal<{ id: string; name: string } | null>(null);
 
   statusOptions = [
     { value: PropertyStatus.DRAFT, label: 'Brouillon', color: '#94a3b8' },
@@ -62,16 +64,38 @@ export class PropertiesComponent implements OnInit {
     { value: PropertyType.OTHER, label: 'Autre', icon: 'pi-ellipsis-h' }
   ];
 
-  ngOnInit(): void { this.applyFilters(); }
+  ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const contactId = params.get('contactId');
+    const contactName = params.get('contactName');
+    if (contactId && contactName) {
+      this.contactFilter.set({ id: contactId, name: contactName });
+    }
+    this.applyFilters();
+  }
+
+  clearContactFilter(): void {
+    this.contactFilter.set(null);
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    this.applyFilters();
+  }
 
   applyFilters(): void {
     this.isLoading.set(true);
     const [sortField, sortOrder] = this.sortBy.split('_');
-    const req = { ...this.filters, page: this.currentPage(), sortBy: sortField, sortOrder: sortOrder as 'asc' | 'desc' };
+    const cf = this.contactFilter();
+    const req = {
+      ...this.filters,
+      page: cf ? 0 : this.currentPage(),
+      pageSize: cf ? 500 : this.filters.pageSize,
+      sortBy: sortField,
+      sortOrder: sortOrder as 'asc' | 'desc'
+    };
     this.propertyService.getAll(req).subscribe(res => {
-      this.properties.set(res.items);
-      this.totalItems.set(res.total);
-      this.totalPages.set(res.totalPages);
+      const items = cf ? res.items.filter(p => p.ownerId === cf.id) : res.items;
+      this.properties.set(items);
+      this.totalItems.set(cf ? items.length : res.total);
+      this.totalPages.set(cf ? 1 : res.totalPages);
       this.isLoading.set(false);
     });
   }
@@ -119,6 +143,8 @@ export class PropertiesComponent implements OnInit {
     this.filters = { query: '', status: [], type: [], pageSize: 12 };
     this.sortBy = 'createdAt_desc';
     this.currentPage.set(1);
+    this.contactFilter.set(null);
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
     this.applyFilters();
   }
 

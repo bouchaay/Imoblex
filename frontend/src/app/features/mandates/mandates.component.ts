@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { MandateService } from '../../core/services/mandate.service';
@@ -20,10 +20,12 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.c
 export class MandatesComponent implements OnInit, OnDestroy {
   private readonly mandateService = inject(MandateService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private sub?: Subscription;
 
   mandates = signal<Mandate[]>([]);
   filteredMandates = signal<Mandate[]>([]);
+  contactFilter = signal<{ id: string; name: string } | null>(null);
   loading = signal(true);
   activeTab = 'ALL';
   expiringCount = signal(0);
@@ -39,8 +41,20 @@ export class MandatesComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const contactId = params.get('contactId');
+    const contactName = params.get('contactName');
+    if (contactId && contactName) {
+      this.contactFilter.set({ id: contactId, name: contactName });
+    }
     this.loadMandates();
     this.sub = this.mandateService.change$.subscribe(() => this.loadMandates());
+  }
+
+  clearContactFilter(): void {
+    this.contactFilter.set(null);
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    this.filterMandates();
   }
 
   ngOnDestroy(): void { this.sub?.unsubscribe(); }
@@ -58,16 +72,20 @@ export class MandatesComponent implements OnInit, OnDestroy {
   setTab(tab: string): void { this.activeTab = tab; this.filterMandates(); }
 
   filterMandates(): void {
-    const all = this.mandates();
+    const cf = this.contactFilter();
+    let all = this.mandates();
+    if (cf) all = all.filter(m => m.mandatorId === cf.id);
     this.filteredMandates.set(this.activeTab === 'ALL' ? all : all.filter(m => m.status === this.activeTab));
   }
 
-  filterExpiring(): void { this.setTab('ACTIVE'); }
-
   getTabCount(tab: string): number {
-    if (tab === 'ALL') return this.mandates().length;
-    return this.mandates().filter(m => m.status === tab).length;
+    const cf = this.contactFilter();
+    const all = cf ? this.mandates().filter(m => m.mandatorId === cf.id) : this.mandates();
+    if (tab === 'ALL') return all.length;
+    return all.filter(m => m.status === tab).length;
   }
+
+  filterExpiring(): void { this.setTab('ACTIVE'); }
 
   getMandateTypeLabel(type: string): string {
     return MANDATE_TYPE_LABELS[type as keyof typeof MANDATE_TYPE_LABELS] || type;

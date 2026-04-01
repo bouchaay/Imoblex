@@ -10,7 +10,7 @@
         <button [class.active]="viewMode() === 'week'" (click)="viewMode.set('week')">Semaine</button>
         <button [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')">Liste</button>
       </div>
-      <button class="btn-primary" (click)="openNewAppointment()">
+      <button class="btn btn-primary" (click)="openNewAppointment()">
         <i class="pi pi-plus"></i> Nouveau RDV
       </button>
     </div>
@@ -98,18 +98,174 @@
           <button class="close-btn" (click)="selectedAppointment.set(null)"><i class="pi pi-times"></i></button>
         </div>
         <div class="drawer-body">
-          <div class="drawer-field"><i class="pi pi-calendar"></i> {{ selectedAppointment()!.startDate | date:'EEEE d MMMM':'':'fr' }}</div>
-          <div class="drawer-field"><i class="pi pi-clock"></i> {{ selectedAppointment()!.startDate | date:'HH:mm' }} — {{ selectedAppointment()!.endDate | date:'HH:mm' }}</div>
-          @if (selectedAppointment()!.location) {
-            <div class="drawer-field"><i class="pi pi-map-marker"></i> {{ selectedAppointment()!.location }}</div>
-          }
+
+          <!-- Statut -->
+          <div class="drawer-status-row">
+            <span class="drawer-status-chip status-{{ selectedAppointment()!.status }}">
+              <i class="pi" [class.pi-clock]="selectedAppointment()!.status === 'scheduled'"
+                           [class.pi-check-circle]="selectedAppointment()!.status === 'completed'"
+                           [class.pi-times-circle]="selectedAppointment()!.status === 'cancelled'"></i>
+              {{ getStatusLabel(selectedAppointment()!.status) }}
+            </span>
+            <span class="apt-type-chip" [style]="getEventStyle(selectedAppointment()!.type)">
+              {{ getTypeLabel(selectedAppointment()!.type) }}
+            </span>
+          </div>
+
+          <div class="drawer-divider"></div>
+
+          <!-- Date & heure -->
           <div class="drawer-field">
-            <i class="pi pi-tag"></i>
-            <span class="apt-type-chip" [style]="getEventStyle(selectedAppointment()!.type)">{{ getTypeLabel(selectedAppointment()!.type) }}</span>
+            <i class="pi pi-calendar"></i>
+            <span>{{ selectedAppointment()!.startDate | date:'EEEE d MMMM yyyy':'':'fr' }}</span>
+          </div>
+          <div class="drawer-field">
+            <i class="pi pi-clock"></i>
+            <span>{{ selectedAppointment()!.startDate | date:'HH:mm' }} — {{ selectedAppointment()!.endDate | date:'HH:mm' }}</span>
+          </div>
+
+          <!-- Lieu -->
+          @if (selectedAppointment()!.location) {
+            <div class="drawer-field">
+              <i class="pi pi-map-marker"></i>
+              <span>{{ selectedAppointment()!.location }}</span>
+            </div>
+          }
+
+          <!-- Contact -->
+          @if (selectedAppointment()!.contactName) {
+            <div class="drawer-field">
+              <i class="pi pi-user"></i>
+              <span>{{ selectedAppointment()!.contactName }}</span>
+            </div>
+          }
+
+          <!-- Bien immobilier -->
+          @if (selectedAppointment()!.propertyReference) {
+            <div class="drawer-field">
+              <i class="pi pi-building"></i>
+              <span>{{ selectedAppointment()!.propertyReference }}</span>
+            </div>
+          }
+
+          <!-- Agent -->
+          @if (selectedAppointment()!.agentName) {
+            <div class="drawer-field">
+              <i class="pi pi-id-card"></i>
+              <span>{{ selectedAppointment()!.agentName }}</span>
+            </div>
+          }
+
+          <!-- Confirmation -->
+          <div class="drawer-field">
+            <i class="pi" [class.pi-check-circle]="selectedAppointment()!.isConfirmed"
+                          [class.pi-circle]="!selectedAppointment()!.isConfirmed"
+                          [style.color]="selectedAppointment()!.isConfirmed ? '#10b981' : '#94a3b8'"></i>
+            <span [style.color]="selectedAppointment()!.isConfirmed ? '#10b981' : '#94a3b8'">
+              {{ selectedAppointment()!.isConfirmed ? 'Confirmé par le client' : 'En attente de confirmation' }}
+            </span>
+          </div>
+
+          <!-- Notes -->
+          @if (selectedAppointment()!.notes) {
+            <div class="drawer-divider"></div>
+            <div class="drawer-notes">
+              <div class="drawer-notes-label"><i class="pi pi-align-left"></i> Notes</div>
+              <p class="drawer-notes-text">{{ selectedAppointment()!.notes }}</p>
+            </div>
+          }
+
+          <div class="drawer-divider"></div>
+
+          <!-- Actions -->
+          <div class="drawer-actions">
+            <button class="btn btn-primary" (click)="openEditDialog()">
+              <i class="pi pi-pencil"></i> Modifier
+            </button>
+            @if (selectedAppointment()!.status !== 'cancelled') {
+              <button class="btn btn-danger" [disabled]="isCancelling()" (click)="cancelAppointment()">
+                <i class="pi pi-times-circle"></i> {{ isCancelling() ? 'Annulation...' : 'Annuler le RDV' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit appointment dialog -->
+  @if (showEditDialog()) {
+    <div class="apt-drawer-overlay" (click)="showEditDialog.set(false)">
+      <div class="apt-drawer" (click)="$event.stopPropagation()">
+        <div class="drawer-header">
+          <h3>Modifier le rendez-vous</h3>
+          <button class="close-btn" (click)="showEditDialog.set(false)"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="drawer-body">
+          <div class="form-group">
+            <label class="form-label">Titre</label>
+            <input type="text" [(ngModel)]="editApt.title" class="form-input" placeholder="Titre..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select [(ngModel)]="editApt.type" class="form-input">
+              <option value="VISIT">Visite</option>
+              <option value="MEETING">Réunion</option>
+              <option value="ESTIMATION">Estimation</option>
+              <option value="SIGNING">Signature</option>
+              <option value="PHONE_CALL">Appel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" [(ngModel)]="editApt.date" class="form-input" />
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Début</label>
+              <input type="time" [(ngModel)]="editApt.startTime" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fin</label>
+              <input type="time" [(ngModel)]="editApt.endTime" class="form-input" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact <span class="optional-label">(optionnel)</span></label>
+            <div class="contact-search-wrap">
+              @if (editApt.contactId) {
+                <div class="selected-contact-chip">
+                  <i class="pi pi-user"></i> {{ editApt.contactName }}
+                  <button class="chip-remove" (click)="clearContact('edit')"><i class="pi pi-times"></i></button>
+                </div>
+              } @else {
+                <input type="text" class="form-input" placeholder="Rechercher un contact..."
+                  [value]="editApt.contactName"
+                  (input)="onContactInput($any($event.target).value, 'edit')" />
+                @if (showContactDropdown() && contactResults().length > 0) {
+                  <div class="contact-dropdown">
+                    @for (c of contactResults(); track c.id) {
+                      <div class="contact-option" (click)="selectContact(c, 'edit')">
+                        <span class="co-name">{{ c.firstName }} {{ c.lastName }}</span>
+                        <span class="co-type">{{ c.email }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lieu <span class="optional-label">(optionnel)</span></label>
+            <input type="text" [(ngModel)]="editApt.location" class="form-input" placeholder="Adresse..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes <span class="optional-label">(optionnel)</span></label>
+            <textarea [(ngModel)]="editApt.notes" class="form-input" rows="3" placeholder="Notes..."></textarea>
           </div>
           <div class="drawer-actions">
-            <button class="btn-primary"><i class="pi pi-pencil"></i> Modifier</button>
-            <button class="btn-danger"><i class="pi pi-times-circle"></i> Annuler le RDV</button>
+            <button class="btn btn-secondary" (click)="showEditDialog.set(false)">Annuler</button>
+            <button class="btn btn-primary" (click)="saveEditAppointment()"><i class="pi pi-check"></i> Enregistrer</button>
           </div>
         </div>
       </div>
@@ -126,7 +282,7 @@
         </div>
         <div class="drawer-body">
           <div class="form-group">
-            <label class="form-label">Titre</label>
+            <label class="form-label">Titre *</label>
             <input type="text" [(ngModel)]="newApt.title" class="form-input" placeholder="Visite appartement..." />
           </div>
           <div class="form-group">
@@ -134,28 +290,59 @@
             <select [(ngModel)]="newApt.type" class="form-input">
               <option value="VISIT">Visite</option>
               <option value="MEETING">Réunion</option>
-              <option value="ESTIMATION">Estimation</option>
+              <option value="PHONE_CALL">Appel téléphonique</option>
               <option value="SIGNING">Signature</option>
-              <option value="NOTARY">Notaire</option>
+              <option value="ESTIMATION">Estimation</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input type="date" [(ngModel)]="newApt.date" class="form-input" />
           </div>
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Date</label>
-              <input type="date" [(ngModel)]="newApt.date" class="form-input" />
+              <label class="form-label">Heure début</label>
+              <input type="time" [(ngModel)]="newApt.startTime" class="form-input" />
             </div>
             <div class="form-group">
-              <label class="form-label">Heure</label>
-              <input type="time" [(ngModel)]="newApt.time" class="form-input" />
+              <label class="form-label">Heure fin <span class="optional-label">(optionnel)</span></label>
+              <input type="time" [(ngModel)]="newApt.endTime" class="form-input" />
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Lieu</label>
+            <label class="form-label">Contact <span class="optional-label">(optionnel)</span></label>
+            <div class="contact-search-wrap">
+              @if (newApt.contactId) {
+                <div class="selected-contact-chip">
+                  <i class="pi pi-user"></i> {{ newApt.contactName }}
+                  <button class="chip-remove" (click)="clearContact('new')"><i class="pi pi-times"></i></button>
+                </div>
+              } @else {
+                <input type="text" class="form-input" placeholder="Rechercher un contact..."
+                  [value]="newApt.contactName"
+                  (input)="onContactInput($any($event.target).value, 'new')" />
+                @if (showContactDropdown() && contactResults().length > 0) {
+                  <div class="contact-dropdown">
+                    @for (c of contactResults(); track c.id) {
+                      <div class="contact-option" (click)="selectContact(c, 'new')">
+                        <span class="co-name">{{ c.firstName }} {{ c.lastName }}</span>
+                        <span class="co-type">{{ c.email }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lieu <span class="optional-label">(optionnel)</span></label>
             <input type="text" [(ngModel)]="newApt.location" class="form-input" placeholder="Adresse..." />
           </div>
           <div class="drawer-actions">
-            <button class="btn-secondary" (click)="showNewDialog.set(false)">Annuler</button>
-            <button class="btn-primary" (click)="saveNewAppointment()"><i class="pi pi-check"></i> Créer</button>
+            <button class="btn btn-secondary" (click)="showNewDialog.set(false)">Annuler</button>
+            <button class="btn btn-primary" [disabled]="!newApt.title || !newApt.date" (click)="saveNewAppointment()">
+              <i class="pi pi-check"></i> Créer
+            </button>
           </div>
         </div>
       </div>

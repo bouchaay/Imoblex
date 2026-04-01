@@ -71,7 +71,7 @@ export class ContactsComponent implements OnInit {
   }
 
   viewContact(c: Contact): void { this.router.navigate(['/contacts', c.id]); }
-  editContact(c: Contact): void { this.router.navigate(['/contacts', c.id], { queryParams: { edit: true } }); }
+  editContact(c: Contact): void { this.router.navigate(['/contacts', c.id, 'edit']); }
 
   deleteRequest(c: Contact): void {
     this.contactToDelete.set(c);
@@ -80,6 +80,9 @@ export class ContactsComponent implements OnInit {
 
   confirmDelete(): void {
     const c = this.contactToDelete();
-    if (c) this.contactService.delete(c.id).subscribe(() => this.loadContacts());
+    if (c) this.contactService.delete(c.id).subscribe(() => {
+      this.contactService.notifyChange();
+      this.loadContacts();
+    });
   }
 }

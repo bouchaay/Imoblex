@@ -1,7 +1,7 @@
 import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Contact } from '../models/contact.model';
 import { ContactType } from '../models/enums';
@@ -50,6 +50,18 @@ interface BackendContactResponse {
 export class ContactService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/contacts`;
+
+  private readonly _change$ = new Subject<void>();
+  readonly change$ = this._change$.asObservable();
+  notifyChange(): void { this._change$.next(); }
+
+  getCount(): Observable<number> {
+    const params = new HttpParams().set('page', '0').set('size', '1');
+    return this.http.get<PageResponse<BackendContactResponse>>(this.apiUrl, { params }).pipe(
+      map(r => r.totalElements),
+      catchError(() => of(0))
+    );
+  }
 
   getAll(filters?: Partial<{ query: string; type: ContactType; page: number; pageSize: number }>): Observable<{ items: Contact[]; total: number }> {
     let params = new HttpParams()

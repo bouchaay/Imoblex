@@ -2,7 +2,10 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgendaService } from '../../core/services/agenda.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ContactService } from '../../core/services/contact.service';
 import { Appointment } from '../../core/models/appointment.model';
+import { Contact } from '../../core/models/contact.model';
 import { AppointmentType } from '../../core/models/enums';
 
 interface CalendarDay {
@@ -21,14 +24,25 @@ interface CalendarDay {
 })
 export class AgendaComponent implements OnInit {
   private readonly agendaService = inject(AgendaService);
+  private readonly authService = inject(AuthService);
+  private readonly contactService = inject(ContactService);
 
   appointments = signal<Appointment[]>([]);
   viewMode = signal<'month' | 'week' | 'list'>('month');
   currentDate = signal(new Date());
   selectedAppointment = signal<Appointment | null>(null);
   showNewDialog = signal(false);
+  showEditDialog = signal(false);
+  isCancelling = signal(false);
 
-  newApt = { title: '', type: 'VISIT', date: '', time: '10:00', location: '' };
+  newApt  = { title: '', type: 'VISIT', date: '', startTime: '10:00', endTime: '11:00', location: '', contactId: '', contactName: '' };
+  editApt = { title: '', type: 'VISIT', date: '', startTime: '10:00', endTime: '11:00', location: '', notes: '', contactId: '', contactName: '' };
+
+  // Contact search
+  contactSearchQuery = signal('');
+  contactResults = signal<Contact[]>([]);
+  showContactDropdown = signal(false);
+  private contactSearchTimer: any;
 
   dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -135,28 +149,132 @@ export class AgendaComponent implements OnInit {
     this.showNewDialog.set(true);
   }
 
+  openEditDialog(): void {
+    const apt = this.selectedAppointment();
+    if (!apt) return;
+    const start = new Date(apt.startDate);
+    const end = new Date(apt.endDate);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    this.editApt = {
+      title:       apt.title,
+      type:        apt.type,
+      date:        `${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`,
+      startTime:   `${pad(start.getHours())}:${pad(start.getMinutes())}`,
+      endTime:     `${pad(end.getHours())}:${pad(end.getMinutes())}`,
+      location:    apt.location || '',
+      notes:       apt.notes || '',
+      contactId:   apt.contactId || '',
+      contactName: ''
+    };
+    // Charger le nom du contact si existant
+    if (apt.contactId) {
+      this.contactService.getById(apt.contactId).subscribe(c => {
+        this.editApt.contactName = `${c.firstName} ${c.lastName}`;
+      });
+    }
+    this.showEditDialog.set(true);
+  }
+
+  saveEditAppointment(): void {
+    const apt = this.selectedAppointment();
+    if (!apt || !this.editApt.title || !this.editApt.date) return;
+    const [sh, sm] = this.editApt.startTime.split(':').map(Number);
+    const [eh, em] = this.editApt.endTime.split(':').map(Number);
+    const startDate = new Date(this.editApt.date); startDate.setHours(sh, sm);
+    const endDate   = new Date(this.editApt.date); endDate.setHours(eh, em);
+
+    this.agendaService.update(apt.id, {
+      title:     this.editApt.title,
+      type:      this.editApt.type as AppointmentType,
+      startDate, endDate,
+      location:  this.editApt.location || undefined,
+      notes:     this.editApt.notes || undefined,
+      contactId: this.editApt.contactId || undefined,
+      agentId:   apt.agentId
+    }).subscribe({
+      next: updated => {
+        this.showEditDialog.set(false);
+        this.selectedAppointment.set(updated);
+        this.agendaService.notifyChange();
+        this.loadAppointments();
+      },
+      error: () => {}
+    });
+  }
+
+  cancelAppointment(): void {
+    const apt = this.selectedAppointment();
+    if (!apt || this.isCancelling()) return;
+    this.isCancelling.set(true);
+    this.agendaService.update(apt.id, { ...apt, status: 'cancelled' }).subscribe({
+      next: updated => {
+        this.selectedAppointment.set(updated);
+        this.isCancelling.set(false);
+        this.agendaService.notifyChange();
+        this.loadAppointments();
+      },
+      error: () => this.isCancelling.set(false)
+    });
+  }
+
   saveNewAppointment(): void {
     if (!this.newApt.title || !this.newApt.date) return;
-    const [h, m] = this.newApt.time.split(':').map(Number);
-    const startDate = new Date(this.newApt.date);
-    startDate.setHours(h, m);
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    const [sh, sm] = this.newApt.startTime.split(':').map(Number);
+    const startDate = new Date(this.newApt.date); startDate.setHours(sh, sm);
+    const endDate   = new Date(this.newApt.date);
+    if (this.newApt.endTime) {
+      const [eh, em] = this.newApt.endTime.split(':').map(Number);
+      endDate.setHours(eh, em);
+    } else {
+      endDate.setHours(sh + 1, sm);
+    }
 
     this.agendaService.create({
       title: this.newApt.title,
       type: this.newApt.type as AppointmentType,
-      startDate,
-      endDate,
-      location: this.newApt.location,
+      startDate, endDate,
+      location:  this.newApt.location || undefined,
+      contactId: this.newApt.contactId || undefined,
       status: 'scheduled',
       isConfirmed: false,
-      agentId: '1'
+      agentId: this.authService.currentUser?.id ?? ''
     }).subscribe(() => {
       this.showNewDialog.set(false);
-      this.newApt = { title: '', type: 'VISIT', date: '', time: '10:00', location: '' };
+      this.newApt = { title: '', type: 'VISIT', date: '', startTime: '10:00', endTime: '11:00', location: '', contactId: '', contactName: '' };
+      this.contactResults.set([]);
+      this.agendaService.notifyChange();
       this.loadAppointments();
     });
   }
+
+  // ── Contact search ───────────────────────────────────────────────
+  onContactInput(query: string, target: 'new' | 'edit'): void {
+    if (target === 'new') this.newApt.contactName = query;
+    else this.editApt.contactName = query;
+    clearTimeout(this.contactSearchTimer);
+    if (!query.trim()) { this.contactResults.set([]); this.showContactDropdown.set(false); return; }
+    this.contactSearchTimer = setTimeout(() => {
+      this.contactService.getAll({ query, page: 0, pageSize: 8 }).subscribe(r => {
+        this.contactResults.set(r.items);
+        this.showContactDropdown.set(r.items.length > 0);
+      });
+    }, 250);
+  }
+
+  selectContact(contact: Contact, target: 'new' | 'edit'): void {
+    const name = `${contact.firstName} ${contact.lastName}`;
+    if (target === 'new') { this.newApt.contactId = contact.id; this.newApt.contactName = name; }
+    else { this.editApt.contactId = contact.id; this.editApt.contactName = name; }
+    this.contactResults.set([]);
+    this.showContactDropdown.set(false);
+  }
+
+  clearContact(target: 'new' | 'edit'): void {
+    if (target === 'new') { this.newApt.contactId = ''; this.newApt.contactName = ''; }
+    else { this.editApt.contactId = ''; this.editApt.contactName = ''; }
+    this.contactResults.set([]);
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   getEventColor(type: string): string {
     const colors: Record<string, string> = {

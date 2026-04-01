@@ -1,11 +1,10 @@
 import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Appointment } from '../models/appointment.model';
 import { AppointmentType } from '../models/enums';
-import { MOCK_APPOINTMENTS } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -48,23 +47,43 @@ export class AgendaService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/appointments`;
 
+  private readonly _change$ = new Subject<void>();
+  readonly change$ = this._change$.asObservable();
+  notifyChange(): void { this._change$.next(); }
+
+  // Backend enum: VISIT, MEETING, SIGNING, PHONE, OTHER
   private readonly TYPE_MAP: Record<string, AppointmentType> = {
-    VISIT: AppointmentType.VISIT,
-    ESTIMATION: AppointmentType.ESTIMATION,
-    COMPROMIS_SIGNATURE: AppointmentType.SIGNING,
-    RENTAL_SIGNING: AppointmentType.SIGNING,
-    SIGNING: AppointmentType.SIGNING,
+    VISIT:   AppointmentType.VISIT,
     MEETING: AppointmentType.MEETING,
-    PHONE_CALL: AppointmentType.PHONE_CALL,
-    NOTARY: AppointmentType.NOTARY
+    SIGNING: AppointmentType.SIGNING,
+    PHONE:   AppointmentType.PHONE_CALL,
+    OTHER:   AppointmentType.MEETING
   };
 
+  // Frontend enum → backend enum
+  private readonly REVERSE_TYPE_MAP: Record<string, string> = {
+    [AppointmentType.VISIT]:       'VISIT',
+    [AppointmentType.MEETING]:     'MEETING',
+    [AppointmentType.SIGNING]:     'SIGNING',
+    [AppointmentType.PHONE_CALL]:  'PHONE',
+    [AppointmentType.ESTIMATION]:  'OTHER',
+    [AppointmentType.NOTARY]:      'OTHER'
+  };
+
+  // Frontend status → backend status
+  private readonly REVERSE_STATUS_MAP: Record<string, string> = {
+    'scheduled':   'PLANNED',
+    'completed':   'DONE',
+    'cancelled':   'CANCELLED',
+    'rescheduled': 'PLANNED'
+  };
+
+  // Backend status: PLANNED, CONFIRMED, DONE, CANCELLED
   private readonly STATUS_MAP: Record<string, string> = {
-    PLANNED: 'scheduled',
-    SCHEDULED: 'scheduled',
-    COMPLETED: 'completed',
-    CANCELLED: 'cancelled',
-    RESCHEDULED: 'rescheduled'
+    PLANNED:   'scheduled',
+    CONFIRMED: 'scheduled',
+    DONE:      'completed',
+    CANCELLED: 'cancelled'
   };
 
   getAll(start?: Date, end?: Date): Observable<Appointment[]> {
@@ -74,20 +93,19 @@ export class AgendaService {
         .set('end', end.toISOString());
       return this.http.get<ApiResponse<BackendAppointmentResponse[]>>(`${this.apiUrl}/range`, { params }).pipe(
         map(r => r.data.map(a => this.mapAppointment(a))),
-        catchError(() => of(MOCK_APPOINTMENTS))
+        catchError(() => of([]))
       );
     }
     const params = new HttpParams().set('page', '0').set('size', '200');
     return this.http.get<PageResponse<BackendAppointmentResponse>>(this.apiUrl, { params }).pipe(
-      map(r => r.content.length > 0 ? r.content.map(a => this.mapAppointment(a)) : MOCK_APPOINTMENTS),
-      catchError(() => of(MOCK_APPOINTMENTS))
+      map(r => r.content.map(a => this.mapAppointment(a))),
+      catchError(() => of([]))
     );
   }
 
   getById(id: string): Observable<Appointment> {
     return this.http.get<ApiResponse<BackendAppointmentResponse>>(`${this.apiUrl}/${id}`).pipe(
-      map(r => this.mapAppointment(r.data)),
-      catchError(() => of(MOCK_APPOINTMENTS.find(a => a.id === id) ?? null as any))
+      map(r => this.mapAppointment(r.data))
     );
   }
 
@@ -112,7 +130,20 @@ export class AgendaService {
       params: new HttpParams().set('limit', limit.toString())
     }).pipe(
       map(r => r.data.map(a => this.mapAppointment(a))),
-      catchError(() => of(MOCK_APPOINTMENTS.slice(0, limit).sort((a, b) => a.startDate.getTime() - b.startDate.getTime())))
+      catchError(() => of([]))
+    );
+  }
+
+  getTodayCount(): Observable<number> {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+    const end   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    const params = new HttpParams()
+      .set('start', start.toISOString())
+      .set('end', end.toISOString());
+    return this.http.get<ApiResponse<BackendAppointmentResponse[]>>(`${this.apiUrl}/range`, { params }).pipe(
+      map(r => r.data.length),
+      catchError(() => of(0))
     );
   }
 
@@ -120,7 +151,7 @@ export class AgendaService {
     return {
       id: a.id,
       title: a.title,
-      type: this.TYPE_MAP[a.type] || AppointmentType.MEETING,
+      type: this.TYPE_MAP[a.type] ?? AppointmentType.MEETING,
       startDate: new Date(a.startAt),
       endDate: new Date(a.endAt),
       allDay: false,
@@ -128,8 +159,11 @@ export class AgendaService {
       notes: a.notes || '',
       status: (this.STATUS_MAP[a.status] || 'scheduled') as 'scheduled' | 'completed' | 'cancelled' | 'rescheduled',
       propertyId: a.propertyId,
+      propertyReference: a.propertyReference,
       contactId: a.contactId,
+      contactName: a.contactName,
       agentId: a.agentId || '',
+      agentName: a.agentName,
       reminderMinutes: 30,
       isConfirmed: a.confirmed || false,
       createdAt: a.createdAt ? new Date(a.createdAt) : new Date(),
@@ -139,19 +173,16 @@ export class AgendaService {
 
   private mapToRequest(data: Partial<Appointment>): any {
     return {
-      title: data.title,
-      type: data.type,
-      startAt: data.startDate instanceof Date
-        ? (data.startDate as Date).toISOString()
-        : data.startDate,
-      endAt: data.endDate instanceof Date
-        ? (data.endDate as Date).toISOString()
-        : data.endDate,
-      location: data.location,
-      notes: data.notes,
-      propertyId: data.propertyId,
-      contactId: data.contactId,
-      agentId: data.agentId
+      title:   data.title,
+      type:    this.REVERSE_TYPE_MAP[data.type ?? ''] ?? 'OTHER',
+      startAt: data.startDate instanceof Date ? data.startDate.toISOString() : data.startDate,
+      endAt:   data.endDate   instanceof Date ? data.endDate.toISOString()   : data.endDate,
+      location:   data.location   || null,
+      notes:      data.notes      || null,
+      propertyId: data.propertyId || null,
+      contactId:  data.contactId  || null,   // null explicite = effacer le contact
+      agentId:    data.agentId,
+      status:     data.status ? this.REVERSE_STATUS_MAP[data.status] : undefined
     };
   }
 }

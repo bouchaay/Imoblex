@@ -15,10 +15,13 @@ export interface Appointment {
   status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
   property?: Property;
   propertyId?: string;
+  propertyReference?: string;
   contact?: Contact;
   contactId?: string;
+  contactName?: string;
   agent?: User;
   agentId: string;
+  agentName?: string;
   attendees?: string[];
   reminderMinutes?: number;
   isConfirmed: boolean;

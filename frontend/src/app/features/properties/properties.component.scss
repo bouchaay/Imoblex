@@ -189,3 +189,20 @@
 .page-btn.active { background: #1B4F72; border-color: #1B4F72; color: #fff; }
 .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .page-btn.ellipsis { border: none; background: none; cursor: default; }
+
+/* Chip filtre contact */
+.contact-filter-chip {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: rgba(27,79,114,0.08); border: 1.5px solid rgba(27,79,114,0.2);
+  color: #1B4F72; border-radius: 100px; padding: 0.4rem 0.75rem 0.4rem 1rem;
+  font-size: 0.85rem; margin-bottom: 1rem;
+  strong { font-weight: 700; }
+  i.pi-user { font-size: 0.8rem; }
+}
+.chip-clear {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(27,79,114,0.12); border: none; border-radius: 50%;
+  width: 20px; height: 20px; cursor: pointer; color: #1B4F72;
+  padding: 0; font-size: 0.7rem;
+  &:hover { background: rgba(27,79,114,0.25); }
+}

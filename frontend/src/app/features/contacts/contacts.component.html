@@ -53,8 +53,6 @@
             <th>Type</th>
             <th>Téléphone</th>
             <th>Source</th>
-            <th>Dernière interaction</th>
-            <th>Note</th>
             <th></th>
           </tr>
         </thead>
@@ -82,17 +80,6 @@
               </td>
               <td class="phone-cell">{{ contact.mobilePhone || contact.phone || '—' }}</td>
               <td class="source-cell">{{ contact.source || '—' }}</td>
-              <td class="date-cell">
-                {{ contact.lastInteractionAt ? (contact.lastInteractionAt | date:'dd/MM/yy') : '—' }}
-              </td>
-              <td>
-                <div class="rating-stars">
-                  @for (n of [1,2,3,4,5]; track n) {
-                    <i class="pi" [class.pi-star-fill]="n <= (contact.rating || 0)" [class.pi-star]="n > (contact.rating || 0)"
-                      [style.color]="n <= (contact.rating || 0) ? '#F39C12' : '#cbd5e1'"></i>
-                  }
-                </div>
-              </td>
               <td>
                 <div class="row-actions" (click)="$event.stopPropagation()">
                   <button class="action-btn-sm" (click)="viewContact(contact)" title="Voir">

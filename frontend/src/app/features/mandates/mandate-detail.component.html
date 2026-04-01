@@ -1,0 +1,197 @@
+@if (isLoading()) {
+  <div class="loading-wrap"><i class="pi pi-spin pi-spinner"></i> Chargement...</div>
+} @else if (notFound()) {
+  <div class="not-found">
+    <i class="pi pi-file-edit"></i>
+    <p>Mandat introuvable</p>
+    <a routerLink="/mandates" class="btn-secondary">Retour aux mandats</a>
+  </div>
+} @else if (mandate()) {
+  <div class="detail-page">
+
+    <!-- Header -->
+    <div class="page-header">
+      <a routerLink="/mandates" class="breadcrumb-link">
+        <i class="pi pi-arrow-left"></i> Mandats
+      </a>
+      <button class="btn-primary" (click)="edit()">
+        <i class="pi pi-pencil"></i> Modifier
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="mandate-hero card">
+      <div class="hero-left">
+        <div class="hero-ref">{{ mandate()!.reference }}</div>
+        <h1 class="hero-title">
+          {{ getMandateTypeLabel(mandate()!.type) }} —
+          {{ getTransactionLabel(mandate()!.transactionType) }}
+        </h1>
+        <div class="hero-badges">
+          <span class="status-pill" [style.background]="getStatusColor(mandate()!.status) + '20'"
+                [style.color]="getStatusColor(mandate()!.status)">
+            <span class="status-dot" [style.background]="getStatusColor(mandate()!.status)"></span>
+            {{ getStatusLabel(mandate()!.status) }}
+          </span>
+          @if (mandate()!.isExpiringSoon && mandate()!.status === 'ACTIVE') {
+            <span class="expiring-pill">
+              <i class="pi pi-clock"></i> Expire bientôt
+            </span>
+          }
+        </div>
+      </div>
+      <div class="hero-price-block">
+        <div class="hero-price">{{ mandate()!.price | number:'1.0-0' }} €</div>
+        <div class="hero-fee">
+          Commission {{ mandate()!.agencyFeePercent }}% =
+          {{ (mandate()!.agencyFeeAmount || mandate()!.price * mandate()!.agencyFeePercent / 100) | number:'1.0-0' }} €
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Colonne principale -->
+      <div class="detail-main">
+
+        <!-- Bien lié -->
+        <div class="card">
+          <h3 class="card-title"><i class="pi pi-building"></i> Bien immobilier</h3>
+          @if (mandate()!.propertyId) {
+            <a [routerLink]="['/properties', mandate()!.propertyId]" class="linked-item">
+              <div class="linked-icon"><i class="pi pi-home"></i></div>
+              <div class="linked-info">
+                <div class="linked-ref">{{ mandate()!.propertyReference }}</div>
+                <div class="linked-label">{{ mandate()!.propertyAddress || 'Adresse non renseignée' }}</div>
+              </div>
+              <i class="pi pi-chevron-right linked-arrow"></i>
+            </a>
+          } @else {
+            <div class="empty-inline"><i class="pi pi-home"></i> Aucun bien lié</div>
+          }
+        </div>
+
+        <!-- Mandant -->
+        <div class="card">
+          <h3 class="card-title"><i class="pi pi-user"></i> Mandant</h3>
+          @if (mandate()!.mandatorId) {
+            <a [routerLink]="['/contacts', mandate()!.mandatorId]" class="linked-item">
+              <div class="linked-icon contact-icon">
+                {{ (mandate()!.mandatorName || '?')[0] }}
+              </div>
+              <div class="linked-info">
+                <div class="linked-label">{{ mandate()!.mandatorName || 'Contact lié' }}</div>
+                <div class="linked-ref">Voir la fiche contact</div>
+              </div>
+              <i class="pi pi-chevron-right linked-arrow"></i>
+            </a>
+          } @else {
+            <div class="empty-inline"><i class="pi pi-user"></i> Aucun mandant lié</div>
+          }
+        </div>
+
+        <!-- Dates -->
+        <div class="card">
+          <h3 class="card-title"><i class="pi pi-calendar"></i> Dates</h3>
+          <div class="dates-grid">
+            <div class="date-block">
+              <span class="date-label">Date de début</span>
+              <strong class="date-val">{{ mandate()!.startDate | date:'dd MMMM yyyy':'':'fr' }}</strong>
+            </div>
+            <div class="date-arrow"><i class="pi pi-arrow-right"></i></div>
+            <div class="date-block">
+              <span class="date-label">Date de fin</span>
+              <strong class="date-val" [class.text-red]="mandate()!.isExpiringSoon">
+                {{ mandate()!.endDate | date:'dd MMMM yyyy':'':'fr' }}
+              </strong>
+            </div>
+            @if (mandate()!.daysRemaining !== undefined) {
+              <div class="days-pill"
+                [class.urgent]="(mandate()!.daysRemaining || 0) <= 7"
+                [class.warning]="(mandate()!.daysRemaining || 0) > 7 && (mandate()!.daysRemaining || 0) <= 15"
+                [class.ok]="(mandate()!.daysRemaining || 0) > 15">
+                <i class="pi pi-clock"></i>
+                @if ((mandate()!.daysRemaining || 0) < 0) {
+                  Expiré depuis {{ -(mandate()!.daysRemaining || 0) }}j
+                } @else {
+                  {{ mandate()!.daysRemaining }}j restants
+                }
+              </div>
+            }
+          </div>
+          @if (mandate()!.renewalDate) {
+            <div class="info-row mt"><span>Renouvellement prévu</span><strong>{{ mandate()!.renewalDate | date:'dd/MM/yyyy' }}</strong></div>
+          }
+        </div>
+
+        <!-- Notes -->
+        @if (mandate()!.notes) {
+          <div class="card">
+            <h3 class="card-title"><i class="pi pi-align-left"></i> Notes / Conditions particulières</h3>
+            <p class="notes-text">{{ mandate()!.notes }}</p>
+          </div>
+        }
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="detail-sidebar">
+
+        <!-- Infos financières -->
+        <div class="card">
+          <h3 class="card-title">Finances</h3>
+          <div class="info-list">
+            <div class="info-row">
+              <span>Prix mandaté</span>
+              <strong>{{ mandate()!.price | number:'1.0-0' }} €</strong>
+            </div>
+            <div class="info-row">
+              <span>Honoraires</span>
+              <strong>{{ mandate()!.agencyFeePercent }}%</strong>
+            </div>
+            <div class="info-row">
+              <span>Montant HN</span>
+              <strong class="text-blue">
+                {{ (mandate()!.agencyFeeAmount || mandate()!.price * mandate()!.agencyFeePercent / 100) | number:'1.0-0' }} €
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations -->
+        <div class="card">
+          <h3 class="card-title">Informations</h3>
+          <div class="info-list">
+            <div class="info-row">
+              <span>Référence</span><span class="mono">{{ mandate()!.reference }}</span>
+            </div>
+            <div class="info-row">
+              <span>Type</span><span>{{ getMandateTypeLabel(mandate()!.type) }}</span>
+            </div>
+            <div class="info-row">
+              <span>Transaction</span><span>{{ getTransactionLabel(mandate()!.transactionType) }}</span>
+            </div>
+            @if (mandate()!.agentName) {
+              <div class="info-row">
+                <span>Agent</span><span>{{ mandate()!.agentName }}</span>
+              </div>
+            }
+            @if (mandate()!.signedAt) {
+              <div class="info-row">
+                <span>Signé le</span><span>{{ mandate()!.signedAt | date:'dd/MM/yyyy' }}</span>
+              </div>
+            }
+            @if (mandate()!.signedAtPlace) {
+              <div class="info-row">
+                <span>Lieu de signature</span><span>{{ mandate()!.signedAtPlace }}</span>
+              </div>
+            }
+            <div class="info-row">
+              <span>Créé le</span><span>{{ mandate()!.createdAt | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
