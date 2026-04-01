@@ -22,6 +22,8 @@ export class PropertyDetailComponent implements OnInit {
   readonly TransactionType = TransactionType;
 
   property = signal<Property | null>(null);
+  activePhotoIndex = signal(0);
+  lightboxOpen = signal(false);
 
   ngOnInit(): void {
     const id = this.id || this.route.snapshot.paramMap.get('id')!;

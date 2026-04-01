@@ -56,7 +56,7 @@ export class SearchBarComponent {
     const path = this.activeTab() === 'sale' ? '/vente' : '/location';
     const queryParams: Record<string, string> = {};
     if (this.searchCity) queryParams['city'] = this.searchCity;
-    if (this.selectedType) queryParams['type'] = this.selectedType;
+    if (this.selectedType) queryParams['propertyType'] = this.selectedType;
     if (this.maxBudget) queryParams['maxPrice'] = this.maxBudget;
     this.router.navigate([path], { queryParams });
     this.searchSubmitted.emit();

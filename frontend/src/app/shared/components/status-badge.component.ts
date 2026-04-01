@@ -34,6 +34,7 @@ export class StatusBadgeComponent {
       SOLD: { bg: 'rgba(239,68,68,0.12)', color: '#dc2626' },
       RENTED: { bg: 'rgba(139,92,246,0.12)', color: '#7c3aed' },
       OFF_MARKET: { bg: 'rgba(107,114,128,0.12)', color: '#4b5563' },
+      WITHDRAWN: { bg: 'rgba(107,114,128,0.12)', color: '#4b5563' },
       DRAFT: { bg: 'rgba(156,163,175,0.12)', color: '#6b7280' },
       ACTIVE: { bg: 'rgba(16,185,129,0.12)', color: '#059669' },
       EXPIRED: { bg: 'rgba(239,68,68,0.12)', color: '#dc2626' },

@@ -31,7 +31,10 @@ public class User implements UserDetails {
     private String lastName;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private String username; // identifiant de connexion (ex: admin, sophie.m)
+
+    @Column(nullable = false, unique = true)
+    private String email; // pour les notifications uniquement
 
     @Column(nullable = false)
     private String password;
@@ -72,7 +75,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
     @Override

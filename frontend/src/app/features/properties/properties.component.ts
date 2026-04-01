@@ -39,6 +39,7 @@ export class PropertiesComponent implements OnInit {
   sortBy = 'createdAt_desc';
 
   statusOptions = [
+    { value: PropertyStatus.DRAFT, label: 'Brouillon', color: '#94a3b8' },
     { value: PropertyStatus.AVAILABLE, label: 'Disponible', color: '#10b981' },
     { value: PropertyStatus.UNDER_OFFER, label: 'Sous offre', color: '#f59e0b' },
     { value: PropertyStatus.SOLD, label: 'Vendu', color: '#ef4444' },
@@ -51,8 +52,14 @@ export class PropertiesComponent implements OnInit {
     { value: PropertyType.HOUSE, label: 'Maison', icon: 'pi-home' },
     { value: PropertyType.VILLA, label: 'Villa', icon: 'pi-sun' },
     { value: PropertyType.STUDIO, label: 'Studio', icon: 'pi-inbox' },
-    { value: PropertyType.LOFT, label: 'Loft', icon: 'pi-box' },
-    { value: PropertyType.LAND, label: 'Terrain', icon: 'pi-map' }
+    { value: PropertyType.LAND, label: 'Terrain', icon: 'pi-map' },
+    { value: PropertyType.COMMERCIAL, label: 'Commercial', icon: 'pi-shop' },
+    { value: PropertyType.OFFICE, label: 'Bureau', icon: 'pi-briefcase' },
+    { value: PropertyType.WAREHOUSE, label: 'Entrepôt', icon: 'pi-box' },
+    { value: PropertyType.GARAGE, label: 'Garage', icon: 'pi-car' },
+    { value: PropertyType.PARKING, label: 'Parking', icon: 'pi-car' },
+    { value: PropertyType.NEW_PROGRAM, label: 'Programme neuf', icon: 'pi-star' },
+    { value: PropertyType.OTHER, label: 'Autre', icon: 'pi-ellipsis-h' }
   ];
 
   ngOnInit(): void { this.applyFilters(); }
@@ -145,8 +152,10 @@ export class PropertiesComponent implements OnInit {
     const p = this.propertyToDelete();
     if (p) {
       this.propertyService.delete(p.id).subscribe(() => {
-        this.applyFilters();
+        this.showDeleteDialog = false;
         this.propertyToDelete.set(null);
+        this.propertyService.notifyChange();
+        this.applyFilters();
       });
     }
   }

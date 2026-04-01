@@ -33,7 +33,7 @@ public class UserController {
     @GetMapping("/agents")
     @Operation(summary = "Liste des agents")
     public ResponseEntity<ApiResponse<List<UserResponse>>> findAgents() {
-        return ResponseEntity.ok(ApiResponse.success(userService.findByRole(Role.AGENT)));
+        return ResponseEntity.ok(ApiResponse.success(userService.findByRole(Role.USER)));
     }
 
     @GetMapping("/{id}")

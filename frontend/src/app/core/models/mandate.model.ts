@@ -11,10 +11,14 @@ export interface Mandate {
   transactionType: TransactionType;
   property?: Property;
   propertyId: string;
+  propertyReference?: string;
+  propertyAddress?: string;
   mandator?: Contact;
   mandatorId: string;
+  mandatorName?: string;
   agent?: User;
   agentId: string;
+  agentName?: string;
   price: number;
   agencyFeePercent: number;
   agencyFeeAmount: number;
@@ -23,6 +27,7 @@ export interface Mandate {
   renewalDate?: Date;
   exclusivityEndDate?: Date;
   signedAt?: Date;
+  signedAtPlace?: string;
   notes?: string;
   conditions?: string;
   isRenewable: boolean;

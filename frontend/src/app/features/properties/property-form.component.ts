@@ -2,6 +2,8 @@ import { Component, inject, OnInit, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { Observable, switchMap, of, forkJoin } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { PropertyService } from '../../core/services/property.service';
 import { PropertyType, PropertyStatus, TransactionType, DpeClass, PROPERTY_TYPE_LABELS, DPE_COLORS } from '../../core/models/enums';
 import { DpeBadgeComponent } from '../../shared/components/dpe-badge.component';
@@ -19,14 +21,37 @@ export class PropertyFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly propertyService = inject(PropertyService);
+  private readonly http = inject(HttpClient);
 
   form!: FormGroup;
   currentStep = signal(0);
   isSaving = signal(false);
   isDragging = signal(false);
-  publishOption = signal<'draft' | 'publish'>('draft');
-  photoFiles = signal<{ name: string; preview: string }[]>([]);
+  selectedStatus = signal<PropertyStatus>(PropertyStatus.DRAFT);
+  photoFiles = signal<{ file?: File; name: string; preview: string; existingId?: string }[]>([]);
+
+  statusOptions = [
+    { value: PropertyStatus.DRAFT,       label: 'Brouillon',    desc: 'Visible uniquement en back-office',          color: '#9ca3af', icon: 'pi-file' },
+    { value: PropertyStatus.AVAILABLE,   label: 'Disponible',   desc: 'Bien disponible à la vente ou location',     color: '#22c55e', icon: 'pi-check-circle' },
+    { value: PropertyStatus.UNDER_OFFER, label: 'Sous offre',   desc: 'Une offre est en cours de négociation',      color: '#f59e0b', icon: 'pi-clock' },
+    { value: PropertyStatus.SOLD,        label: 'Vendu',        desc: 'Le bien a été vendu',                        color: '#ef4444', icon: 'pi-times-circle' },
+    { value: PropertyStatus.RENTED,      label: 'Loué',         desc: 'Le bien est actuellement loué',              color: '#a855f7', icon: 'pi-home' },
+    { value: PropertyStatus.OFF_MARKET,  label: 'Hors marché',  desc: 'Le bien n\'est plus sur le marché',          color: '#6b7280', icon: 'pi-ban' },
+  ];
+  deletedPhotoIds = signal<string[]>([]);
+  saveError = signal<string | null>(null);
   isEdit = false;
+  isGeocoding = signal(false);
+  geocodeError = signal<string | null>(null);
+
+  // Champs requis par étape (pour naviguer vers l'étape en erreur)
+  private readonly stepFields: string[][] = [
+    ['type', 'transactionType', 'title', 'price'],
+    ['street', 'city', 'postalCode'],
+    ['surface', 'rooms'],
+    [],
+    []
+  ];
 
   steps = [
     { id: 0, label: 'Informations' },
@@ -65,9 +90,9 @@ export class PropertyFormComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(10)]],
       description: [''],
       price: [null, [Validators.required, Validators.min(1)]],
-      street: [''],
+      street: ['', Validators.required],
       city: ['', Validators.required],
-      postalCode: [''],
+      postalCode: ['', Validators.required],
       department: [''],
       latitude: [null],
       longitude: [null],
@@ -105,6 +130,17 @@ export class PropertyFormComponent implements OnInit {
           hasBalcony: p.features.hasBalcony, hasTerrace: p.features.hasTerrace,
           hasElevator: p.features.hasElevator, hasCellar: p.features.hasCellar
         });
+        // Restaurer le statut
+        if (p.status) this.selectedStatus.set(p.status as PropertyStatus);
+        // Charger les photos existantes
+        const existingPhotos = [...(p.photos || [])]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map(photo => ({
+            name: photo.url.split('/').pop() || 'photo',
+            preview: photo.url,
+            existingId: photo.id
+          }));
+        this.photoFiles.set(existingPhotos);
       });
     }
   }
@@ -129,21 +165,54 @@ export class PropertyFormComponent implements OnInit {
     Array.from(files).forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.photoFiles.update(photos => [...photos, { name: file.name, preview: e.target?.result as string }]);
+        this.photoFiles.update(photos => [...photos, { file, name: file.name, preview: e.target?.result as string }]);
       };
       reader.readAsDataURL(file);
     });
   }
 
+  get hasExistingPhoto(): boolean {
+    return this.photoFiles().some(p => !!p.existingId);
+  }
+
   removePhoto(index: number): void {
+    const photo = this.photoFiles()[index];
+    if (photo.existingId) {
+      this.deletedPhotoIds.update(ids => [...ids, photo.existingId!]);
+    }
     this.photoFiles.update(photos => photos.filter((_, i) => i !== index));
   }
 
+  movePhotoUp(index: number): void {
+    if (index === 0) return;
+    this.photoFiles.update(photos => {
+      const arr = [...photos];
+      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+      return arr;
+    });
+  }
+
+  movePhotoDown(index: number): void {
+    this.photoFiles.update(photos => {
+      if (index >= photos.length - 1) return photos;
+      const arr = [...photos];
+      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+      return arr;
+    });
+  }
+
   onSave(): void {
+    this.form.markAllAsTouched();
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      // Naviguer vers la première étape avec des erreurs
+      const errorStep = this.stepFields.findIndex(fields =>
+        fields.some(f => this.form.get(f)?.invalid)
+      );
+      if (errorStep >= 0) this.currentStep.set(errorStep);
+      this.saveError.set('Veuillez remplir tous les champs obligatoires.');
       return;
     }
+    this.saveError.set(null);
     this.isSaving.set(true);
     const fv = this.form.value;
     const data: any = {
@@ -155,17 +224,65 @@ export class PropertyFormComponent implements OnInit {
       address: { street: fv.street, city: fv.city, postalCode: fv.postalCode, country: 'France', latitude: fv.latitude, longitude: fv.longitude },
       features: { surface: fv.surface, rooms: fv.rooms, bedrooms: fv.bedrooms, bathrooms: fv.bathrooms, floor: fv.floor, constructionYear: fv.constructionYear, hasParking: fv.hasParking, hasGarage: fv.hasGarage, hasGarden: fv.hasGarden, hasPool: fv.hasPool, hasBalcony: fv.hasBalcony, hasTerrace: fv.hasTerrace, hasElevator: fv.hasElevator, hasCellar: fv.hasCellar, isGroundFloor: false },
       dpe: fv.dpe,
-      isPublished: this.publishOption() === 'publish',
-      status: this.publishOption() === 'publish' ? PropertyStatus.AVAILABLE : PropertyStatus.DRAFT,
+      isPublished: this.selectedStatus() === PropertyStatus.AVAILABLE,
+      status: this.selectedStatus(),
       photos: []
     };
 
+    const editId = this.id || this.route.snapshot.paramMap.get('id')!;
     const op = this.isEdit
-      ? this.propertyService.update(this.route.snapshot.paramMap.get('id')!, data)
+      ? this.propertyService.update(editId, data)
       : this.propertyService.create(data);
 
-    op.subscribe(() => {
-      this.router.navigate(['/properties']);
+    const newFiles = this.photoFiles().filter(p => !!p.file).map(p => p.file!);
+    const toDelete = this.deletedPhotoIds();
+
+    op.pipe(
+      switchMap(property => {
+        const tasks: Observable<any>[] = [
+          ...toDelete.map(pid => this.propertyService.deletePhoto(property.id, pid)),
+          ...(newFiles.length > 0 ? [this.propertyService.uploadPhotos(property.id, newFiles)] : [])
+        ];
+        return tasks.length > 0 ? forkJoin(tasks) : of(null);
+      })
+    ).subscribe({
+      next: () => this.router.navigate(['/properties']),
+      error: () => this.isSaving.set(false)
+    });
+  }
+
+  geocodeAddress(): void {
+    const street = this.form.get('street')?.value?.trim();
+    const city = this.form.get('city')?.value?.trim();
+    const postalCode = this.form.get('postalCode')?.value?.trim();
+
+    if (!street && !city) {
+      this.geocodeError.set('Saisissez au moins la rue ou la ville');
+      return;
+    }
+
+    this.isGeocoding.set(true);
+    this.geocodeError.set(null);
+
+    const q = [street, city].filter(Boolean).join(' ');
+    let url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=1`;
+    if (postalCode) url += `&postcode=${encodeURIComponent(postalCode)}`;
+
+    this.http.get<any>(url).subscribe({
+      next: res => {
+        this.isGeocoding.set(false);
+        const feature = res?.features?.[0];
+        if (!feature) {
+          this.geocodeError.set('Adresse introuvable, vérifiez les champs');
+          return;
+        }
+        const [lng, lat] = feature.geometry.coordinates;
+        this.form.patchValue({ latitude: +lat.toFixed(6), longitude: +lng.toFixed(6) });
+      },
+      error: () => {
+        this.isGeocoding.set(false);
+        this.geocodeError.set('Erreur de géocodage, réessayez');
+      }
     });
   }
 
@@ -183,7 +300,7 @@ export class PropertyFormComponent implements OnInit {
   }
 
   private getTypeIcon(type: string): string {
-    const icons: Record<string, string> = { APARTMENT: 'pi-building', HOUSE: 'pi-home', VILLA: 'pi-sun', STUDIO: 'pi-inbox', LOFT: 'pi-box', DUPLEX: 'pi-copy', LAND: 'pi-map', COMMERCIAL: 'pi-shop', OFFICE: 'pi-briefcase', GARAGE: 'pi-car', PARKING: 'pi-car' };
+    const icons: Record<string, string> = { APARTMENT: 'pi-building', HOUSE: 'pi-home', VILLA: 'pi-sun', STUDIO: 'pi-inbox', LAND: 'pi-map', COMMERCIAL: 'pi-shop', OFFICE: 'pi-briefcase', WAREHOUSE: 'pi-box', PARKING: 'pi-car', GARAGE: 'pi-car', NEW_PROGRAM: 'pi-star', OTHER: 'pi-ellipsis-h' };
     return icons[type] || 'pi-building';
   }
 }

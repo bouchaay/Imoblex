@@ -1,10 +1,10 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Property, PropertySearchRequest, PropertySearchResponse, PropertyPhoto } from '../models/property.model';
 import { PropertyType, PropertyStatus, TransactionType, DpeClass } from '../models/enums';
-import { MOCK_PROPERTIES } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -84,12 +84,17 @@ interface BackendPropertyResponse {
 @Injectable({ providedIn: 'root' })
 export class PropertyService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/properties';
+  private readonly apiUrl = `${environment.apiUrl}/properties`;
+  private readonly _change$ = new Subject<void>();
+  readonly change$ = this._change$.asObservable();
+
+  notifyChange(): void { this._change$.next(); }
 
   private readonly TYPE_LABELS: Record<string, string> = {
     APARTMENT: 'Appartement', HOUSE: 'Maison', VILLA: 'Villa', STUDIO: 'Studio',
-    LOFT: 'Loft', DUPLEX: 'Duplex', LAND: 'Terrain', COMMERCIAL: 'Local commercial',
-    OFFICE: 'Bureau', GARAGE: 'Garage', PARKING: 'Parking'
+    LAND: 'Terrain', COMMERCIAL: 'Local commercial', OFFICE: 'Bureau',
+    WAREHOUSE: 'Entrepôt', GARAGE: 'Garage', PARKING: 'Parking',
+    NEW_PROGRAM: 'Programme neuf', OTHER: 'Autre'
   };
 
   getAll(request: PropertySearchRequest = {}): Observable<PropertySearchResponse> {
@@ -121,14 +126,12 @@ export class PropertyService {
         pageSize: response.size,
         totalPages: response.totalPages
       })),
-      catchError(() => of({ items: MOCK_PROPERTIES, total: MOCK_PROPERTIES.length, page: 1, pageSize: 12, totalPages: 1 }))
     );
   }
 
   getById(id: string): Observable<Property> {
     return this.http.get<ApiResponse<BackendPropertyResponse>>(`${this.apiUrl}/${id}`).pipe(
-      map(r => this.mapProperty(r.data)),
-      catchError(() => of(MOCK_PROPERTIES.find(p => p.id === id) ?? null as any))
+      map(r => this.mapProperty(r.data))
     );
   }
 
@@ -152,20 +155,12 @@ export class PropertyService {
     const formData = new FormData();
     files.forEach(f => formData.append('files', f));
     return this.http.post<ApiResponse<PropertyPhoto[]>>(`${this.apiUrl}/${id}/photos`, formData).pipe(
-      map(r => r.data),
-      catchError(() => {
-        const photos: PropertyPhoto[] = files.map((f, i) => ({
-          id: 'photo_' + Date.now() + i,
-          url: URL.createObjectURL(f),
-          thumbnailUrl: URL.createObjectURL(f),
-          caption: f.name,
-          isPrimary: i === 0,
-          order: i,
-          uploadedAt: new Date()
-        }));
-        return of(photos);
-      })
+      map(r => r.data)
     );
+  }
+
+  deletePhoto(propertyId: string, photoId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${propertyId}/photos/${photoId}`);
   }
 
   togglePublish(id: string, publish: boolean): Observable<Property> {

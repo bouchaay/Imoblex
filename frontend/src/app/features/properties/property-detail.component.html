@@ -19,9 +19,27 @@
 
     <!-- Photo gallery -->
     <div class="photo-gallery">
-      <div class="main-photo">
-        <img [src]="property()!.photos[0]?.url" [alt]="property()!.title" />
+      <div class="main-photo" (click)="property()!.photos.length > 0 && lightboxOpen.set(true)">
+        @if (property()!.photos.length > 0) {
+          <img [src]="property()!.photos[activePhotoIndex()]?.url" [alt]="property()!.title" />
+          <div class="photo-counter">{{ activePhotoIndex() + 1 }} / {{ property()!.photos.length }}</div>
+          <div class="zoom-overlay">
+            <i class="pi pi-search-plus"></i>
+            <span>Voir en plein écran</span>
+          </div>
+        } @else {
+          <div class="no-photo"><i class="pi pi-image"></i><span>Aucune photo</span></div>
+        }
       </div>
+      @if (property()!.photos.length > 1) {
+        <div class="photo-thumbnails">
+          @for (photo of property()!.photos; track photo.id; let i = $index) {
+            <div class="thumb" [class.active]="activePhotoIndex() === i" (click)="activePhotoIndex.set(i)">
+              <img [src]="photo.thumbnailUrl || photo.url" [alt]="'Photo ' + (i + 1)" />
+            </div>
+          }
+        </div>
+      }
     </div>
 
     <div class="detail-grid">
@@ -131,6 +149,24 @@
       </div>
     </div>
   </div>
+  <!-- Lightbox -->
+  @if (lightboxOpen()) {
+    <div class="lightbox-overlay" (click)="lightboxOpen.set(false)">
+      <button class="lightbox-close" (click)="lightboxOpen.set(false)"><i class="pi pi-times"></i></button>
+      @if (property()!.photos.length > 1) {
+        <button class="lightbox-nav prev" (click)="$event.stopPropagation(); activePhotoIndex.set((activePhotoIndex() - 1 + property()!.photos.length) % property()!.photos.length)">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+      }
+      <img [src]="property()!.photos[activePhotoIndex()]?.url" [alt]="property()!.title" (click)="$event.stopPropagation()" />
+      @if (property()!.photos.length > 1) {
+        <button class="lightbox-nav next" (click)="$event.stopPropagation(); activePhotoIndex.set((activePhotoIndex() + 1) % property()!.photos.length)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      }
+      <div class="lightbox-counter">{{ activePhotoIndex() + 1 }} / {{ property()!.photos.length }}</div>
+    </div>
+  }
 } @else {
   <div class="loading-detail">
     <div class="spinner-large"></div>

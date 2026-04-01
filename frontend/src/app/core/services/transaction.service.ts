@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -57,7 +58,7 @@ interface BackendTransactionResponse {
 @Injectable({ providedIn: 'root' })
 export class TransactionService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/transactions';
+  private readonly apiUrl = `${environment.apiUrl}/transactions`;
 
   private readonly PIPELINE = [
     TransactionStatus.VISIT,

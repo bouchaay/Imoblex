@@ -16,7 +16,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  credentials = { email: '', password: '', rememberMe: false };
+  credentials = { agencyCode: '', username: '', password: '' };
   isLoading = signal(false);
   showPassword = signal(false);
   errorMessage = signal('');
@@ -28,15 +28,9 @@ export class LoginComponent {
     { icon: 'pi-calendar', text: 'Agenda et planification des visites' }
   ];
 
-  stats = [
-    { value: '2,400+', label: 'Agences' },
-    { value: '98%', label: 'Satisfaction' },
-    { value: '45k+', label: 'Biens gérés' }
-  ];
-
   onSubmit(): void {
     this.errorMessage.set('');
-    if (!this.credentials.email || !this.credentials.password) {
+    if (!this.credentials.agencyCode || !this.credentials.username || !this.credentials.password) {
       this.errorMessage.set('Veuillez remplir tous les champs.');
       return;
     }
@@ -47,7 +41,7 @@ export class LoginComponent {
         this.router.navigateByUrl(returnUrl);
       },
       error: (err) => {
-        this.errorMessage.set(err?.message || 'Identifiants incorrects. Vérifiez votre email et mot de passe.');
+        this.errorMessage.set(err?.message || 'Identifiants incorrects.');
         this.isLoading.set(false);
       }
     });

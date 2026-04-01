@@ -248,15 +248,7 @@
       <!-- Map view -->
       @if (!loading() && currentView() === 'map') {
         <div class="flex gap-4" style="height: 600px;">
-          <div id="search-map" class="flex-1 rounded-xl overflow-hidden shadow-card bg-blue-50 flex items-center justify-center">
-            <div class="text-center text-gray-400">
-              <svg class="w-12 h-12 mx-auto mb-2 text-primary/20" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-              </svg>
-              <p class="text-sm font-medium">Carte interactive</p>
-              <p class="text-xs mt-1">{{ properties().length }} biens à afficher</p>
-            </div>
-          </div>
+          <div id="search-map" class="flex-1 rounded-xl overflow-hidden shadow-card"></div>
           <div class="w-72 flex-shrink-0 overflow-y-auto space-y-3">
             @for (property of properties().slice(0, 10); track property.id) {
               <div class="bg-white rounded-xl shadow-card p-3 cursor-pointer hover:shadow-card-hover transition-all" [routerLink]="['/bien', property.id]">

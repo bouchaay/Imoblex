@@ -11,6 +11,7 @@ public class UserMapper {
         if (u == null) return null;
         return UserResponse.builder()
                 .id(u.getId())
+                .username(u.getUsername())
                 .firstName(u.getFirstName())
                 .lastName(u.getLastName())
                 .email(u.getEmail())

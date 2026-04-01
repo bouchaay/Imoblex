@@ -1,10 +1,10 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Mandate } from '../models/mandate.model';
 import { MandateType, MandateStatus, TransactionType } from '../models/enums';
-import { MOCK_MANDATES } from '../mock/mock-data';
 
 interface PageResponse<T> {
   content: T[];
@@ -51,7 +51,11 @@ interface BackendMandateResponse {
 @Injectable({ providedIn: 'root' })
 export class MandateService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/mandates';
+  private readonly apiUrl = `${environment.apiUrl}/mandates`;
+
+  private readonly _change$ = new Subject<void>();
+  readonly change$ = this._change$.asObservable();
+  notifyChange(): void { this._change$.next(); }
 
   getAll(): Observable<Mandate[]> {
     const params = new HttpParams()
@@ -60,25 +64,24 @@ export class MandateService {
       .set('sortBy', 'createdAt')
       .set('sortDir', 'DESC');
     return this.http.get<PageResponse<BackendMandateResponse>>(this.apiUrl, { params }).pipe(
-      map(r => r.content.length > 0 ? r.content.map(m => this.mapMandate(m)) : MOCK_MANDATES),
-      catchError(() => of(MOCK_MANDATES))
+      map(r => r.content.map(m => this.mapMandate(m))),
+      catchError(() => of([]))
     );
   }
 
   getById(id: string): Observable<Mandate> {
     return this.http.get<ApiResponse<BackendMandateResponse>>(`${this.apiUrl}/${id}`).pipe(
-      map(r => this.mapMandate(r.data)),
-      catchError(() => of(MOCK_MANDATES.find(m => m.id === id) ?? null as any))
+      map(r => this.mapMandate(r.data))
     );
   }
 
-  create(data: Partial<Mandate>): Observable<Mandate> {
+  create(data: Partial<Mandate> & { notes?: string; signedAtPlace?: string }): Observable<Mandate> {
     return this.http.post<ApiResponse<BackendMandateResponse>>(this.apiUrl, this.mapToRequest(data)).pipe(
       map(r => this.mapMandate(r.data))
     );
   }
 
-  update(id: string, data: Partial<Mandate>): Observable<Mandate> {
+  update(id: string, data: Partial<Mandate> & { notes?: string; signedAtPlace?: string }): Observable<Mandate> {
     return this.http.put<ApiResponse<BackendMandateResponse>>(`${this.apiUrl}/${id}`, this.mapToRequest(data)).pipe(
       map(r => this.mapMandate(r.data))
     );
@@ -93,7 +96,7 @@ export class MandateService {
       params: new HttpParams().set('days', days.toString())
     }).pipe(
       map(r => r.data.map(m => this.mapMandate(m))),
-      catchError(() => of(MOCK_MANDATES.filter(m => m.isExpiringSoon)))
+      catchError(() => of([]))
     );
   }
 
@@ -105,16 +108,23 @@ export class MandateService {
       reference: m.mandateNumber || `MND-${m.id.substring(0, 8).toUpperCase()}`,
       type: m.type as MandateType,
       status: m.status as MandateStatus,
-      transactionType: TransactionType.SALE,
+      transactionType: TransactionType.RENTAL, // défini par le bien lié
       propertyId: m.propertyId || '',
+      propertyReference: m.propertyReference,
+      propertyAddress: m.propertyAddress,
       mandatorId: m.mandatorId || '',
+      mandatorName: m.mandatorName,
       agentId: m.agentId || '',
+      agentName: m.agentName,
       price: m.agreedPrice || 0,
       agencyFeePercent: m.agencyFeesPercent || 0,
       agencyFeeAmount: m.agencyFees || 0,
       startDate: m.startDate ? new Date(m.startDate) : new Date(),
       endDate,
+      renewalDate: m.renewalDate ? new Date(m.renewalDate) : undefined,
       signedAt: m.signedAt ? new Date(m.signedAt) : undefined,
+      signedAtPlace: m.signedAtPlace,
+      notes: m.notes,
       isRenewable: true,
       renewalCount: 0,
       daysRemaining,
@@ -124,9 +134,10 @@ export class MandateService {
     };
   }
 
-  private mapToRequest(data: Partial<Mandate>): any {
+  private mapToRequest(data: Partial<Mandate> & { notes?: string; signedAtPlace?: string }): any {
     return {
       type: data.type,
+      status: data.status,
       propertyId: data.propertyId || undefined,
       mandatorId: data.mandatorId || undefined,
       agentId: data.agentId || undefined,
@@ -138,7 +149,11 @@ export class MandateService {
       endDate: data.endDate instanceof Date
         ? (data.endDate as Date).toISOString().split('T')[0]
         : data.endDate,
-      notes: (data as any).notes
+      renewalDate: data.renewalDate instanceof Date
+        ? (data.renewalDate as Date).toISOString().split('T')[0]
+        : data.renewalDate,
+      notes: data.notes,
+      signedAtPlace: data.signedAtPlace
     };
   }
 }

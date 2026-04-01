@@ -3,15 +3,7 @@
   <div class="login-left">
     <div class="login-left-content">
       <div class="brand-logo">
-        <div class="brand-icon">
-          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
-            <path d="M16 3L3 14h4v15h7v-9h4v9h7V14h4L16 3z" fill="#F39C12"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <span class="brand-name">IMOBLEX</span>
-          <span class="brand-tagline">Excellence Immobilière</span>
-        </div>
+        <img src="assets/logo.png" alt="Imoblex" class="brand-img" />
       </div>
 
       <div class="hero-content">
@@ -29,18 +21,8 @@
           }
         </div>
       </div>
-
-      <div class="stats-row">
-        @for (stat of stats; track stat.label) {
-          <div class="stat-card">
-            <span class="stat-value">{{ stat.value }}</span>
-            <span class="stat-label">{{ stat.label }}</span>
-          </div>
-        }
-      </div>
     </div>
 
-    <!-- Decorative shapes -->
     <div class="deco-circle deco-1"></div>
     <div class="deco-circle deco-2"></div>
     <div class="deco-circle deco-3"></div>
@@ -49,17 +31,10 @@
   <!-- Right panel - form -->
   <div class="login-right">
     <div class="login-form-wrapper">
-      <!-- Mobile logo -->
-      <div class="mobile-logo">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <path d="M16 3L3 14h4v15h7v-9h4v9h7V14h4L16 3z" fill="#F39C12"/>
-        </svg>
-        <span class="brand-name-mobile">IMOBLEX</span>
-      </div>
 
       <div class="form-header">
-        <h2 class="form-title">Bon retour !</h2>
-        <p class="form-subtitle">Connectez-vous à votre espace de gestion</p>
+        <h2 class="form-title">Connexion</h2>
+        <p class="form-subtitle">Accédez à votre espace de gestion</p>
       </div>
 
       @if (errorMessage()) {
@@ -70,29 +45,44 @@
       }
 
       <form class="login-form" (ngSubmit)="onSubmit()" #form="ngForm">
+
+        <!-- Code agence -->
         <div class="form-group">
-          <label class="form-label">Adresse email</label>
+          <label class="form-label">Identifiant agence</label>
           <div class="input-wrapper">
-            <i class="pi pi-envelope input-icon"></i>
+            <i class="pi pi-building input-icon"></i>
             <input
-              type="email"
-              name="email"
-              [(ngModel)]="credentials.email"
+              type="text"
+              name="agencyCode"
+              [(ngModel)]="credentials.agencyCode"
               required
-              email
-              placeholder="votre@email.fr"
+              placeholder="Ex : IMB01"
               class="form-input"
-              [class.input-error]="form.submitted && !credentials.email"
-              autocomplete="email"
+              autocomplete="organization"
             />
           </div>
         </div>
 
+        <!-- Username -->
         <div class="form-group">
-          <label class="form-label">
-            <span>Mot de passe</span>
-            <a href="#" class="forgot-link" (click)="$event.preventDefault()">Mot de passe oublié ?</a>
-          </label>
+          <label class="form-label">Identifiant utilisateur</label>
+          <div class="input-wrapper">
+            <i class="pi pi-user input-icon"></i>
+            <input
+              type="text"
+              name="username"
+              [(ngModel)]="credentials.username"
+              required
+              placeholder="Ex : admin"
+              class="form-input"
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
           <div class="input-wrapper">
             <i class="pi pi-lock input-icon"></i>
             <input
@@ -102,21 +92,12 @@
               required
               placeholder="••••••••"
               class="form-input"
-              [class.input-error]="form.submitted && !credentials.password"
               autocomplete="current-password"
             />
             <button type="button" class="toggle-password" (click)="showPassword.set(!showPassword())">
               <i class="pi" [class.pi-eye]="!showPassword()" [class.pi-eye-slash]="showPassword()"></i>
             </button>
           </div>
-        </div>
-
-        <div class="form-options">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="credentials.rememberMe" name="rememberMe" />
-            <span class="checkbox-custom"></span>
-            <span>Se souvenir de moi</span>
-          </label>
         </div>
 
         <button
@@ -135,19 +116,18 @@
         </button>
       </form>
 
-      <!-- Demo credentials hint -->
+      <!-- Hint -->
       <div class="demo-hint">
         <i class="pi pi-info-circle"></i>
         <div>
-          <strong>Comptes de démo :</strong><br/>
-          Admin : <code>admin&#64;imoblex.fr</code> / <code>Admin&#64;2024</code><br/>
-          Agent : <code>agent&#64;imoblex.fr</code> / <code>Agent&#64;2024</code>
+          <strong>Identifiants :</strong><br/>
+          Agence : <code>IMB01</code><br/>
+          Admin : <code>admin</code> / <code>Admin&#64;2024</code><br/>
+          Sophie : <code>sophie</code> / <code>Sophie&#64;2024</code>
         </div>
       </div>
 
-      <p class="login-footer">
-        © 2024 Imoblex — Tous droits réservés
-      </p>
+      <p class="login-footer">© 2025 Imoblex — Tous droits réservés</p>
     </div>
   </div>
 </div>

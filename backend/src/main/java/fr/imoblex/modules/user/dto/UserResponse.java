@@ -11,6 +11,7 @@ import java.util.UUID;
 @Builder
 public class UserResponse {
     private UUID id;
+    private String username;
     private String firstName;
     private String lastName;
     private String email;

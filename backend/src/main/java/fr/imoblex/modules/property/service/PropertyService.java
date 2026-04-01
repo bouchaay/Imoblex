@@ -10,8 +10,6 @@ import fr.imoblex.modules.property.repository.PropertySpecification;
 import fr.imoblex.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +29,7 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final PropertyMapper propertyMapper;
     private final PropertyReferenceService referenceService;
+    private final PhotoStorageService photoStorageService;
 
     @Transactional(readOnly = true)
     public Page<PropertyResponse> search(PropertySearchRequest req) {
@@ -41,7 +40,6 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "property", key = "#id")
     public PropertyResponse findById(UUID id) {
         return propertyRepository.findById(id)
             .map(propertyMapper::toResponse)
@@ -55,14 +53,12 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Bien introuvable: " + reference));
     }
 
-    @CacheEvict(value = "property", key = "#result.id")
     public PropertyResponse create(PropertyCreateRequest request) {
         Property property = propertyMapper.toEntity(request);
         property.setReference(referenceService.generateNext());
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
 
-    @CacheEvict(value = "property", key = "#id")
     public PropertyResponse update(UUID id, PropertyCreateRequest request) {
         Property property = propertyRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Bien introuvable: " + id));
@@ -70,13 +66,13 @@ public class PropertyService {
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
 
-    @CacheEvict(value = "property", key = "#id")
     public void delete(UUID id) {
         if (!propertyRepository.existsById(id)) {
             throw new ResourceNotFoundException("Bien introuvable: " + id);
         }
         propertyRepository.deleteById(id);
-        log.info("Bien supprimé: {}", id);
+        photoStorageService.deletePropertyFolder(id);
+        log.info("Bien supprimé (avec photos): {}", id);
     }
 
     public void incrementViewCount(UUID id) {

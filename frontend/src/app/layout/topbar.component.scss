@@ -213,5 +213,28 @@
 .action-dropdown .dropdown-item { border-radius: 6px; }
 
 .overlay-dismiss {
-  position: fixed; inset: 0; z-index: 99;
+  position: fixed; inset: 0; z-index: 15;
+}
+
+/* Bouton déconnexion direct */
+.logout-direct-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1.5px solid #ef4444;
+  border-radius: 8px;
+  background: transparent;
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  i { font-size: 0.85rem; }
+
+  &:hover {
+    background: #ef4444;
+    color: white;
+  }
 }

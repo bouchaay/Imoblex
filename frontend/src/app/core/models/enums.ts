@@ -3,28 +3,32 @@ export enum PropertyType {
   HOUSE = 'HOUSE',
   VILLA = 'VILLA',
   STUDIO = 'STUDIO',
-  LOFT = 'LOFT',
-  DUPLEX = 'DUPLEX',
   LAND = 'LAND',
   COMMERCIAL = 'COMMERCIAL',
   OFFICE = 'OFFICE',
+  WAREHOUSE = 'WAREHOUSE',
+  PARKING = 'PARKING',
   GARAGE = 'GARAGE',
-  PARKING = 'PARKING'
+  NEW_PROGRAM = 'NEW_PROGRAM',
+  OTHER = 'OTHER'
 }
 
 export enum PropertyStatus {
+  DRAFT = 'DRAFT',
   AVAILABLE = 'AVAILABLE',
   UNDER_OFFER = 'UNDER_OFFER',
+  COMPROMIS = 'COMPROMIS',
   SOLD = 'SOLD',
   RENTED = 'RENTED',
-  OFF_MARKET = 'OFF_MARKET',
-  DRAFT = 'DRAFT'
+  WITHDRAWN = 'WITHDRAWN',
+  OFF_MARKET = 'OFF_MARKET'
 }
 
 export enum TransactionType {
   SALE = 'SALE',
   RENTAL = 'RENTAL',
-  SEASONAL_RENTAL = 'SEASONAL_RENTAL'
+  SEASONAL_RENTAL = 'SEASONAL_RENTAL',
+  VIAGER = 'VIAGER'
 }
 
 export enum ContactType {
@@ -39,7 +43,8 @@ export enum ContactType {
 export enum MandateType {
   EXCLUSIVE = 'EXCLUSIVE',
   SIMPLE = 'SIMPLE',
-  SEMI_EXCLUSIVE = 'SEMI_EXCLUSIVE'
+  SEMI_EXCLUSIVE = 'SEMI_EXCLUSIVE',
+  CO_EXCLUSIVE = 'CO_EXCLUSIVE'
 }
 
 export enum MandateStatus {
@@ -93,22 +98,25 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
   [PropertyType.HOUSE]: 'Maison',
   [PropertyType.VILLA]: 'Villa',
   [PropertyType.STUDIO]: 'Studio',
-  [PropertyType.LOFT]: 'Loft',
-  [PropertyType.DUPLEX]: 'Duplex',
   [PropertyType.LAND]: 'Terrain',
   [PropertyType.COMMERCIAL]: 'Local commercial',
   [PropertyType.OFFICE]: 'Bureau',
+  [PropertyType.WAREHOUSE]: 'Entrepôt',
+  [PropertyType.PARKING]: 'Parking',
   [PropertyType.GARAGE]: 'Garage',
-  [PropertyType.PARKING]: 'Parking'
+  [PropertyType.NEW_PROGRAM]: 'Programme neuf',
+  [PropertyType.OTHER]: 'Autre'
 };
 
 export const PROPERTY_STATUS_LABELS: Record<PropertyStatus, string> = {
+  [PropertyStatus.DRAFT]: 'Brouillon',
   [PropertyStatus.AVAILABLE]: 'Disponible',
   [PropertyStatus.UNDER_OFFER]: 'Sous offre',
+  [PropertyStatus.COMPROMIS]: 'Compromis',
   [PropertyStatus.SOLD]: 'Vendu',
   [PropertyStatus.RENTED]: 'Loué',
-  [PropertyStatus.OFF_MARKET]: 'Hors marché',
-  [PropertyStatus.DRAFT]: 'Brouillon'
+  [PropertyStatus.WITHDRAWN]: 'Retiré',
+  [PropertyStatus.OFF_MARKET]: 'Hors marché'
 };
 
 export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
@@ -123,7 +131,8 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
 export const MANDATE_TYPE_LABELS: Record<MandateType, string> = {
   [MandateType.EXCLUSIVE]: 'Exclusif',
   [MandateType.SIMPLE]: 'Simple',
-  [MandateType.SEMI_EXCLUSIVE]: 'Semi-exclusif'
+  [MandateType.SEMI_EXCLUSIVE]: 'Semi-exclusif',
+  [MandateType.CO_EXCLUSIVE]: 'Co-exclusif'
 };
 
 export const TRANSACTION_STATUS_LABELS: Record<TransactionStatus, string> = {

@@ -21,7 +21,8 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByEmail(username)
+        // Spring Security charge le user par son username (pas email)
+        return username -> userRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé: " + username));
     }
 

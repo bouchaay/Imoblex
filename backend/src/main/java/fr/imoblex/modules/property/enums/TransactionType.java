@@ -1,8 +1,8 @@
 package fr.imoblex.modules.property.enums;
 
 public enum TransactionType {
-    SALE,           // Vente
-    RENT,           // Location
-    SEASONAL_RENT,  // Location saisonnière
-    VIAGER          // Viager
+    SALE,            // Vente
+    RENTAL,          // Location (alias RENT)
+    SEASONAL_RENTAL, // Location saisonnière (alias SEASONAL_RENT)
+    VIAGER           // Viager
 }

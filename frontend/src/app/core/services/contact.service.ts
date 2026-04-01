@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -48,7 +49,7 @@ interface BackendContactResponse {
 @Injectable({ providedIn: 'root' })
 export class ContactService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/contacts';
+  private readonly apiUrl = `${environment.apiUrl}/contacts`;
 
   getAll(filters?: Partial<{ query: string; type: ContactType; page: number; pageSize: number }>): Observable<{ items: Contact[]; total: number }> {
     let params = new HttpParams()

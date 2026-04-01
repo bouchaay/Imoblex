@@ -20,6 +20,12 @@
     </div>
   </div>
 
+  @if (saveError()) {
+    <div class="form-error-banner">
+      <i class="pi pi-exclamation-triangle"></i> {{ saveError() }}
+    </div>
+  }
+
   <!-- Step indicators -->
   <div class="steps-bar">
     @for (step of steps; track step.id; let i = $index) {
@@ -70,6 +76,18 @@
                 <i class="pi pi-key"></i>
                 <span>Location</span>
               </div>
+              <div class="toggle-option"
+                [class.selected]="form.get('transactionType')?.value === 'SEASONAL_RENTAL'"
+                (click)="form.get('transactionType')?.setValue('SEASONAL_RENTAL')">
+                <i class="pi pi-sun"></i>
+                <span>Saisonnière</span>
+              </div>
+              <div class="toggle-option"
+                [class.selected]="form.get('transactionType')?.value === 'VIAGER'"
+                (click)="form.get('transactionType')?.setValue('VIAGER')">
+                <i class="pi pi-calendar"></i>
+                <span>Viager</span>
+              </div>
             </div>
 
             <div class="form-group" style="margin-top: 1.5rem">
@@ -102,7 +120,7 @@
           <div class="card form-card">
             <h3 class="card-section-title">Adresse</h3>
             <div class="form-group">
-              <label class="form-label">Numéro et rue</label>
+              <label class="form-label required">Numéro et rue *</label>
               <input type="text" formControlName="street" class="form-input" placeholder="14 Avenue Foch" />
             </div>
             <div class="form-group">
@@ -123,18 +141,34 @@
 
           <div class="card form-card">
             <h3 class="card-section-title">Coordonnées GPS</h3>
-            <div class="map-placeholder">
-              <i class="pi pi-map-marker"></i>
-              <span>Entrez l'adresse pour géolocaliser automatiquement</span>
-            </div>
+            <p class="card-section-subtitle">Optionnel — remplissez l'adresse ci-dessus puis cliquez sur le bouton</p>
+
+            <button type="button" class="btn-geocode" (click)="geocodeAddress()" [disabled]="isGeocoding()">
+              @if (isGeocoding()) {
+                <span class="spinner-sm"></span> Recherche en cours...
+              } @else {
+                <i class="pi pi-map-marker"></i> Obtenir les coordonnées depuis l'adresse
+              }
+            </button>
+
+            @if (geocodeError()) {
+              <div class="geocode-error"><i class="pi pi-exclamation-triangle"></i> {{ geocodeError() }}</div>
+            }
+            @if (form.get('latitude')?.value && form.get('longitude')?.value) {
+              <div class="geocode-success">
+                <i class="pi pi-check-circle"></i>
+                Position trouvée : {{ form.get('latitude')?.value }}, {{ form.get('longitude')?.value }}
+              </div>
+            }
+
             <div class="form-grid-2-sm" style="margin-top:1rem">
               <div class="form-group">
                 <label class="form-label">Latitude</label>
-                <input type="number" formControlName="latitude" class="form-input" placeholder="48.8566" step="0.0001" />
+                <input type="number" formControlName="latitude" class="form-input" placeholder="48.8566" step="0.000001" />
               </div>
               <div class="form-group">
                 <label class="form-label">Longitude</label>
-                <input type="number" formControlName="longitude" class="form-input" placeholder="2.3522" step="0.0001" />
+                <input type="number" formControlName="longitude" class="form-input" placeholder="2.3522" step="0.000001" />
               </div>
             </div>
           </div>
@@ -239,13 +273,27 @@
 
           <!-- Photo previews -->
           @if (photoFiles().length > 0) {
-            <div class="photo-grid">
+            <p class="section-hint" style="margin-top:1rem">
+              <i class="pi pi-info-circle"></i>
+              La première photo sera la photo de couverture. Utilisez les flèches pour réordonner.
+            </p>
+            <div class="photo-list">
               @for (photo of photoFiles(); track photo.name; let i = $index) {
-                <div class="photo-preview-item" [class.primary]="i === 0">
-                  <img [src]="photo.preview" [alt]="photo.name" />
-                  <div class="photo-preview-overlay">
-                    @if (i === 0) { <span class="primary-badge">Photo principale</span> }
-                    <button class="remove-photo-btn" (click)="removePhoto(i)">
+                <div class="photo-list-item" [class.primary]="i === 0">
+                  <img [src]="photo.preview" [alt]="photo.name" class="photo-thumb" />
+                  <div class="photo-list-info">
+                    @if (i === 0) { <span class="primary-badge">Couverture</span> }
+                    @if (photo.existingId) { <span class="existing-badge">Existante</span> }
+                    <span class="photo-name">{{ photo.name }}</span>
+                  </div>
+                  <div class="photo-list-actions">
+                    <button type="button" class="order-btn" (click)="movePhotoUp(i)" [disabled]="i === 0" title="Monter">
+                      <i class="pi pi-chevron-up"></i>
+                    </button>
+                    <button type="button" class="order-btn" (click)="movePhotoDown(i)" [disabled]="i === photoFiles().length - 1" title="Descendre">
+                      <i class="pi pi-chevron-down"></i>
+                    </button>
+                    <button type="button" class="remove-photo-btn" (click)="removePhoto(i)" title="Supprimer">
                       <i class="pi pi-times"></i>
                     </button>
                   </div>
@@ -261,25 +309,22 @@
     @if (currentStep() === 4) {
       <div class="step-panel animate-fade">
         <div class="card form-card">
-          <h3 class="card-section-title">Options de publication</h3>
+          <h3 class="card-section-title">Statut du bien</h3>
+          <p class="card-section-subtitle">Choisissez l'état commercial de ce bien</p>
 
-          <div class="publish-options">
-            <div class="publish-option" [class.selected]="publishOption() === 'draft'" (click)="publishOption.set('draft')">
-              <div class="pub-icon"><i class="pi pi-file"></i></div>
-              <div class="pub-info">
-                <div class="pub-title">Sauvegarder en brouillon</div>
-                <div class="pub-desc">Le bien sera visible uniquement en back-office</div>
+          <div class="status-options">
+            @for (opt of statusOptions; track opt.value) {
+              <div class="status-option" [class.selected]="selectedStatus() === opt.value" (click)="selectedStatus.set(opt.value)">
+                <div class="status-dot-icon" [style.background]="opt.color">
+                  <i class="pi" [class]="opt.icon"></i>
+                </div>
+                <div class="pub-info">
+                  <div class="pub-title">{{ opt.label }}</div>
+                  <div class="pub-desc">{{ opt.desc }}</div>
+                </div>
+                <div class="pub-radio" [class.checked]="selectedStatus() === opt.value"></div>
               </div>
-              <div class="pub-radio" [class.checked]="publishOption() === 'draft'"></div>
-            </div>
-            <div class="publish-option" [class.selected]="publishOption() === 'publish'" (click)="publishOption.set('publish')">
-              <div class="pub-icon pub-icon-green"><i class="pi pi-eye"></i></div>
-              <div class="pub-info">
-                <div class="pub-title">Publier immédiatement</div>
-                <div class="pub-desc">Le bien sera visible sur tous les portails connectés</div>
-              </div>
-              <div class="pub-radio" [class.checked]="publishOption() === 'publish'"></div>
-            </div>
+            }
           </div>
 
           <!-- Summary -->

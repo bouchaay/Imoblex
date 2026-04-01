@@ -8,6 +8,7 @@ import lombok.Data;
 
 @Data
 public class RegisterRequest {
+    @NotBlank private String username;
     @NotBlank private String firstName;
     @NotBlank private String lastName;
     @NotBlank @Email private String email;
@@ -15,5 +16,5 @@ public class RegisterRequest {
     private String phone;
     private String mobile;
     private String title;
-    private Role role = Role.AGENT;
+    private Role role = Role.USER;
 }

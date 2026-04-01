@@ -19,30 +19,41 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!userRepository.existsByEmail("admin@imoblex.fr")) {
-            User admin = User.builder()
-                    .firstName("Admin")
-                    .lastName("Imoblex")
-                    .email("admin@imoblex.fr")
-                    .password(passwordEncoder.encode("Admin@2024"))
-                    .role(Role.ADMIN)
-                    .enabled(true)
-                    .build();
-            userRepository.save(admin);
-            log.info("Admin créé: admin@imoblex.fr / Admin@2024");
-        }
-        if (!userRepository.existsByEmail("agent@imoblex.fr")) {
-            User agent = User.builder()
-                    .firstName("Sophie")
-                    .lastName("Moreau")
-                    .email("agent@imoblex.fr")
-                    .password(passwordEncoder.encode("Agent@2024"))
-                    .role(Role.AGENT)
-                    .title("Négociatrice")
-                    .enabled(true)
-                    .build();
-            userRepository.save(agent);
-            log.info("Agent créé: agent@imoblex.fr / Agent@2024");
-        }
+        createOrUpdate("admin",  "Admin",  "Imoblex",  "admin@imoblex.fr",  "Admin@2024",  Role.ADMIN, "Directeur d'agence");
+        createOrUpdate("sophie", "Sophie", "Moreau",   "sophie.moreau@imoblex.fr", "Sophie@2024", Role.USER, "Négociatrice");
+    }
+
+    private void createOrUpdate(String username, String firstName, String lastName,
+                                String email, String rawPassword, Role role, String title) {
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+
+        userRepository.findByUsername(username).ifPresentOrElse(
+            user -> {
+                // Mettre à jour le mot de passe et le rôle à chaque démarrage (dev)
+                user.setPassword(encodedPassword);
+                user.setRole(role);
+                user.setFirstName(firstName);
+                user.setLastName(lastName);
+                user.setEmail(email);
+                user.setTitle(title);
+                user.setEnabled(true);
+                userRepository.save(user);
+                log.info("✅ Utilisateur mis à jour — login: IMB01 / {} / {}", username, rawPassword);
+            },
+            () -> {
+                User user = User.builder()
+                        .username(username)
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .email(email)
+                        .password(encodedPassword)
+                        .role(role)
+                        .title(title)
+                        .enabled(true)
+                        .build();
+                userRepository.save(user);
+                log.info("✅ Utilisateur créé — login: IMB01 / {} / {}", username, rawPassword);
+            }
+        );
     }
 }

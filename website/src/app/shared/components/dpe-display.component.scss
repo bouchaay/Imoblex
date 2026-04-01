@@ -1,12 +1,21 @@
 .dpe-bar {
   min-width: 32px;
-  height: 24px;
-  border-radius: 0 4px 4px 0;
+  height: 26px;
+  border-radius: 0 6px 6px 0;
   display: flex;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 10px;
   font-size: 12px;
   font-weight: 700;
   color: white;
+  opacity: 0.75;
+  transition: all 0.2s;
+}
+.dpe-bar-active {
+  opacity: 1;
+  height: 30px;
+  font-size: 13px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+  border: 2px solid rgba(255,255,255,0.6);
 }
 .dpe-D { color: #333; }

@@ -4,97 +4,200 @@
       <i class="pi pi-arrow-left"></i> Mandats
     </a>
   </div>
-  <div class="card">
-    <h2 class="card-title">Nouveau mandat</h2>
 
-    @if (errorMessage()) {
-      <div class="alert alert-error">
-        <i class="pi pi-exclamation-circle"></i> {{ errorMessage() }}
-      </div>
-    }
-    @if (successMessage()) {
-      <div class="alert alert-success">
-        <i class="pi pi-check-circle"></i> {{ successMessage() }}
-      </div>
-    }
+  @if (loadingData()) {
+    <div class="loading-center"><i class="pi pi-spin pi-spinner"></i> Chargement...</div>
+  } @else {
+    <div class="card">
+      <h2 class="card-title">{{ isEdit() ? 'Modifier le mandat' : 'Nouveau mandat' }}</h2>
 
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Type de mandat *</label>
-        <select class="form-input" [(ngModel)]="formData.type" name="type">
-          <option value="" disabled>Choisir un type...</option>
-          <option value="EXCLUSIVE">Exclusif</option>
-          <option value="SIMPLE">Simple</option>
-          <option value="SEMI_EXCLUSIVE">Semi-exclusif</option>
-        </select>
-      </div>
+      @if (errorMessage()) {
+        <div class="alert alert-error">
+          <i class="pi pi-exclamation-circle"></i> {{ errorMessage() }}
+        </div>
+      }
 
-      <div class="form-group">
-        <label class="form-label">Type de transaction</label>
-        <select class="form-input" [(ngModel)]="formData.transactionType" name="transactionType">
-          <option value="SALE">Vente</option>
-          <option value="RENTAL">Location</option>
-        </select>
+      <!-- TYPE DE MANDAT -->
+      <div class="section-title">Type de mandat *</div>
+      <div class="type-options">
+        @for (opt of typeOptions; track opt.value) {
+          <div class="type-option" [class.selected]="formData.type === opt.value"
+               (click)="formData.type = opt.value">
+            <div class="type-option-label">{{ opt.label }}</div>
+            <div class="type-option-desc">{{ opt.desc }}</div>
+          </div>
+        }
       </div>
 
-      <div class="form-group">
-        <label class="form-label">ID du bien immobilier</label>
-        <input type="text" class="form-input"
-          [(ngModel)]="formData.propertyId" name="propertyId"
-          placeholder="UUID du bien (optionnel)" />
+      <div class="form-grid">
+
+        <!-- BIEN IMMOBILIER -->
+        <div class="form-group full-width">
+          <label class="form-label">Bien immobilier</label>
+          <div class="autocomplete-wrap">
+            <div class="autocomplete-input-row">
+              <i class="pi pi-home input-icon"></i>
+              <input type="text" class="form-input with-icon"
+                [value]="propertySearch()"
+                (input)="propertySearch.set($any($event.target).value)"
+                (focus)="onPropertySearchFocus()"
+                (blur)="onPropertySearchBlur()"
+                placeholder="Rechercher un bien par titre, adresse ou référence..." />
+              @if (formData.propertyId) {
+                <button class="clear-btn" (click)="clearProperty()" type="button">
+                  <i class="pi pi-times"></i>
+                </button>
+              }
+            </div>
+            @if (showPropertyDropdown() && filteredProperties().length > 0) {
+              <div class="autocomplete-dropdown">
+                @for (p of filteredProperties(); track p.id) {
+                  <div class="autocomplete-item" (mousedown)="selectProperty(p)">
+                    <div class="autocomplete-item-main">
+                      @if (p.reference) {
+                        <span class="item-ref">{{ p.reference }}</span>
+                      }
+                      {{ p.title || p.address }}
+                    </div>
+                    <div class="autocomplete-item-sub">{{ p.city }} — {{ p.price | number:'1.0-0' }} €</div>
+                  </div>
+                }
+              </div>
+            }
+            @if (formData.propertyId && selectedProperty()) {
+              <div class="selected-chip">
+                <i class="pi pi-check-circle"></i>
+                {{ selectedProperty()!.reference ? '[' + selectedProperty()!.reference + '] ' : '' }}
+                {{ selectedProperty()!.title || selectedProperty()!.address }}
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- MANDANT (CONTACT) -->
+        <div class="form-group full-width">
+          <label class="form-label">Mandant (contact)</label>
+          <div class="autocomplete-wrap">
+            <div class="autocomplete-input-row">
+              <i class="pi pi-user input-icon"></i>
+              <input type="text" class="form-input with-icon"
+                [value]="contactSearch()"
+                (input)="contactSearch.set($any($event.target).value)"
+                (focus)="onContactSearchFocus()"
+                (blur)="onContactSearchBlur()"
+                placeholder="Rechercher un contact par nom ou email..." />
+              @if (formData.mandatorId) {
+                <button class="clear-btn" (click)="clearContact()" type="button">
+                  <i class="pi pi-times"></i>
+                </button>
+              }
+            </div>
+            @if (showContactDropdown() && filteredContacts().length > 0) {
+              <div class="autocomplete-dropdown">
+                @for (c of filteredContacts(); track c.id) {
+                  <div class="autocomplete-item" (mousedown)="selectContact(c)">
+                    <div class="autocomplete-item-main">{{ c.firstName }} {{ c.lastName }}</div>
+                    <div class="autocomplete-item-sub">{{ c.email }}{{ c.phone ? ' — ' + c.phone : '' }}</div>
+                  </div>
+                }
+              </div>
+            }
+            @if (formData.mandatorId && selectedContact()) {
+              <div class="selected-chip">
+                <i class="pi pi-check-circle"></i>
+                {{ selectedContact()!.firstName }} {{ selectedContact()!.lastName }}
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- PRIX -->
+        <div class="form-group">
+          <label class="form-label">Prix mandaté (€) *</label>
+          <input type="number" class="form-input"
+            [(ngModel)]="formData.price" name="price"
+            placeholder="350000" min="0" />
+        </div>
+
+        <!-- HONORAIRES -->
+        <div class="form-group">
+          <label class="form-label">Honoraires agence (%)</label>
+          <div class="input-with-suffix">
+            <input type="number" class="form-input"
+              [(ngModel)]="formData.agencyFeesPercent" name="agencyFeesPercent"
+              placeholder="5" step="0.5" min="0" max="20" />
+            <span class="input-suffix-label">
+              = {{ (formData.price * formData.agencyFeesPercent / 100) | number:'1.0-0' }} €
+            </span>
+          </div>
+        </div>
+
+        <!-- DATE DÉBUT -->
+        <div class="form-group">
+          <label class="form-label">Date de début *</label>
+          <input type="date" class="form-input"
+            [(ngModel)]="formData.startDate" name="startDate" />
+        </div>
+
+        <!-- DATE FIN -->
+        <div class="form-group">
+          <label class="form-label">Date de fin *</label>
+          <input type="date" class="form-input"
+            [(ngModel)]="formData.endDate" name="endDate" />
+        </div>
+
+        <!-- DATE RENOUVELLEMENT -->
+        <div class="form-group">
+          <label class="form-label">Date de renouvellement</label>
+          <input type="date" class="form-input"
+            [(ngModel)]="formData.renewalDate" name="renewalDate" />
+        </div>
+
+        <!-- LIEU DE SIGNATURE -->
+        <div class="form-group">
+          <label class="form-label">Lieu de signature</label>
+          <input type="text" class="form-input"
+            [(ngModel)]="formData.signedAtPlace" name="signedAtPlace"
+            placeholder="Ex : Toulouse" />
+        </div>
+
+        <!-- STATUT (mode édition) -->
+        @if (isEdit()) {
+          <div class="form-group full-width">
+            <label class="form-label">Statut du mandat</label>
+            <div class="status-options">
+              @for (s of statusOptions; track s.value) {
+                <div class="status-option" [class.selected]="formData.status === s.value"
+                     (click)="formData.status = s.value"
+                     [style.--status-color]="s.color">
+                  <span class="status-dot" [style.background]="s.color"></span>
+                  {{ s.label }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- NOTES -->
+        <div class="form-group full-width">
+          <label class="form-label">Notes / Conditions particulières</label>
+          <textarea class="form-input"
+            [(ngModel)]="formData.notes" name="notes"
+            rows="3"
+            placeholder="Conditions particulières, observations..."></textarea>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">ID du mandant (contact)</label>
-        <input type="text" class="form-input"
-          [(ngModel)]="formData.mandatorId" name="mandatorId"
-          placeholder="UUID du contact mandant (optionnel)" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Prix mandaté (€) *</label>
-        <input type="number" class="form-input"
-          [(ngModel)]="formData.price" name="price"
-          placeholder="350000" min="0" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Honoraires agence (%)</label>
-        <input type="number" class="form-input"
-          [(ngModel)]="formData.agencyFeesPercent" name="agencyFeesPercent"
-          placeholder="5" step="0.5" min="0" max="20" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Date de début *</label>
-        <input type="date" class="form-input"
-          [(ngModel)]="formData.startDate" name="startDate" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Date de fin *</label>
-        <input type="date" class="form-input"
-          [(ngModel)]="formData.endDate" name="endDate" />
-      </div>
-
-      <div class="form-group" style="grid-column: 1/-1">
-        <label class="form-label">Notes</label>
-        <textarea class="form-input"
-          [(ngModel)]="formData.notes" name="notes"
-          rows="3"
-          placeholder="Conditions particulières, observations..."></textarea>
+      <div class="form-actions">
+        <a routerLink="/mandates" class="btn-secondary">Annuler</a>
+        <button class="btn-primary" (click)="onSave()" [disabled]="isSaving() || !isValid()">
+          <i class="pi"
+            [class.pi-spin]="isSaving()"
+            [class.pi-spinner]="isSaving()"
+            [class.pi-check]="!isSaving()"></i>
+          {{ isSaving() ? 'Sauvegarde...' : (isEdit() ? 'Mettre à jour' : 'Créer le mandat') }}
+        </button>
       </div>
     </div>
-
-    <div class="form-actions">
-      <a routerLink="/mandates" class="btn-secondary">Annuler</a>
-      <button class="btn-primary" (click)="onSave()" [disabled]="loading() || !isValid()">
-        <i class="pi"
-          [class.pi-spin]="loading()"
-          [class.pi-spinner]="loading()"
-          [class.pi-check]="!loading()"></i>
-        {{ loading() ? 'Création en cours...' : 'Créer le mandat' }}
-      </button>
-    </div>
-  </div>
+  }
 </div>

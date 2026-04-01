@@ -19,13 +19,14 @@ export class PropertyTypeIconComponent {
       HOUSE: 'pi-home',
       VILLA: 'pi-sun',
       STUDIO: 'pi-inbox',
-      LOFT: 'pi-box',
-      DUPLEX: 'pi-copy',
       LAND: 'pi-map',
       COMMERCIAL: 'pi-shop',
       OFFICE: 'pi-briefcase',
+      WAREHOUSE: 'pi-box',
       GARAGE: 'pi-car',
-      PARKING: 'pi-car'
+      PARKING: 'pi-car',
+      NEW_PROGRAM: 'pi-star',
+      OTHER: 'pi-ellipsis-h'
     };
     return icons[this.type] || 'pi-building';
   }

@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { PropertyService } from '../../shared/services/property.service';
 import { PropertyCardComponent } from '../../shared/components/property-card.component';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb.component';
@@ -19,12 +20,28 @@ import { Property } from '../../shared/models/property.model';
 export class PropertyDetailComponent implements OnInit {
   private readonly propertyService = inject(PropertyService);
   private readonly route = inject(ActivatedRoute);
+  private readonly sanitizer = inject(DomSanitizer);
 
   property = signal<Property | null>(null);
   similarProperties = signal<Property[]>([]);
   notFound = signal(false);
   currentPhotoIndex = signal(0);
   showFullDescription = signal(false);
+  lightboxOpen = signal(false);
+  lightboxIndex = signal(0);
+
+  mapUrl = computed((): SafeResourceUrl | null => {
+    const p = this.property();
+    const lat = p?.location?.lat;
+    const lng = p?.location?.lng;
+    if (!lat || !lng) return null;
+    const d = 0.008;
+    const url = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-d},${lat-d},${lng+d},${lat+d}&layer=mapnik&marker=${lat},${lng}`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  });
+
+  @HostListener('document:keydown.escape')
+  onEsc(): void { this.lightboxOpen.set(false); }
 
   breadcrumbs = () => {
     const p = this.property();
@@ -85,6 +102,20 @@ export class PropertyDetailComponent implements OnInit {
 
   openGallery(index: number): void {
     this.currentPhotoIndex.set(index);
+    this.lightboxIndex.set(index);
+    this.lightboxOpen.set(true);
+  }
+
+  closeLightbox(): void { this.lightboxOpen.set(false); }
+
+  prevLightbox(): void {
+    const len = this.property()!.photos.length;
+    this.lightboxIndex.update(i => (i - 1 + len) % len);
+  }
+
+  nextLightbox(): void {
+    const len = this.property()!.photos.length;
+    this.lightboxIndex.update(i => (i + 1) % len);
   }
 
   formatPrice(): string {

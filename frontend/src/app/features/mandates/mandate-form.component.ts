@@ -1,9 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MandateService } from '../../core/services/mandate.service';
-import { MandateType } from '../../core/models/enums';
+import { PropertyService } from '../../core/services/property.service';
+import { ContactService } from '../../core/services/contact.service';
+import { MandateType, MandateStatus } from '../../core/models/enums';
+import { Property } from '../../core/models/property.model';
+import { Contact } from '../../core/models/contact.model';
 
 @Component({
   selector: 'app-mandate-form',
@@ -12,33 +16,187 @@ import { MandateType } from '../../core/models/enums';
   templateUrl: './mandate-form.component.html',
   styleUrls: ['./mandate-form.component.scss']
 })
-export class MandateFormComponent {
+export class MandateFormComponent implements OnInit {
   private readonly mandateService = inject(MandateService);
+  private readonly propertyService = inject(PropertyService);
+  private readonly contactService = inject(ContactService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
+  // État
   loading = signal(false);
+  loadingData = signal(true);
+  isSaving = signal(false);
   errorMessage = signal('');
-  successMessage = signal('');
+  editId = signal<string | null>(null);
 
+  // Données pour les dropdowns
+  properties = signal<Property[]>([]);
+  contacts = signal<Contact[]>([]);
+
+  // Recherche dans les dropdowns
+  propertySearch = signal('');
+  contactSearch = signal('');
+  showPropertyDropdown = signal(false);
+  showContactDropdown = signal(false);
+
+  // Bien et contact sélectionnés (pour l'affichage)
+  selectedProperty = signal<Property | null>(null);
+  selectedContact = signal<Contact | null>(null);
+
+  // Formulaire
   formData = {
     type: '' as MandateType | '',
-    transactionType: 'SALE',
+    status: MandateStatus.ACTIVE as MandateStatus,
     propertyId: '',
     mandatorId: '',
     price: 0,
     agencyFeesPercent: 5,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    renewalDate: '',
+    signedAtPlace: '',
     notes: ''
   };
 
-  isValid(): boolean {
-    return !!(
-      this.formData.type &&
-      this.formData.price > 0 &&
-      this.formData.startDate &&
-      this.formData.endDate
-    );
+  // Options
+  typeOptions = [
+    { value: MandateType.SIMPLE,        label: 'Simple',       desc: 'Le propriétaire peut mandater plusieurs agences' },
+    { value: MandateType.EXCLUSIVE,     label: 'Exclusif',     desc: 'Mandat exclusif confié à votre agence' },
+    { value: MandateType.SEMI_EXCLUSIVE,label: 'Semi-exclusif',desc: 'Agence exclusive + vente en direct autorisée' },
+    { value: MandateType.CO_EXCLUSIVE,  label: 'Co-exclusif',  desc: 'Exclusivité partagée entre plusieurs agences' }
+  ];
+
+  statusOptions = [
+    { value: MandateStatus.ACTIVE,    label: 'Actif',    color: '#10b981' },
+    { value: MandateStatus.EXPIRED,   label: 'Expiré',   color: '#ef4444' },
+    { value: MandateStatus.CANCELLED, label: 'Annulé',   color: '#6b7280' },
+    { value: MandateStatus.COMPLETED, label: 'Terminé',  color: '#3b82f6' }
+  ];
+
+  // Biens filtrés
+  filteredProperties = computed(() => {
+    const q = this.propertySearch().toLowerCase();
+    if (!q) return this.properties().slice(0, 10);
+    return this.properties().filter(p =>
+      p.title?.toLowerCase().includes(q) ||
+      p.address?.toLowerCase().includes(q) ||
+      p.reference?.toLowerCase().includes(q)
+    ).slice(0, 10);
+  });
+
+  // Contacts filtrés
+  filteredContacts = computed(() => {
+    const q = this.contactSearch().toLowerCase();
+    if (!q) return this.contacts().slice(0, 10);
+    return this.contacts().filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.phone?.toLowerCase().includes(q)
+    ).slice(0, 10);
+  });
+
+  isEdit = computed(() => !!this.editId());
+  isValid = computed(() => !!(
+    this.formData.type &&
+    this.formData.price > 0 &&
+    this.formData.startDate &&
+    this.formData.endDate
+  ));
+
+  ngOnInit(): void {
+    // Charger biens et contacts en parallèle
+    this.propertyService.getAll({ page: 0, pageSize: 200 }).subscribe(page => {
+      this.properties.set(page.properties);
+    });
+    this.contactService.getAll().subscribe(contacts => {
+      this.contacts.set(contacts);
+    });
+
+    // Mode édition ?
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.editId.set(id);
+      this.mandateService.getById(id).subscribe({
+        next: m => {
+          this.formData = {
+            type: m.type,
+            status: m.status,
+            propertyId: m.propertyId,
+            mandatorId: m.mandatorId,
+            price: m.price,
+            agencyFeesPercent: m.agencyFeePercent,
+            startDate: m.startDate instanceof Date
+              ? m.startDate.toISOString().split('T')[0]
+              : String(m.startDate),
+            endDate: m.endDate instanceof Date
+              ? m.endDate.toISOString().split('T')[0]
+              : String(m.endDate),
+            renewalDate: m.renewalDate instanceof Date
+              ? m.renewalDate.toISOString().split('T')[0]
+              : '',
+            signedAtPlace: m.signedAtPlace || '',
+            notes: m.notes || ''
+          };
+          // Pré-charger les libellés
+          if (m.propertyReference || m.propertyAddress) {
+            this.propertySearch.set(m.propertyReference || m.propertyAddress || '');
+          }
+          if (m.mandatorName) {
+            this.contactSearch.set(m.mandatorName);
+          }
+          this.loadingData.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('Impossible de charger le mandat.');
+          this.loadingData.set(false);
+        }
+      });
+    } else {
+      this.loadingData.set(false);
+    }
+  }
+
+  // Sélection d'un bien
+  selectProperty(p: Property): void {
+    this.formData.propertyId = p.id;
+    this.propertySearch.set(`${p.reference ? '[' + p.reference + '] ' : ''}${p.title || p.address}`);
+    this.selectedProperty.set(p);
+    this.showPropertyDropdown.set(false);
+    // Pré-remplir le prix depuis le bien
+    if (p.price && !this.formData.price) {
+      this.formData.price = p.price;
+    }
+  }
+
+  clearProperty(): void {
+    this.formData.propertyId = '';
+    this.propertySearch.set('');
+    this.selectedProperty.set(null);
+  }
+
+  // Sélection d'un contact
+  selectContact(c: Contact): void {
+    this.formData.mandatorId = c.id;
+    this.contactSearch.set(`${c.firstName} ${c.lastName}${c.email ? ' — ' + c.email : ''}`);
+    this.selectedContact.set(c);
+    this.showContactDropdown.set(false);
+  }
+
+  clearContact(): void {
+    this.formData.mandatorId = '';
+    this.contactSearch.set('');
+    this.selectedContact.set(null);
+  }
+
+  onPropertySearchFocus(): void { this.showPropertyDropdown.set(true); }
+  onContactSearchFocus(): void { this.showContactDropdown.set(true); }
+
+  onPropertySearchBlur(): void {
+    setTimeout(() => this.showPropertyDropdown.set(false), 200);
+  }
+  onContactSearchBlur(): void {
+    setTimeout(() => this.showContactDropdown.set(false), 200);
   }
 
   onSave(): void {
@@ -51,27 +209,36 @@ export class MandateFormComponent {
       return;
     }
 
-    this.loading.set(true);
+    this.isSaving.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
 
-    this.mandateService.create({
+    const payload: any = {
       type: this.formData.type as MandateType,
+      status: this.formData.status,
       price: this.formData.price,
       agencyFeePercent: this.formData.agencyFeesPercent,
       startDate: new Date(this.formData.startDate),
       endDate: new Date(this.formData.endDate),
+      renewalDate: this.formData.renewalDate ? new Date(this.formData.renewalDate) : undefined,
       propertyId: this.formData.propertyId || undefined,
       mandatorId: this.formData.mandatorId || undefined,
-    } as any).subscribe({
+      signedAtPlace: this.formData.signedAtPlace || undefined,
+      notes: this.formData.notes || undefined
+    };
+
+    const op = this.isEdit()
+      ? this.mandateService.update(this.editId()!, payload)
+      : this.mandateService.create(payload);
+
+    op.subscribe({
       next: () => {
-        this.loading.set(false);
-        this.successMessage.set('Mandat créé avec succès !');
-        setTimeout(() => this.router.navigate(['/mandates']), 1500);
+        this.isSaving.set(false);
+        this.mandateService.notifyChange();
+        this.router.navigate(['/mandates']);
       },
       error: (err) => {
-        this.loading.set(false);
-        this.errorMessage.set(err?.message || 'Erreur lors de la création du mandat. Vérifiez les données saisies.');
+        this.isSaving.set(false);
+        this.errorMessage.set(err?.error?.message || 'Erreur lors de la sauvegarde du mandat.');
       }
     });
   }

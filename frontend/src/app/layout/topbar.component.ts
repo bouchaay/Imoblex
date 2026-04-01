@@ -75,6 +75,7 @@ export class TopbarComponent {
   }
 
   logout(): void {
+    this.closeAll();
     this.authService.logout();
   }
 }

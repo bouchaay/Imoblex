@@ -3,6 +3,7 @@ package fr.imoblex.modules.property.controller;
 import fr.imoblex.modules.property.dto.PropertyCreateRequest;
 import fr.imoblex.modules.property.dto.PropertyResponse;
 import fr.imoblex.modules.property.dto.PropertySearchRequest;
+import fr.imoblex.modules.property.service.PhotoStorageService;
 import fr.imoblex.modules.property.service.PropertyService;
 import fr.imoblex.shared.response.ApiResponse;
 import fr.imoblex.shared.response.PageResponse;
@@ -15,7 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +28,7 @@ import java.util.UUID;
 public class PropertyController {
 
     private final PropertyService propertyService;
+    private final PhotoStorageService photoStorageService;
 
     @GetMapping
     @Operation(summary = "Recherche et liste des biens (back-office)")
@@ -76,5 +80,23 @@ public class PropertyController {
     @Operation(summary = "Publier/dépublier un bien sur le site")
     public ResponseEntity<ApiResponse<PropertyResponse>> togglePublish(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(propertyService.togglePublish(id)));
+    }
+
+    @PostMapping("/{id}/photos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Uploader des photos pour un bien")
+    public ResponseEntity<ApiResponse<List<PropertyResponse.PhotoDto>>> uploadPhotos(
+            @PathVariable UUID id,
+            @RequestParam("files") MultipartFile[] files
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(photoStorageService.uploadPhotos(id, files)));
+    }
+
+    @DeleteMapping("/{id}/photos/{photoId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Supprimer une photo d'un bien")
+    public ResponseEntity<Void> deletePhoto(@PathVariable UUID id, @PathVariable UUID photoId) {
+        photoStorageService.deletePhoto(id, photoId);
+        return ResponseEntity.noContent().build();
     }
 }

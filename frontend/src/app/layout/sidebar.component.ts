@@ -1,7 +1,9 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterLinkActive } from '@angular/router';
+import { RouterModule, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter, merge } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
+import { PropertyService } from '../core/services/property.service';
 
 interface NavItem {
   label: string;
@@ -23,19 +25,21 @@ interface NavGroup {
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() toggleCollapse = new EventEmitter<void>();
 
   readonly authService = inject(AuthService);
+  private readonly propertyService = inject(PropertyService);
+  private readonly router = inject(Router);
 
   navGroups: NavGroup[] = [
     {
       title: 'Principal',
       items: [
         { label: 'Tableau de bord', icon: 'pi-home', route: '/dashboard' },
-        { label: 'Biens', icon: 'pi-building', route: '/properties', badge: 8 },
-        { label: 'Mandats', icon: 'pi-file-edit', route: '/mandates', badge: 3, badgeColor: '#ef4444' },
+        { label: 'Biens', icon: 'pi-building', route: '/properties' },
+        { label: 'Mandats', icon: 'pi-file-edit', route: '/mandates' },
         { label: 'Contacts', icon: 'pi-users', route: '/contacts' }
       ]
     },
@@ -55,6 +59,25 @@ export class SidebarComponent {
       ]
     }
   ];
+
+  ngOnInit(): void {
+    this.loadPropertyCount();
+
+    merge(
+      this.propertyService.change$,
+      this.router.events.pipe(filter(e => e instanceof NavigationEnd))
+    ).subscribe(() => this.loadPropertyCount());
+  }
+
+  private loadPropertyCount(): void {
+    this.propertyService.getAll({ page: 0, pageSize: 1 }).subscribe({
+      next: page => {
+        const item = this.navGroups[0].items.find(i => i.route === '/properties');
+        if (item) item.badge = page.total;
+      },
+      error: () => {}
+    });
+  }
 
   getRoleLabel(role?: string): string {
     const labels: Record<string, string> = {
