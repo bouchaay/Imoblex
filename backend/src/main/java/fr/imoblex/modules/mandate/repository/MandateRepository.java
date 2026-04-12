@@ -28,7 +28,7 @@ public interface MandateRepository extends JpaRepository<Mandate, UUID> {
 
     long countByStatus(MandateStatus status);
 
-    @Query("SELECT m FROM Mandate m WHERE m.status = 'ACTIVE' AND m.endDate BETWEEN :now AND :cutoff ORDER BY m.endDate ASC")
+    @Query("SELECT m FROM Mandate m LEFT JOIN FETCH m.property p WHERE m.status = 'ACTIVE' AND m.endDate BETWEEN :now AND :cutoff ORDER BY m.endDate ASC")
     List<Mandate> findExpiringMandates(LocalDate now, LocalDate cutoff);
 
     @Query("SELECT MAX(CAST(SUBSTRING(m.mandateNumber, 4) AS long)) FROM Mandate m WHERE m.mandateNumber LIKE 'MND%'")

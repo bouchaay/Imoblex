@@ -2,8 +2,11 @@ import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import * as L from 'leaflet';
 import { PropertyService } from '../../shared/services/property.service';
+import { FavoritesService } from '../../shared/services/favorites.service';
 import { PropertyCardComponent } from '../../shared/components/property-card.component';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb.component';
 import { Property, PropertySearchParams, TransactionType, PropertyType } from '../../shared/models/property.model';
@@ -20,17 +23,22 @@ type SortOption = 'date_desc' | 'price_asc' | 'price_desc' | 'area_desc';
 })
 export class SearchComponent implements OnInit, OnDestroy {
   private readonly propertyService = inject(PropertyService);
+  private readonly favoritesService = inject(FavoritesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   transactionType = signal<TransactionType>('sale');
+  showFavoritesOnly = signal(false);
   properties = signal<Property[]>([]);
+  allFetchedProperties = signal<Property[]>([]);
   totalResults = signal(0);
   currentPage = signal(1);
   totalPages = signal(1);
   loading = signal(true);
   currentView = signal<ViewMode>('grid');
   sortBy: SortOption = 'date_desc';
+
+  get favoritesCount(): number { return this.favoritesService.count(); }
 
   private map: L.Map | null = null;
   private markers: L.Layer[] = [];
@@ -128,9 +136,16 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   setTransactionType(type: TransactionType): void {
     this.transactionType.set(type);
+    this.showFavoritesOnly.set(false);
     this.currentPage.set(1);
     this.applyFilters();
     this.router.navigate([type === 'sale' ? '/vente' : '/location']);
+  }
+
+  toggleFavorites(): void {
+    this.showFavoritesOnly.update(v => !v);
+    this.currentPage.set(1);
+    this.applyFilters();
   }
 
   setView(mode: ViewMode): void {
@@ -144,6 +159,29 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     this.loading.set(true);
+
+    if (this.showFavoritesOnly()) {
+      const ids = this.favoritesService.getFavoriteIds();
+      if (ids.length === 0) {
+        this.properties.set([]);
+        this.totalResults.set(0);
+        this.totalPages.set(1);
+        this.loading.set(false);
+        return;
+      }
+      // Load each favorited property directly by ID — reliable regardless of pagination
+      forkJoin(
+        ids.map(id => this.propertyService.getPropertyById(id).pipe(catchError(() => of(null))))
+      ).subscribe(results => {
+        const favProps = results.filter((p): p is Property => p !== null);
+        this.properties.set(favProps);
+        this.totalResults.set(favProps.length);
+        this.totalPages.set(1);
+        this.loading.set(false);
+      });
+      return;
+    }
+
     const selectedTypes = this.propertyTypes.filter(t => t.checked).map(t => t.value);
     const params: PropertySearchParams = {
       type: this.transactionType(),

@@ -3,9 +3,11 @@
     <div class="flex items-center justify-between h-24">
 
       <!-- Logo -->
-      <a routerLink="/" class="flex items-center group">
-        <div class="transition-all duration-300 group-hover:scale-105">
-          <img src="assets/logo.png" alt="Imoblex" class="h-16 w-auto" />
+      <a routerLink="/" class="nav-logo-link group">
+        <img class="nav-logo-img" src="assets/logo.png" alt="IMOBLEX" />
+        <div class="nav-logo-text">
+          <span class="nav-logo-name">IMOBLEX</span>
+          <span class="nav-logo-tagline">Le Monde Immobilier</span>
         </div>
       </a>
 
@@ -34,8 +36,12 @@
   <!-- Mobile Menu -->
   <div class="mobile-menu" [class.is-open]="mobileMenuOpen()">
     <div class="flex items-center justify-between px-6 h-20 border-b border-white/10">
-      <a routerLink="/" class="flex items-center" (click)="closeMobileMenu()">
-        <img src="assets/logo.png" alt="Imoblex" class="h-10 w-auto" />
+      <a routerLink="/" class="nav-logo-link group" (click)="closeMobileMenu()">
+        <img class="nav-logo-img" src="assets/logo.png" alt="IMOBLEX" />
+        <div class="nav-logo-text">
+          <span class="nav-logo-name" style="color:#fff">IMOBLEX</span>
+          <span class="nav-logo-tagline" style="color:rgba(255,255,255,0.5)">Le Monde Immobilier</span>
+        </div>
       </a>
       <button class="text-white p-2" (click)="closeMobileMenu()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

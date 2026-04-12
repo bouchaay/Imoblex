@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Property } from '../models/property.model';
+import { FavoritesService } from '../services/favorites.service';
 
 @Component({
   selector: 'app-property-card',
@@ -10,16 +11,27 @@ import { Property } from '../models/property.model';
   templateUrl: './property-card.component.html',
   styleUrls: ['./property-card.component.scss']
 })
-export class PropertyCardComponent {
+export class PropertyCardComponent implements OnInit {
   @Input({ required: true }) property!: Property;
   @Output() favoriteToggled = new EventEmitter<string>();
 
-  isFavorite = signal(false);
+  private readonly favService = inject(FavoritesService);
+  isFav = false;
+
+  ngOnInit(): void {
+    // Auto-remove from favorites if property is no longer available
+    const unavailable = this.property.status === 'sold' || this.property.status === 'rented';
+    if (unavailable && this.favService.isFavorite(this.property.id)) {
+      this.favService.remove(this.property.id);
+    }
+    this.isFav = this.favService.isFavorite(this.property.id);
+  }
 
   toggleFavorite(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.isFavorite.update(v => !v);
+    this.favService.toggle(this.property.id);
+    this.isFav = this.favService.isFavorite(this.property.id);
     this.favoriteToggled.emit(this.property.id);
   }
 

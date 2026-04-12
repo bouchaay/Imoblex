@@ -1,4 +1,4 @@
-import { MandateType, MandateStatus, TransactionType } from './enums';
+import { MandateCategory, MandateType, MandateStatus, TransactionType } from './enums';
 import { Property } from './property.model';
 import { Contact } from './contact.model';
 import { User } from './user.model';
@@ -6,6 +6,7 @@ import { User } from './user.model';
 export interface Mandate {
   id: string;
   reference: string;
+  category?: MandateCategory;
   type: MandateType;
   status: MandateStatus;
   transactionType: TransactionType;
@@ -22,6 +23,7 @@ export interface Mandate {
   price: number;
   agencyFeePercent: number;
   agencyFeeAmount: number;
+  agencyFeesText?: string;
   startDate: Date;
   endDate: Date;
   renewalDate?: Date;
@@ -30,6 +32,7 @@ export interface Mandate {
   signedAtPlace?: string;
   notes?: string;
   conditions?: string;
+  maxDurationYears?: number;
   isRenewable: boolean;
   renewalCount: number;
   createdAt: Date;

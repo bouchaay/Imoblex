@@ -161,6 +161,92 @@
           </p>
         </div>
 
+        <!-- Disponibilité + Transports + Commerces -->
+        @if (property()!.availableFrom || (property()!.transports && property()!.transports!.length > 0) || (property()!.shops && property()!.shops!.length > 0)) {
+          <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+            <h2 class="font-heading font-bold text-primary text-lg mb-4">Proximité & disponibilité</h2>
+
+            @if (property()!.availableFrom) {
+              <div class="flex items-center gap-2 mb-5">
+                <svg class="w-5 h-5 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+                </svg>
+                <span class="text-sm text-gray-600">
+                  Disponible à partir du
+                  <strong class="text-primary ml-1">{{ property()!.availableFrom | date:'longDate':'':'fr-FR' }}</strong>
+                </span>
+              </div>
+            }
+
+            @if (property()!.transports && property()!.transports!.length > 0) {
+              <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 6 4 6 8v6l-2 2v1h16v-1l-2-2V8c0-4-2.13-6-6-6zm0 19c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm0-17c3.1 0 4 1.73 4 4v7H8V8c0-2.27.9-4 4-4z"/>
+                </svg>
+                Transports en commun
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-5">
+                @for (t of property()!.transports!; track t) {
+                  <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg text-sm">
+                    <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl text-white flex-shrink-0"
+                      [ngClass]="getTransportBgClass(t.type)"
+                      style="min-width:2.25rem">
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                        <path [attr.d]="getTransportIconPath(t.type)" />
+                      </svg>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <div class="font-semibold text-gray-800 truncate flex items-center gap-1">
+                        {{ t.name || getTransportLabel(t.type) }}
+                        @if (t.line) {
+                          <span class="inline-block bg-primary/10 text-primary text-xs font-bold px-1.5 py-0.5 rounded">{{ t.line }}</span>
+                        }
+                      </div>
+                      <div class="text-gray-400 text-xs mt-0.5">
+                        {{ getTransportLabel(t.type) }}
+                        @if (t.walkingMinutes || t.distanceMeters) {
+                          ·
+                          @if (t.walkingMinutes) { {{ t.walkingMinutes }} min à pied }
+                          @if (t.walkingMinutes && t.distanceMeters) { — }
+                          @if (t.distanceMeters) { {{ t.distanceMeters }} m }
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (property()!.shops && property()!.shops!.length > 0) {
+              <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4v2l16-.02V4zM4 20h16v-2H4v2zm0-4h16v-2H4v2zm0-4h16V8H4v4z"/>
+                </svg>
+                Commerces & services
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                @for (s of property()!.shops!; track s) {
+                  <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg text-sm">
+                    <span class="text-xl flex-shrink-0" style="min-width:1.5rem">
+                      {{ s.type === 'SUPERMARKET' ? '🛒' : s.type === 'BAKERY' ? '🥖' : s.type === 'PHARMACY' ? '💊' : s.type === 'SCHOOL' ? '🏫' : s.type === 'KINDERGARTEN' ? '🧒' : s.type === 'PARK' ? '🌳' : s.type === 'RESTAURANT' ? '🍽️' : s.type === 'BANK' ? '🏦' : s.type === 'HOSPITAL' ? '🏥' : '📍' }}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <div class="font-medium text-gray-800 truncate">{{ s.name || (s.type === 'SUPERMARKET' ? 'Supermarché' : s.type === 'BAKERY' ? 'Boulangerie' : s.type === 'PHARMACY' ? 'Pharmacie' : s.type === 'SCHOOL' ? 'École' : s.type === 'KINDERGARTEN' ? 'Crèche / Maternelle' : s.type === 'PARK' ? 'Parc / Jardin' : s.type === 'RESTAURANT' ? 'Restaurant' : s.type === 'BANK' ? 'Banque' : s.type === 'HOSPITAL' ? 'Hôpital' : 'Commerce') }}</div>
+                      @if (s.walkingMinutes || s.distanceMeters) {
+                        <div class="text-gray-500 text-xs">
+                          @if (s.walkingMinutes) { {{ s.walkingMinutes }} min à pied }
+                          @if (s.walkingMinutes && s.distanceMeters) { · }
+                          @if (s.distanceMeters) { {{ s.distanceMeters }} m }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
         <!-- Map -->
         <div class="bg-white rounded-xl shadow-card p-6 mb-6">
           <h2 class="font-heading font-bold text-primary text-lg mb-4">
@@ -242,7 +328,8 @@
             title="Demande d'information"
             submitLabel="Envoyer ma demande"
             [showPropertyRef]="true"
-            [propertyRefPlaceholder]="property()!.reference"
+            [prefilledPropertyRef]="property()!.reference"
+            [phoneRequired]="true"
             messagePlaceholder="Je souhaite avoir plus d'informations sur ce bien..." />
 
           <!-- Call button -->

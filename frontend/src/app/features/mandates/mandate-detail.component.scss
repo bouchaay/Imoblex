@@ -134,3 +134,102 @@
 }
 .text-red { color: #ef4444 !important; }
 .text-blue { color: #1B4F72 !important; }
+
+/* ── PDF dropdown ─────────────────────────────────────────────── */
+.pdf-dropdown-wrap { position: relative; }
+
+.pdf-chevron {
+  font-size: 0.7rem;
+  margin-left: 2px;
+  transition: transform 0.18s ease;
+  &.open { transform: rotate(180deg); }
+}
+
+.pdf-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 300;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+  border: 1.5px solid #e2e8f0;
+  min-width: 230px;
+  overflow: hidden;
+  animation: menuIn 0.15s ease;
+}
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pdf-menu-date {
+  padding: 0.75rem 1rem 0.6rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pdf-date-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.4rem;
+  i { font-size: 0.8rem; color: #1B4F72; }
+}
+
+.pdf-date-optional {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.pdf-date-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #1e293b;
+  background: #f8fafc;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  &:focus { border-color: #1B4F72; background: #fff; }
+}
+
+.pdf-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+
+  i { font-size: 1rem; color: #1B4F72; flex-shrink: 0; }
+
+  span { display: flex; flex-direction: column; gap: 1px; }
+  strong { font-size: 0.875rem; color: #1e293b; font-weight: 600; }
+  small { font-size: 0.75rem; color: #94a3b8; }
+
+  &:hover { background: #f8fafc; }
+  &:not(:last-child) { border-bottom: 1px solid #f1f5f9; }
+
+  &--blank {
+    i { color: #64748b; }
+    strong { color: #475569; }
+    &:hover { background: #f8f9fa; }
+  }
+}
+
+.pdf-menu-separator {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.25rem 0;
+}

@@ -270,6 +270,14 @@
                 </label>
               }
             </div>
+            <div class="form-group" style="margin-top:1rem;max-width:260px">
+              <label class="form-label">Ameublement</label>
+              <select formControlName="furnished" class="form-input">
+                <option [ngValue]="null">Non précisé</option>
+                <option [ngValue]="true">Meublé</option>
+                <option [ngValue]="false">Non meublé</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -384,6 +392,124 @@
               <div><span>Pièces :</span> {{ form.get('rooms')?.value || '—' }}</div>
             </div>
           </div>
+        </div>
+      </div>
+    }
+    <!-- Step 5: Proximité -->
+    @if (currentStep() === 5) {
+      <div class="step-panel animate-fade">
+        <!-- Available from -->
+        <div class="card form-card">
+          <h3 class="card-section-title">Disponibilité</h3>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Disponible à partir du</label>
+              <input type="date" class="form-input" formControlName="availableFrom" />
+              <span class="section-hint">Laisser vide si disponible immédiatement.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transports -->
+        <div class="card form-card">
+          <div class="card-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <h3 class="card-section-title" style="margin:0;border:none;padding:0">Transports en commun</h3>
+            <button type="button" class="btn-secondary" style="font-size:0.8rem;padding:0.4rem 0.8rem" (click)="addTransport()">
+              <i class="pi pi-plus"></i> Ajouter
+            </button>
+          </div>
+          @if (transports().length === 0) {
+            <p style="color:#94a3b8;font-size:0.875rem;text-align:center;padding:1.5rem 0">
+              Aucun transport ajouté
+            </p>
+          }
+          @for (t of transports(); track t; let i = $index) {
+            <div class="transport-row">
+              <div class="form-grid-3" style="flex:1">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Type</label>
+                  <select class="form-input" [(ngModel)]="t.type" [ngModelOptions]="{standalone: true}">
+                    <option value="METRO">Métro</option>
+                    <option value="BUS">Bus</option>
+                    <option value="TRAM">Tramway</option>
+                    <option value="RER">RER</option>
+                    <option value="TRAIN">Train</option>
+                    <option value="OTHER">Autre</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Ligne</label>
+                  <input type="text" class="form-input" [(ngModel)]="t.line" [ngModelOptions]="{standalone: true}" placeholder="ex: Ligne 4" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Nom / Station</label>
+                  <input type="text" class="form-input" [(ngModel)]="t.name" [ngModelOptions]="{standalone: true}" placeholder="ex: République" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Distance (m)</label>
+                  <input type="number" class="form-input" [(ngModel)]="t.distanceMeters" [ngModelOptions]="{standalone: true}" placeholder="ex: 300" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">À pied (min)</label>
+                  <input type="number" class="form-input" [(ngModel)]="t.walkingMinutes" [ngModelOptions]="{standalone: true}" placeholder="ex: 5" />
+                </div>
+              </div>
+              <button type="button" class="btn-remove-item" (click)="removeTransport(i)" title="Supprimer">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Commerces -->
+        <div class="card form-card">
+          <div class="card-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <h3 class="card-section-title" style="margin:0;border:none;padding:0">Commerces & services</h3>
+            <button type="button" class="btn-secondary" style="font-size:0.8rem;padding:0.4rem 0.8rem" (click)="addShop()">
+              <i class="pi pi-plus"></i> Ajouter
+            </button>
+          </div>
+          @if (shops().length === 0) {
+            <p style="color:#94a3b8;font-size:0.875rem;text-align:center;padding:1.5rem 0">
+              Aucun commerce ajouté
+            </p>
+          }
+          @for (s of shops(); track s; let i = $index) {
+            <div class="transport-row">
+              <div class="form-grid-3" style="flex:1">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Type</label>
+                  <select class="form-input" [(ngModel)]="s.type" [ngModelOptions]="{standalone: true}">
+                    <option value="SUPERMARKET">Supermarché</option>
+                    <option value="BAKERY">Boulangerie</option>
+                    <option value="PHARMACY">Pharmacie</option>
+                    <option value="SCHOOL">École</option>
+                    <option value="KINDERGARTEN">Crèche / Maternelle</option>
+                    <option value="PARK">Parc / Jardin</option>
+                    <option value="RESTAURANT">Restaurant / Café</option>
+                    <option value="BANK">Banque</option>
+                    <option value="HOSPITAL">Hôpital / Clinique</option>
+                    <option value="OTHER">Autre</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Nom (optionnel)</label>
+                  <input type="text" class="form-input" [(ngModel)]="s.name" [ngModelOptions]="{standalone: true}" placeholder="ex: Carrefour City" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Distance (m)</label>
+                  <input type="number" class="form-input" [(ngModel)]="s.distanceMeters" [ngModelOptions]="{standalone: true}" placeholder="ex: 200" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">À pied (min)</label>
+                  <input type="number" class="form-input" [(ngModel)]="s.walkingMinutes" [ngModelOptions]="{standalone: true}" placeholder="ex: 3" />
+                </div>
+              </div>
+              <button type="button" class="btn-remove-item" (click)="removeShop(i)" title="Supprimer">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          }
         </div>
       </div>
     }

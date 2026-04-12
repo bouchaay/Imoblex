@@ -1,24 +1,34 @@
 <footer class="bg-dark text-white">
 
   <!-- Newsletter strip -->
-  <div class="bg-primary py-10">
+  <div class="newsletter-strip">
     <div class="container-fluid">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div>
-          <h3 class="font-heading font-bold text-xl text-white">Alertes immobilières personnalisées</h3>
-          <p class="text-white/70 text-sm mt-1">Recevez les nouveaux biens correspondant à vos critères</p>
+      <div class="newsletter-strip-inner">
+        <div class="newsletter-strip-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        <div class="flex w-full md:w-auto gap-0 max-w-md">
-          <input
-            type="email"
-            [(ngModel)]="newsletterEmail"
-            placeholder="Votre adresse email"
-            class="newsletter-input flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-l-lg text-white placeholder-white/50 outline-none focus:border-accent text-sm min-w-0">
-          <button
-            (click)="subscribeNewsletter()"
-            class="bg-accent hover:bg-accent-600 text-white font-semibold px-6 py-3 rounded-r-lg transition-colors whitespace-nowrap text-sm">
-            S'inscrire
-          </button>
+        <div class="newsletter-strip-text">
+          <h3>Alertes immobilières personnalisées</h3>
+          <p>Recevez en avant-première les biens qui correspondent exactement à vos critères</p>
+        </div>
+        <div class="newsletter-strip-cta">
+          <div class="newsletter-inline-form">
+            <input
+              type="email"
+              [(ngModel)]="formData.email"
+              placeholder="Votre adresse email"
+              class="newsletter-email-input"
+            />
+            <button (click)="openModal()" class="newsletter-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              Créer mon alerte
+            </button>
+          </div>
+          <p class="newsletter-strip-legal">Gratuit · Sans engagement · Désabonnement en 1 clic</p>
         </div>
       </div>
     </div>
@@ -129,14 +139,154 @@
   </div>
 </footer>
 
-@if (subscribed()) {
-  <div class="toast toast-success">
-    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-    </svg>
-    <div>
-      <p class="font-semibold text-sm text-gray-800">Inscription confirmée !</p>
-      <p class="text-xs text-gray-500">Vous recevrez nos alertes immobilières.</p>
+<!-- Newsletter Modal -->
+@if (showModal()) {
+  <div class="nl-backdrop" (click)="closeModal()">
+    <div class="nl-modal" (click)="$event.stopPropagation()">
+
+      @if (!success()) {
+        <!-- Header -->
+        <div class="nl-header">
+          <div class="nl-header-icon">
+            <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6">
+              <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="nl-title">Créer mon alerte immo</h2>
+            <p class="nl-subtitle">Recevez les nouvelles annonces en avant-première</p>
+          </div>
+          <button class="nl-close" (click)="closeModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="nl-body">
+          <!-- Email -->
+          <div class="nl-field">
+            <label class="nl-label">Email *</label>
+            <input type="email" [(ngModel)]="formData.email" class="nl-input" placeholder="votre@email.fr" />
+          </div>
+
+          <!-- Ville -->
+          <div class="nl-field">
+            <label class="nl-label">Ville ou secteur recherché</label>
+            <input type="text" [(ngModel)]="formData.city" class="nl-input" placeholder="Ex : Toulouse, Colomiers…" />
+          </div>
+
+          <!-- Type de projet -->
+          <div class="nl-field">
+            <label class="nl-label">Projet</label>
+            <div class="nl-radio-group">
+              <label class="nl-radio" [class.active]="formData.transactionType === 'SALE'">
+                <input type="radio" name="txType" value="SALE" [(ngModel)]="formData.transactionType" hidden />
+                🏷️ Achat
+              </label>
+              <label class="nl-radio" [class.active]="formData.transactionType === 'RENT'">
+                <input type="radio" name="txType" value="RENT" [(ngModel)]="formData.transactionType" hidden />
+                🔑 Location
+              </label>
+              <label class="nl-radio" [class.active]="formData.transactionType === 'BOTH'">
+                <input type="radio" name="txType" value="BOTH" [(ngModel)]="formData.transactionType" hidden />
+                ✨ Les deux
+              </label>
+            </div>
+          </div>
+
+          <!-- Types de biens -->
+          <div class="nl-field">
+            <label class="nl-label">Types de biens (optionnel)</label>
+            <div class="nl-chips">
+              @for (opt of propertyTypeOptions; track opt.value) {
+                <button type="button"
+                        class="nl-chip"
+                        [class.active]="formData.propertyTypes.includes(opt.value)"
+                        (click)="togglePropertyType(opt.value)">
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Budget -->
+          <div class="nl-field">
+            <label class="nl-label">Budget (optionnel)</label>
+            <div class="nl-budget-row">
+              <input type="number" [(ngModel)]="formData.minBudget" class="nl-input" placeholder="Min €" />
+              <span class="nl-budget-sep">–</span>
+              <input type="number" [(ngModel)]="formData.maxBudget" class="nl-input" placeholder="Max €" />
+            </div>
+          </div>
+
+          <!-- GDPR -->
+          <div class="nl-gdpr">
+            <label class="nl-gdpr-label">
+              <input type="checkbox" [(ngModel)]="formData.gdprConsent" class="nl-gdpr-check" />
+              <span>
+                J'accepte que mes données personnelles (email, critères de recherche) soient traitées par
+                <strong>Imoblex – ANDRADE ALEIXO SARL</strong> dans le but exclusif de recevoir des alertes
+                immobilières personnalisées. Je peux me désabonner à tout moment via le lien présent dans
+                chaque email. Données conservées 3 ans maximum.
+                <a href="/politique-confidentialite" target="_blank" class="nl-gdpr-link">En savoir plus</a>
+              </span>
+            </label>
+          </div>
+
+          @if (error()) {
+            <div class="nl-error">{{ error() }}</div>
+          }
+
+          <button
+            class="nl-submit"
+            [disabled]="!formData.email || !formData.gdprConsent || sending()"
+            (click)="submitSubscription()">
+            @if (sending()) {
+              <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              Enregistrement…
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              Activer mon alerte gratuite
+            }
+          </button>
+
+          <p class="nl-legal-note">
+            🔒 Vos données sont sécurisées et ne seront jamais partagées avec des tiers.
+            Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression.
+          </p>
+        </div>
+
+      } @else {
+        <!-- Success state -->
+        <div class="nl-success">
+          <button class="nl-close nl-close-abs" (click)="closeModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <div class="nl-success-icon">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="nl-success-title">Alerte créée avec succès !</h3>
+          <p class="nl-success-text">
+            Vous recevrez les nouvelles annonces correspondant à vos critères directement dans votre boîte mail.
+            Un email de confirmation vous a été envoyé.
+          </p>
+          <p class="nl-success-unsub">
+            Vous pouvez vous désabonner à tout moment via le lien dans nos emails.
+          </p>
+          <button class="nl-submit nl-submit-outline" (click)="closeModal()">Fermer</button>
+        </div>
+      }
+
     </div>
   </div>
 }

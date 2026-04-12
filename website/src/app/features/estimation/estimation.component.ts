@@ -1,7 +1,8 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { LeadService } from '../../shared/services/lead.service';
 
 type PropertyType = 'apartment' | 'house' | 'villa' | 'studio' | 'loft' | 'land' | 'commercial';
 
@@ -18,8 +19,12 @@ interface StepConfig {
   styleUrls: ['./estimation.component.scss']
 })
 export class EstimationComponent {
+  private readonly leadService = inject(LeadService);
+
   currentStep = signal(1);
   submitted = signal(false);
+  sending = signal(false);
+  error = signal('');
 
   progressPercent = computed(() => ((this.currentStep() - 1) / (this.steps.length - 1)) * 100);
 
@@ -97,8 +102,54 @@ export class EstimationComponent {
   }
 
   submitForm(): void {
-    console.log('Estimation form submitted:', this.formData);
-    this.submitted.set(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (this.sending()) return;
+    this.error.set('');
+    this.sending.set(true);
+
+    const typeLabel = this.propertyTypes.find(t => t.value === this.formData.propertyType)?.label ?? this.formData.propertyType;
+    const conditionLabel = this.propertyStates.find(s => s.value === this.formData.condition)?.label ?? this.formData.condition;
+    const features = this.propertyFeatures.filter(f => f.checked).map(f => f.label).join(', ');
+    const address = [this.formData.address, this.formData.postalCode, this.formData.city].filter(Boolean).join(', ');
+    const projectLabels: Record<string, string> = {
+      sell: 'Je souhaite vendre',
+      rent: 'Je souhaite mettre en location',
+      info: 'Je me renseigne simplement',
+    };
+    const projectLabel = projectLabels[this.formData.project] ?? this.formData.project;
+
+    const details: string[] = [
+      `Type : ${typeLabel}`,
+      address ? `Adresse : ${address}` : '',
+      this.formData.area ? `Surface : ${this.formData.area} m²` : '',
+      this.formData.rooms ? `Pièces : ${this.formData.rooms}` : '',
+      this.formData.bedrooms ? `Chambres : ${this.formData.bedrooms}` : '',
+      this.formData.floor !== null ? `Étage : ${this.formData.floor}` : '',
+      this.formData.yearBuilt ? `Année : ${this.formData.yearBuilt}` : '',
+      conditionLabel ? `État : ${conditionLabel}` : '',
+      features ? `Équipements : ${features}` : '',
+      projectLabel ? `Projet : ${projectLabel}` : '',
+      this.formData.notes ? `Notes : ${this.formData.notes}` : '',
+    ].filter(Boolean);
+
+    this.leadService.submit({
+      firstName: this.formData.firstName,
+      lastName: this.formData.lastName,
+      email: this.formData.email,
+      phone: this.formData.phone || undefined,
+      message: details.join('\n'),
+      propertyReference: address || undefined,
+      formType: 'ESTIMATION',
+      gdprConsent: this.formData.gdpr,
+    }).subscribe({
+      next: () => {
+        this.sending.set(false);
+        this.submitted.set(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: () => {
+        this.sending.set(false);
+        this.error.set('Une erreur est survenue. Veuillez réessayer ou nous contacter directement.');
+      }
+    });
   }
 }

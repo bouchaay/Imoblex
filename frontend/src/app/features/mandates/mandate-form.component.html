@@ -17,8 +17,23 @@
         </div>
       }
 
+      <!-- CATÉGORIE DE MANDAT -->
+      <div class="section-title">Catégorie *</div>
+      <div class="type-options category-options">
+        @for (opt of categoryOptions; track opt.value) {
+          <div class="type-option category-option" [class.selected]="formData.category === opt.value"
+               (click)="formData.category = opt.value">
+            <div class="type-option-label">
+              <i class="pi" [class.pi-home]="opt.value === 'GERANCE'" [class.pi-tag]="opt.value === 'VENTE'"></i>
+              Mandat de {{ opt.label }}
+            </div>
+            <div class="type-option-desc">{{ opt.desc }}</div>
+          </div>
+        }
+      </div>
+
       <!-- TYPE DE MANDAT -->
-      <div class="section-title">Type de mandat *</div>
+      <div class="section-title" style="margin-top:1.25rem">Exclusivité *</div>
       <div class="type-options">
         @for (opt of typeOptions; track opt.value) {
           <div class="type-option" [class.selected]="formData.type === opt.value"
@@ -120,15 +135,52 @@
 
         <!-- HONORAIRES -->
         <div class="form-group">
-          <label class="form-label">Honoraires agence (%)</label>
-          <div class="input-with-suffix">
-            <input type="number" class="form-input"
-              [(ngModel)]="formData.agencyFeesPercent" name="agencyFeesPercent"
-              placeholder="5" step="0.5" min="0" max="20" />
-            <span class="input-suffix-label">
-              = {{ (formData.price * formData.agencyFeesPercent / 100) | number:'1.0-0' }} €
-            </span>
+          <label class="form-label">Honoraires agence</label>
+
+          <!-- Sélecteur de mode -->
+          <div class="fee-type-selector">
+            <button type="button" class="fee-type-btn"
+              [class.active]="formData.feeType === 'percent'"
+              (click)="formData.feeType = 'percent'">
+              <i class="pi pi-percentage"></i> Pourcentage
+            </button>
+            <button type="button" class="fee-type-btn"
+              [class.active]="formData.feeType === 'amount'"
+              (click)="formData.feeType = 'amount'">
+              <i class="pi pi-euro"></i> Montant
+            </button>
+            <button type="button" class="fee-type-btn"
+              [class.active]="formData.feeType === 'text'"
+              (click)="formData.feeType = 'text'">
+              <i class="pi pi-align-left"></i> Texte libre
+            </button>
           </div>
+
+          <!-- Champ selon le mode -->
+          @if (formData.feeType === 'percent') {
+            <div class="input-with-suffix">
+              <input type="number" class="form-input"
+                [(ngModel)]="formData.agencyFeesPercentInput" name="agencyFeesPercentInput"
+                placeholder="5" step="0.5" min="0" max="20" />
+              <span class="input-suffix-label">
+                % = {{ (formData.price * formData.agencyFeesPercentInput / 100) | number:'1.0-0' }} €
+              </span>
+            </div>
+          }
+          @if (formData.feeType === 'amount') {
+            <div class="input-with-suffix">
+              <input type="number" class="form-input"
+                [(ngModel)]="formData.agencyFeesAmountInput" name="agencyFeesAmountInput"
+                placeholder="1500" min="0" />
+              <span class="input-suffix-label">€ TTC</span>
+            </div>
+          }
+          @if (formData.feeType === 'text') {
+            <textarea class="form-input fee-text-area"
+              [(ngModel)]="formData.agencyFeesTextInput" name="agencyFeesTextInput"
+              placeholder="Ex : 8% des loyers encaissés TTC, charges comprises"
+              rows="2"></textarea>
+          }
         </div>
 
         <!-- DATE DÉBUT -->
@@ -143,6 +195,15 @@
           <label class="form-label">Date de fin *</label>
           <input type="date" class="form-input"
             [(ngModel)]="formData.endDate" name="endDate" />
+        </div>
+
+        <!-- DURÉE LIMITE RENOUVELLEMENT -->
+        <div class="form-group">
+          <label class="form-label">Durée limite (années)</label>
+          <input type="number" class="form-input"
+            [(ngModel)]="formData.maxDurationYears" name="maxDurationYears"
+            placeholder="3" min="1" max="10" />
+          <span class="form-hint">Limite de renouvellement par tacite reconduction</span>
         </div>
 
         <!-- DATE RENOUVELLEMENT -->

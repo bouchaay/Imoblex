@@ -26,21 +26,42 @@
           <div class="flex rounded-lg overflow-hidden border border-gray-200">
             <button
               class="flex-1 py-2 text-sm font-medium transition-colors"
-              [class.bg-primary]="transactionType() === 'sale'"
-              [class.text-white]="transactionType() === 'sale'"
-              [class.text-gray-500]="transactionType() !== 'sale'"
+              [class.bg-primary]="transactionType() === 'sale' && !showFavoritesOnly()"
+              [class.text-white]="transactionType() === 'sale' && !showFavoritesOnly()"
+              [class.text-gray-500]="transactionType() !== 'sale' || showFavoritesOnly()"
               (click)="setTransactionType('sale')">
               Vente
             </button>
             <button
               class="flex-1 py-2 text-sm font-medium transition-colors"
-              [class.bg-primary]="transactionType() === 'rent'"
-              [class.text-white]="transactionType() === 'rent'"
-              [class.text-gray-500]="transactionType() !== 'rent'"
+              [class.bg-primary]="transactionType() === 'rent' && !showFavoritesOnly()"
+              [class.text-white]="transactionType() === 'rent' && !showFavoritesOnly()"
+              [class.text-gray-500]="transactionType() !== 'rent' || showFavoritesOnly()"
               (click)="setTransactionType('rent')">
               Location
             </button>
           </div>
+          <!-- Favoris -->
+          <button
+            class="w-full mt-2 py-2 text-sm font-medium rounded-lg border transition-colors flex items-center justify-center gap-2"
+            [class.bg-red-500]="showFavoritesOnly()"
+            [class.text-white]="showFavoritesOnly()"
+            [class.border-red-400]="showFavoritesOnly()"
+            [class.border-gray-200]="!showFavoritesOnly()"
+            [class.text-gray-500]="!showFavoritesOnly()"
+            (click)="toggleFavorites()">
+            <svg class="w-4 h-4" [class.fill-white]="showFavoritesOnly()" [class.fill-none]="!showFavoritesOnly()" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            Favoris
+            @if (favoritesCount > 0) {
+              <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full font-bold"
+                [class.bg-white]="showFavoritesOnly()" [class.text-red-500]="showFavoritesOnly()"
+                [class.bg-red-100]="!showFavoritesOnly()" [class.text-red-600]="!showFavoritesOnly()">
+                {{ favoritesCount }}
+              </span>
+            }
+          </button>
         </div>
 
         <!-- Property types -->

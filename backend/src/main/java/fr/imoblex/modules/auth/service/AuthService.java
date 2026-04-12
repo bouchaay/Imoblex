@@ -13,7 +13,6 @@ import fr.imoblex.security.jwt.JwtService;
 import fr.imoblex.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,16 +34,8 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
 
-    @Value("${imoblex.agency.code}")
-    private String agencyCode;
-
     public AuthResponse login(LoginRequest request) {
-        // 1. Vérification du code agence
-        if (!agencyCode.equalsIgnoreCase(request.getAgencyCode())) {
-            throw new BusinessException("Code agence invalide");
-        }
-
-        // 2. Authentification username + password
+        // Authentification username + password
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
@@ -67,7 +58,7 @@ public class AuthService {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        log.info("Login réussi: {} (agence: {})", user.getUsername(), request.getAgencyCode());
+        log.info("Login réussi: {}", user.getUsername());
 
         return AuthResponse.builder()
                 .accessToken(accessToken)

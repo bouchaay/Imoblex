@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Property, PropertySearchRequest, PropertySearchResponse, PropertyPhoto } from '../models/property.model';
+import { Property, PropertySearchRequest, PropertySearchResponse, PropertyPhoto, PropertyTransport, PropertyShop } from '../models/property.model';
 import { PropertyType, PropertyStatus, TransactionType, DpeClass } from '../models/enums';
 
 interface PageResponse<T> {
@@ -81,6 +81,9 @@ interface BackendPropertyResponse {
   updatedAt?: string;
   viewCount?: number;
   visitCount?: number;
+  availableFrom?: string;
+  transports?: PropertyTransport[];
+  shops?: PropertyShop[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -219,7 +222,8 @@ export class PropertyService {
         hasElevator: p.elevator || false,
         isGroundFloor: p.floor === 0,
         heatingType: p.heatingType,
-        heatingEnergy: p.heatingEnergy
+        heatingEnergy: p.heatingEnergy,
+        furnished: p.furnished ?? null
       },
       dpe: p.dpeClass as DpeClass,
       ges: p.gesClass as DpeClass,
@@ -242,7 +246,10 @@ export class PropertyService {
       updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(),
       visitCount: p.visitCount || 0,
       favoriteCount: 0,
-      notes: ''
+      notes: '',
+      availableFrom: p.availableFrom,
+      transports: p.transports || [],
+      shops: p.shops || []
     };
   }
 
@@ -280,10 +287,14 @@ export class PropertyService {
       garage: data.features?.hasGarage,
       cellar: data.features?.hasCellar,
       pool: data.features?.hasPool,
+      furnished: data.features?.furnished ?? undefined,
       dpeClass: data.dpe,
       gesClass: data.ges,
       publishedWebsite: data.isPublished,
-      ownerId: data.ownerId || undefined
+      ownerId: data.ownerId || undefined,
+      availableFrom: data.availableFrom,
+      transports: data.transports,
+      shops: data.shops
     };
   }
 }

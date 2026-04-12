@@ -18,10 +18,10 @@
 
   <!-- Calendar navigation -->
   <div class="cal-nav">
-    <button class="nav-btn" (click)="prevMonth()"><i class="pi pi-chevron-left"></i></button>
+    <button class="nav-btn" (click)="prevPeriod()"><i class="pi pi-chevron-left"></i></button>
     <button class="today-btn" (click)="goToToday()">Aujourd'hui</button>
-    <button class="nav-btn" (click)="nextMonth()"><i class="pi pi-chevron-right"></i></button>
-    <h2 class="month-title">{{ currentMonthLabel() }}</h2>
+    <button class="nav-btn" (click)="nextPeriod()"><i class="pi pi-chevron-right"></i></button>
+    <h2 class="month-title">{{ viewMode() === 'week' ? weekLabel() : currentMonthLabel() }}</h2>
   </div>
 
   @if (viewMode() === 'month') {
@@ -56,6 +56,61 @@
           </div>
         }
       </div>
+    </div>
+  }
+
+  @if (viewMode() === 'week') {
+    <!-- Week view -->
+    <div class="week-view card">
+      <!-- Header jours -->
+      <div class="week-header">
+        <div class="week-time-gutter"></div>
+        @for (day of weekDays(); track day.date.toISOString()) {
+          <div class="week-day-header" [class.today]="day.isToday">
+            <span class="week-day-label">{{ day.label }}</span>
+            <span class="week-day-num" [class.today-num]="day.isToday">{{ day.dayNum }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Grille heures -->
+      <div class="week-grid-scroll">
+        <div class="week-grid">
+          @for (slot of weekHours; track slot.hour) {
+            <div class="week-time-slot">
+              <div class="week-time-label">{{ slot.label }}</div>
+              @for (day of weekDays(); track day.date.toISOString()) {
+                <div class="week-cell"></div>
+              }
+            </div>
+          }
+
+          <!-- Événements positionnés en absolute -->
+          @for (day of weekDays(); track day.date.toISOString(); let colIdx = $index) {
+            @for (apt of day.appointments; track apt.id) {
+              <div class="week-event"
+                   [style.top.%]="getAptTopPct(apt)"
+                   [style.height.%]="getAptHeightPct(apt)"
+                   [style.left]="'calc(' + (colIdx / 7 * 100) + '% + 52px + ' + colIdx * 1 + 'px)'"
+                   [style.width]="'calc(' + (100 / 7) + '% - 6px)'"
+                   [style.background]="getEventColor(apt.type) + '20'"
+                   [style.border-left]="'3px solid ' + getEventColor(apt.type)"
+                   [style.color]="getEventColor(apt.type)"
+                   (click)="selectAppointment(apt)">
+                <span class="week-event-time">{{ apt.startDate | date:'HH:mm' }}</span>
+                <span class="week-event-title">{{ apt.title }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      @if (weekDays().length > 0 && weekDays()[0].appointments.length === 0 && weekDays()[1].appointments.length === 0 && weekDays()[2].appointments.length === 0 && weekDays()[3].appointments.length === 0 && weekDays()[4].appointments.length === 0 && weekDays()[5].appointments.length === 0 && weekDays()[6].appointments.length === 0) {
+        <div class="week-empty">
+          <i class="pi pi-calendar-times"></i>
+          <span>Aucun rendez-vous cette semaine</span>
+        </div>
+      }
     </div>
   }
 
@@ -155,16 +210,6 @@
               <span>{{ selectedAppointment()!.agentName }}</span>
             </div>
           }
-
-          <!-- Confirmation -->
-          <div class="drawer-field">
-            <i class="pi" [class.pi-check-circle]="selectedAppointment()!.isConfirmed"
-                          [class.pi-circle]="!selectedAppointment()!.isConfirmed"
-                          [style.color]="selectedAppointment()!.isConfirmed ? '#10b981' : '#94a3b8'"></i>
-            <span [style.color]="selectedAppointment()!.isConfirmed ? '#10b981' : '#94a3b8'">
-              {{ selectedAppointment()!.isConfirmed ? 'Confirmé par le client' : 'En attente de confirmation' }}
-            </span>
-          </div>
 
           <!-- Notes -->
           @if (selectedAppointment()!.notes) {

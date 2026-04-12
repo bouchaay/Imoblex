@@ -198,7 +198,7 @@
   width: 120px;
   height: 120px;
   margin: 0 auto 1rem;
-  background: conic-gradient(#1B4F72 0% 37%, #2E86C1 37% 62%, #F39C12 62% 75%, #27AE60 75% 87%, #8E44AD 87% 97%, #E74C3C 97% 100%);
+  background: conic-gradient(#e2e8f0 0% 100%); /* overridden dynamically */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -356,4 +356,24 @@
   background: #1B4F72;
   border-radius: 3px;
   transition: width 0.5s ease;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+
+  i { font-size: 1.25rem; }
+}
+
+.empty-hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: center;
+  margin: 1rem 0;
+  font-style: italic;
 }

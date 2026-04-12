@@ -1,68 +1,212 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { DocumentService, DocItem } from '../../core/services/document.service';
+import { StorageService } from '../../core/services/storage.service';
 
-interface DocItem {
-  id: string; name: string; type: string; size: string;
-  category: string; date: Date; icon: string; iconColor: string;
-}
+type FilterMode = 'all' | 'personal' | 'type' | 'folder';
+
+const TYPE_CATEGORIES = [
+  { key: 'MANDATE',   label: 'Mandats',    icon: 'pi-file-edit', color: '#1B4F72' },
+  { key: 'COMPROMIS', label: 'Compromis',  icon: 'pi-file',      color: '#F39C12' },
+  { key: 'DPE',       label: 'DPE',        icon: 'pi-bolt',      color: '#10b981' },
+  { key: 'PHOTO',     label: 'Photos',     icon: 'pi-image',     color: '#8b5cf6' },
+  { key: 'INVOICE',   label: 'Factures',   icon: 'pi-receipt',   color: '#ef4444' },
+  { key: 'OTHER',     label: 'Autres',     icon: 'pi-file',      color: '#64748b' },
+];
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss']
 })
-export class DocumentsComponent {
-  activeCategory = 'all';
+export class DocumentsComponent implements OnInit {
+  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
+
+  private readonly docService = inject(DocumentService);
+  readonly storageService = inject(StorageService);
+
+  documents = signal<DocItem[]>([]);
+  folders = signal<string[]>([]);
+  loading = signal(true);
+  uploading = signal(false);
+
   viewMode: 'grid' | 'list' = 'grid';
   searchQuery = '';
+  filterMode: FilterMode = 'all';
+  activeTypeKey = '';
+  activeFolder = '';
 
-  categories = [
-    { key: 'all', label: 'Tous', icon: 'pi-folder', color: '#64748b', count: 24 },
-    { key: 'mandates', label: 'Mandats', icon: 'pi-file-edit', color: '#1B4F72', count: 8 },
-    { key: 'compromis', label: 'Compromis', icon: 'pi-file', color: '#F39C12', count: 5 },
-    { key: 'dpe', label: 'DPE', icon: 'pi-bolt', color: '#10b981', count: 6 },
-    { key: 'photos', label: 'Photos', icon: 'pi-image', color: '#8b5cf6', count: 5 }
-  ];
+  selectedDoc = signal<DocItem | null>(null);
 
-  documents: DocItem[] = [
-    { id: '1', name: 'Mandat MND-10001.pdf', type: 'pdf', size: '245 Ko', category: 'mandates', date: new Date('2024-03-15'), icon: 'pi-file-pdf', iconColor: '#ef4444' },
-    { id: '2', name: 'Compromis TRX-10003.pdf', type: 'pdf', size: '1.2 Mo', category: 'compromis', date: new Date('2024-03-10'), icon: 'pi-file-pdf', iconColor: '#ef4444' },
-    { id: '3', name: 'DPE Appartement Paris 8.pdf', type: 'pdf', size: '890 Ko', category: 'dpe', date: new Date('2024-02-28'), icon: 'pi-bolt', iconColor: '#10b981' },
-    { id: '4', name: 'Photos Villa Saint-Cloud.zip', type: 'zip', size: '45.2 Mo', category: 'photos', date: new Date('2024-03-01'), icon: 'pi-image', iconColor: '#8b5cf6' },
-    { id: '5', name: 'Mandat MND-10007.pdf', type: 'pdf', size: '312 Ko', category: 'mandates', date: new Date('2024-03-18'), icon: 'pi-file-pdf', iconColor: '#ef4444' },
-    { id: '6', name: 'Acte vente TRX-10001.pdf', type: 'pdf', size: '2.1 Mo', category: 'compromis', date: new Date('2024-02-15'), icon: 'pi-file-pdf', iconColor: '#ef4444' }
-  ];
+  // Upload dialog
+  showUploadDialog = signal(false);
+  uploadType = 'OTHER';
+  uploadFolder = '';
+  uploadFiles: File[] = [];
+
+  // New folder dialog
+  showFolderDialog = signal(false);
+  newFolderName = '';
+
+  // Delete doc dialog
+  showDeleteDialog = signal(false);
+  docToDelete = signal<DocItem | null>(null);
+  deleting = signal(false);
+
+  // Delete folder dialog
+  folderToDelete = signal<string | null>(null);
+  deletingFolder = signal(false);
+
+  readonly typeCategories = TYPE_CATEGORIES;
+
+  ngOnInit(): void {
+    this.load();
+    this.storageService.refresh();
+  }
+
+  load(): void {
+    this.loading.set(true);
+    const params: any = {};
+    if (this.filterMode === 'personal') params.personal = true;
+    else if (this.filterMode === 'type') params.type = this.activeTypeKey;
+    else if (this.filterMode === 'folder') params.folder = this.activeFolder;
+
+    this.docService.getAll(params).subscribe({
+      next: docs => { this.documents.set(docs); this.loading.set(false); },
+      error: () => this.loading.set(false)
+    });
+
+    this.docService.getFolders().subscribe(f => this.folders.set(f));
+  }
+
+  setFilter(mode: FilterMode, key = ''): void {
+    this.filterMode = mode;
+    if (mode === 'type') this.activeTypeKey = key;
+    else if (mode === 'folder') this.activeFolder = key;
+    this.load();
+  }
 
   get filteredDocs(): DocItem[] {
-    return this.documents.filter(d => {
-      const matchesCat = this.activeCategory === 'all' || d.category === this.activeCategory;
-      const matchesSearch = !this.searchQuery || d.name.toLowerCase().includes(this.searchQuery.toLowerCase());
-      return matchesCat && matchesSearch;
+    if (!this.searchQuery.trim()) return this.documents();
+    const q = this.searchQuery.toLowerCase();
+    return this.documents().filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      d.type.toLowerCase().includes(q) ||
+      d.propertyReference?.toLowerCase().includes(q) ||
+      d.contactName?.toLowerCase().includes(q)
+    );
+  }
+
+  getDocIcon(doc: DocItem) { return this.docService.getIcon(doc.type, doc.mimeType); }
+  formatSize(b?: number) { return this.docService.formatSize(b); }
+
+  openUploadDialog(): void { this.showUploadDialog.set(true); }
+  triggerFileInput(): void { this.fileInputRef.nativeElement.click(); }
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.uploadFiles = Array.from(input.files ?? []);
+  }
+
+  doUpload(): void {
+    if (!this.uploadFiles.length || this.uploading()) return;
+    this.uploading.set(true);
+    const uploads = this.uploadFiles.map(f =>
+      this.docService.upload(f, this.uploadType, { folderPath: this.uploadFolder || undefined }).toPromise()
+    );
+    Promise.all(uploads).then(() => {
+      this.uploading.set(false);
+      this.showUploadDialog.set(false);
+      this.uploadFiles = [];
+      this.fileInputRef.nativeElement.value = '';
+      this.docService.notifyChange();
+      this.storageService.refresh();
+      this.load();
+    }).catch(() => this.uploading.set(false));
+  }
+
+  createFolder(): void {
+    const name = this.newFolderName.trim();
+    if (!name) return;
+    this.docService.createFolder(name).subscribe({
+      next: () => {
+        this.showFolderDialog.set(false);
+        this.newFolderName = '';
+        this.docService.getFolders().subscribe(f => {
+          this.folders.set(f);
+          this.setFilter('folder', name);
+        });
+      }
     });
   }
 
-  downloadDoc(doc: DocItem): void {
-    // Simulate download - in real app this would call the API
-    const link = document.createElement('a');
-    link.href = '#';
-    link.download = doc.name;
-    link.click();
-    console.log(`Téléchargement: ${doc.name}`);
+  delete(doc: DocItem, event: Event): void {
+    event.stopPropagation();
+    this.docToDelete.set(doc);
+    this.showDeleteDialog.set(true);
   }
 
-  deleteDoc(id: string): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
-      this.documents = this.documents.filter(d => d.id !== id);
-      // Update category counts
-      this.categories = this.categories.map(c => ({
-        ...c,
-        count: c.key === 'all'
-          ? this.documents.length
-          : this.documents.filter(d => d.category === c.key).length
-      }));
-    }
+  confirmDelete(): void {
+    const doc = this.docToDelete();
+    if (!doc || this.deleting()) return;
+    this.deleting.set(true);
+    this.docService.delete(doc.id).subscribe({
+      next: () => {
+        this.documents.update(list => list.filter(d => d.id !== doc.id));
+        if (this.selectedDoc()?.id === doc.id) this.selectedDoc.set(null);
+        this.docService.notifyChange();
+        this.storageService.refresh();
+        this.showDeleteDialog.set(false);
+        this.docToDelete.set(null);
+        this.deleting.set(false);
+      },
+      error: () => this.deleting.set(false)
+    });
+  }
+
+  cancelDelete(): void {
+    this.showDeleteDialog.set(false);
+    this.docToDelete.set(null);
+  }
+
+  deleteFolder(folder: string, event: Event): void {
+    event.stopPropagation();
+    this.folderToDelete.set(folder);
+  }
+
+  confirmDeleteFolder(): void {
+    const folder = this.folderToDelete();
+    if (!folder || this.deletingFolder()) return;
+    this.deletingFolder.set(true);
+    this.docService.deleteFolder(folder).subscribe({
+      next: () => {
+        this.folders.update(list => list.filter(f => f !== folder));
+        if (this.activeFolder === folder) this.setFilter('all');
+        this.folderToDelete.set(null);
+        this.deletingFolder.set(false);
+      },
+      error: () => this.deletingFolder.set(false)
+    });
+  }
+
+  cancelDeleteFolder(): void {
+    this.folderToDelete.set(null);
+  }
+
+  download(doc: DocItem, event: Event): void {
+    event.stopPropagation();
+    const a = document.createElement('a');
+    a.href = doc.fileUrl;
+    a.download = doc.name;
+    a.target = '_blank';
+    a.click();
+  }
+
+  getTypeLabel(key: string): string {
+    return TYPE_CATEGORIES.find(t => t.key === key)?.label ?? key;
   }
 }

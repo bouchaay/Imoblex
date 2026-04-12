@@ -36,6 +36,30 @@ public class PhotoStorageService {
     @Value("${imoblex.uploads.base-url:http://localhost:8080/api/uploads}")
     private String uploadsBaseUrl;
 
+    /**
+     * Generic file storage for any subfolder (e.g. "documents").
+     * Returns the accessible URL.
+     */
+    public String store(MultipartFile file, String subfolder) throws IOException {
+        Path dir = Paths.get(uploadsDir, subfolder);
+        Files.createDirectories(dir);
+        String ext = getExtension(file.getOriginalFilename());
+        String filename = UUID.randomUUID() + ext;
+        file.transferTo(dir.resolve(filename));
+        return uploadsBaseUrl + "/" + subfolder + "/" + filename;
+    }
+
+    /**
+     * Deletes a file by its full URL. Silently ignores if file not found.
+     */
+    public void delete(String fileUrl) throws IOException {
+        if (fileUrl == null || fileUrl.isBlank()) return;
+        // URL pattern: <baseUrl>/<subfolder>/<filename>
+        String relative = fileUrl.replace(uploadsBaseUrl + "/", "");
+        Path file = Paths.get(uploadsDir, relative.replace("/", java.io.File.separator));
+        Files.deleteIfExists(file);
+    }
+
     @Transactional
     public void deletePhoto(UUID propertyId, UUID photoId) {
         PropertyPhoto photo = photoRepository.findById(photoId)

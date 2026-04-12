@@ -5,6 +5,7 @@ import fr.imoblex.modules.contact.repository.ContactRepository;
 import fr.imoblex.modules.mandate.dto.MandateRequest;
 import fr.imoblex.modules.mandate.dto.MandateResponse;
 import fr.imoblex.modules.mandate.entity.Mandate;
+import fr.imoblex.modules.mandate.enums.MandateCategory;
 import fr.imoblex.modules.mandate.enums.MandateStatus;
 import fr.imoblex.modules.mandate.repository.MandateRepository;
 import fr.imoblex.modules.property.entity.Property;
@@ -70,6 +71,7 @@ public class MandateService {
     public MandateResponse create(MandateRequest req) {
         Mandate mandate = new Mandate();
         mandate.setMandateNumber(generateMandateNumber());
+        if (mandate.getCategory() == null) mandate.setCategory(MandateCategory.GERANCE);
         mapRequestToMandate(req, mandate);
         if (mandate.getStatus() == null) mandate.setStatus(MandateStatus.ACTIVE);
         return toResponse(mandateRepository.save(mandate));
@@ -88,6 +90,8 @@ public class MandateService {
     }
 
     private void mapRequestToMandate(MandateRequest req, Mandate m) {
+        if (req.getCategory() != null) m.setCategory(req.getCategory());
+        else if (m.getCategory() == null) m.setCategory(MandateCategory.GERANCE);
         m.setType(req.getType());
         if (req.getStatus() != null) m.setStatus(req.getStatus());
         Property property = propertyRepository.findById(req.getPropertyId())
@@ -102,7 +106,9 @@ public class MandateService {
         m.setAgreedPrice(req.getAgreedPrice());
         m.setAgencyFees(req.getAgencyFees());
         m.setAgencyFeesPercent(req.getAgencyFeesPercent());
+        m.setAgencyFeesText(req.getAgencyFeesText());
         m.setFeesChargedTo(req.getFeesChargedTo());
+        m.setMaxDurationYears(req.getMaxDurationYears() != null ? req.getMaxDurationYears() : 3);
         m.setStartDate(req.getStartDate());
         m.setEndDate(req.getEndDate());
         m.setRenewalDate(req.getRenewalDate());
@@ -121,6 +127,7 @@ public class MandateService {
         return MandateResponse.builder()
                 .id(m.getId())
                 .mandateNumber(m.getMandateNumber())
+                .category(m.getCategory())
                 .type(m.getType())
                 .status(m.getStatus())
                 .propertyId(m.getProperty() != null ? m.getProperty().getId() : null)
@@ -133,7 +140,9 @@ public class MandateService {
                 .agreedPrice(m.getAgreedPrice())
                 .agencyFees(m.getAgencyFees())
                 .agencyFeesPercent(m.getAgencyFeesPercent())
+                .agencyFeesText(m.getAgencyFeesText())
                 .feesChargedTo(m.getFeesChargedTo())
+                .maxDurationYears(m.getMaxDurationYears())
                 .startDate(m.getStartDate())
                 .endDate(m.getEndDate())
                 .renewalDate(m.getRenewalDate())

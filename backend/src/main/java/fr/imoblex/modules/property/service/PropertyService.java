@@ -6,9 +6,13 @@ import fr.imoblex.modules.property.dto.PropertyCreateRequest;
 import fr.imoblex.modules.property.dto.PropertyResponse;
 import fr.imoblex.modules.property.dto.PropertySearchRequest;
 import fr.imoblex.modules.property.entity.Property;
+import fr.imoblex.modules.property.entity.PropertyShop;
+import fr.imoblex.modules.property.entity.PropertyTransport;
 import fr.imoblex.modules.property.mapper.PropertyMapper;
 import fr.imoblex.modules.property.repository.PropertyRepository;
+import fr.imoblex.modules.property.repository.PropertyShopRepository;
 import fr.imoblex.modules.property.repository.PropertySpecification;
+import fr.imoblex.modules.property.repository.PropertyTransportRepository;
 import fr.imoblex.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,6 +38,8 @@ public class PropertyService {
     private final PropertyReferenceService referenceService;
     private final PhotoStorageService photoStorageService;
     private final ContactRepository contactRepository;
+    private final PropertyTransportRepository transportRepository;
+    private final PropertyShopRepository shopRepository;
 
     @Transactional(readOnly = true)
     public Page<PropertyResponse> search(PropertySearchRequest req) {
@@ -63,7 +70,10 @@ public class PropertyService {
             Contact owner = contactRepository.findById(request.getOwnerId()).orElse(null);
             property.setOwner(owner);
         }
-        return propertyMapper.toResponse(propertyRepository.save(property));
+        Property saved = propertyRepository.save(property);
+        saveTransports(saved, request.getTransports());
+        saveShops(saved, request.getShops());
+        return propertyMapper.toResponse(propertyRepository.findById(saved.getId()).orElse(saved));
     }
 
     public PropertyResponse update(UUID id, PropertyCreateRequest request) {
@@ -77,7 +87,48 @@ public class PropertyService {
         } else {
             property.setOwner(null);
         }
-        return propertyMapper.toResponse(propertyRepository.save(property));
+        Property saved = propertyRepository.save(property);
+        // Mettre à jour transports et commerces
+        transportRepository.deleteByPropertyId(saved.getId());
+        shopRepository.deleteByPropertyId(saved.getId());
+        saveTransports(saved, request.getTransports());
+        saveShops(saved, request.getShops());
+        return propertyMapper.toResponse(propertyRepository.findById(saved.getId()).orElse(saved));
+    }
+
+    private void saveTransports(Property property, List<PropertyCreateRequest.TransportDto> dtos) {
+        if (dtos == null || dtos.isEmpty()) return;
+        for (int i = 0; i < dtos.size(); i++) {
+            PropertyCreateRequest.TransportDto dto = dtos.get(i);
+            if (dto.getType() == null) continue;
+            PropertyTransport t = PropertyTransport.builder()
+                .property(property)
+                .type(dto.getType())
+                .line(dto.getLine())
+                .name(dto.getName())
+                .distanceMeters(dto.getDistanceMeters())
+                .walkingMinutes(dto.getWalkingMinutes())
+                .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : i)
+                .build();
+            transportRepository.save(t);
+        }
+    }
+
+    private void saveShops(Property property, List<PropertyCreateRequest.ShopDto> dtos) {
+        if (dtos == null || dtos.isEmpty()) return;
+        for (int i = 0; i < dtos.size(); i++) {
+            PropertyCreateRequest.ShopDto dto = dtos.get(i);
+            if (dto.getType() == null) continue;
+            PropertyShop s = PropertyShop.builder()
+                .property(property)
+                .type(dto.getType())
+                .name(dto.getName())
+                .distanceMeters(dto.getDistanceMeters())
+                .walkingMinutes(dto.getWalkingMinutes())
+                .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : i)
+                .build();
+            shopRepository.save(s);
+        }
     }
 
     public void delete(UUID id) {

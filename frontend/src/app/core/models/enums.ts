@@ -40,6 +40,11 @@ export enum ContactType {
   PARTNER = 'PARTNER'
 }
 
+export enum MandateCategory {
+  GERANCE = 'GERANCE',
+  VENTE = 'VENTE'
+}
+
 export enum MandateType {
   EXCLUSIVE = 'EXCLUSIVE',
   SIMPLE = 'SIMPLE',
@@ -88,9 +93,7 @@ export enum DpeClass {
 
 export enum Role {
   ADMIN = 'ADMIN',
-  AGENT = 'AGENT',
-  MANAGER = 'MANAGER',
-  ASSISTANT = 'ASSISTANT'
+  USER = 'USER'
 }
 
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
@@ -126,6 +129,11 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   [ContactType.LANDLORD]: 'Propriétaire',
   [ContactType.PROSPECT]: 'Prospect',
   [ContactType.PARTNER]: 'Partenaire'
+};
+
+export const MANDATE_CATEGORY_LABELS: Record<MandateCategory, string> = {
+  [MandateCategory.GERANCE]: 'Gérance',
+  [MandateCategory.VENTE]: 'Vente'
 };
 
 export const MANDATE_TYPE_LABELS: Record<MandateType, string> = {

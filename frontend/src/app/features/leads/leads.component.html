@@ -1,0 +1,177 @@
+<div class="leads-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Formulaires reçus</h1>
+      <p class="page-subtitle">Demandes soumises depuis le site web</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="leads-tabs">
+    <button class="tab-btn" [class.active]="tab() === 'active'" (click)="setTab('active')">
+      <i class="pi pi-inbox"></i> Boîte de réception
+      @if (unreadCount() > 0) {
+        <span class="tab-badge">{{ unreadCount() }}</span>
+      }
+    </button>
+    <button class="tab-btn" [class.active]="tab() === 'archived'" (click)="setTab('archived')">
+      <i class="pi pi-box"></i> Archives
+    </button>
+  </div>
+
+  <div class="leads-layout">
+
+    <!-- Liste -->
+    <div class="leads-list-col">
+      @if (loading()) {
+        @for (i of [1,2,3,4]; track i) {
+          <div class="lead-skeleton"></div>
+        }
+      } @else if (leads().length === 0) {
+        <div class="leads-empty">
+          <i class="pi pi-inbox"></i>
+          <span>{{ tab() === 'active' ? 'Aucun formulaire reçu' : 'Aucune archive' }}</span>
+        </div>
+      } @else {
+        @for (lead of leads(); track lead.id) {
+          <div class="lead-item"
+               [class.unread]="lead.status === 'UNREAD'"
+               [class.selected]="selectedLead()?.id === lead.id"
+               (click)="select(lead)">
+            <div class="lead-item-header">
+              <span class="lead-name">{{ lead.firstName }} {{ lead.lastName }}</span>
+              <span class="lead-date">{{ lead.createdAt | date:'d MMM':'':'fr' }}</span>
+            </div>
+            <div class="lead-item-type">
+              <span class="lead-type-chip">{{ getFormTypeLabel(lead.formType) }}</span>
+              @if (lead.status === 'UNREAD') {
+                <span class="unread-dot"></span>
+              }
+            </div>
+            <p class="lead-preview">{{ lead.email }}</p>
+            <div class="lead-item-actions">
+              @if (tab() === 'active') {
+                <button class="action-btn" title="Archiver" (click)="archive(lead, $event)">
+                  <i class="pi pi-box"></i>
+                </button>
+              } @else {
+                <button class="action-btn" title="Désarchiver" (click)="unarchive(lead, $event)">
+                  <i class="pi pi-inbox"></i>
+                </button>
+              }
+              <button class="action-btn danger" title="Supprimer" [disabled]="deleting() === lead.id" (click)="delete(lead, $event)">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Détail -->
+    <div class="lead-detail-col">
+      @if (!selectedLead()) {
+        <div class="lead-detail-empty">
+          <i class="pi pi-envelope-open"></i>
+          <span>Sélectionnez un formulaire pour voir les détails</span>
+        </div>
+      } @else {
+        <div class="lead-detail card">
+          <div class="detail-header">
+            <div>
+              <h2 class="detail-name">{{ selectedLead()!.firstName }} {{ selectedLead()!.lastName }}</h2>
+              <span class="detail-type-chip">{{ getFormTypeLabel(selectedLead()!.formType) }}</span>
+            </div>
+            <span class="detail-date">{{ selectedLead()!.createdAt | date:'d MMMM yyyy à HH:mm':'':'fr' }}</span>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <div class="detail-fields">
+            <div class="detail-field">
+              <i class="pi pi-envelope"></i>
+              <a [href]="'mailto:' + selectedLead()!.email" class="detail-link">{{ selectedLead()!.email }}</a>
+            </div>
+            @if (selectedLead()!.phone) {
+              <div class="detail-field">
+                <i class="pi pi-phone"></i>
+                <a [href]="'tel:' + selectedLead()!.phone" class="detail-link">{{ selectedLead()!.phone }}</a>
+              </div>
+            }
+            <div class="detail-field">
+              <i class="pi pi-globe"></i>
+              <span>{{ getSourceLabel(selectedLead()!.source) }}</span>
+            </div>
+            @if (selectedLead()!.propertyReference) {
+              <div class="detail-field">
+                <i class="pi pi-building"></i>
+                <span>Réf. bien :&nbsp;</span>
+                <a [routerLink]="['/properties']" [queryParams]="{q: selectedLead()!.propertyReference}" class="detail-link">
+                  {{ selectedLead()!.propertyReference }}
+                </a>
+              </div>
+            }
+          </div>
+
+          @if (selectedLead()!.message) {
+            <div class="detail-divider"></div>
+            <div class="detail-message">
+              <div class="detail-message-label"><i class="pi pi-align-left"></i> Message</div>
+              <p class="detail-message-text">{{ selectedLead()!.message }}</p>
+            </div>
+          }
+
+          <div class="detail-divider"></div>
+
+          <div class="detail-actions">
+            @if (tab() === 'active') {
+              <button class="btn btn-secondary" (click)="archive(selectedLead()!, $event)">
+                <i class="pi pi-box"></i> Archiver
+              </button>
+            } @else {
+              <button class="btn btn-secondary" (click)="unarchive(selectedLead()!, $event)">
+                <i class="pi pi-inbox"></i> Désarchiver
+              </button>
+            }
+            <a [href]="'mailto:' + selectedLead()!.email" class="btn btn-primary">
+              <i class="pi pi-envelope"></i> Répondre par email
+            </a>
+          </div>
+
+          <div class="detail-gdpr">
+            <i class="pi pi-shield" [style.color]="selectedLead()!.gdprConsent ? '#10b981' : '#ef4444'"></i>
+            {{ selectedLead()!.gdprConsent ? 'Consentement RGPD accepté' : 'Consentement RGPD non renseigné' }}
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+@if (leadToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <i class="pi pi-trash"></i>
+      </div>
+      <h3 class="modal-title">Supprimer le formulaire</h3>
+      <p class="modal-body">
+        Vous allez supprimer définitivement le formulaire de
+        <strong>{{ leadToDelete()!.firstName }} {{ leadToDelete()!.lastName }}</strong>.
+      </p>
+      <p class="modal-warning">Cette action est irréversible.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-delete" [disabled]="!!deleting()" (click)="confirmDelete()">
+          @if (deleting()) {
+            <i class="pi pi-spin pi-spinner"></i> Suppression...
+          } @else {
+            <i class="pi pi-trash"></i> Supprimer
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

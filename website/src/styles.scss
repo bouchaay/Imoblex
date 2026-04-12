@@ -190,6 +190,9 @@ h1, h2, h3, h4, h5, h6 {
 
 .property-card {
   @apply bg-white rounded-xl overflow-hidden shadow-card transition-all duration-300 cursor-pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   &:hover {
     @apply shadow-card-hover -translate-y-1;

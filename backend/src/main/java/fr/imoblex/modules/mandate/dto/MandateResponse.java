@@ -1,5 +1,6 @@
 package fr.imoblex.modules.mandate.dto;
 
+import fr.imoblex.modules.mandate.enums.MandateCategory;
 import fr.imoblex.modules.mandate.enums.MandateStatus;
 import fr.imoblex.modules.mandate.enums.MandateType;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import java.util.UUID;
 public class MandateResponse {
     private UUID id;
     private String mandateNumber;
+    private MandateCategory category;
     private MandateType type;
     private MandateStatus status;
     private UUID propertyId;
@@ -27,7 +29,9 @@ public class MandateResponse {
     private BigDecimal agreedPrice;
     private BigDecimal agencyFees;
     private BigDecimal agencyFeesPercent;
+    private String agencyFeesText;
     private String feesChargedTo;
+    private Integer maxDurationYears;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDate renewalDate;

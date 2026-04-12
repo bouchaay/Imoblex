@@ -8,7 +8,6 @@ import { User } from '../models/user.model';
 import { Role } from '../models/enums';
 
 interface LoginRequest {
-  agencyCode: string;
   username: string;
   password: string;
 }
@@ -63,6 +62,17 @@ export class AuthService {
   get isAuthenticated(): boolean { return this.isAuthenticatedSubject.value; }
   get token(): string | null { return localStorage.getItem(this.TOKEN_KEY); }
 
+  isTokenExpired(): boolean {
+    const token = this.token;
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  }
+
   login(request: LoginRequest): Observable<BackendAuthResponse> {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
@@ -81,11 +91,16 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearSession();
+    this.router.navigate(['/login']);
+  }
+
+  /** Clears auth state without navigating — used by the HTTP interceptor. */
+  clearSession(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
-    this.router.navigate(['/login']);
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
@@ -100,9 +115,23 @@ export class AuthService {
     );
   }
 
+  /** Updates the stored user (after profile edit) and notifies all subscribers. */
+  updateCurrentUser(partial: Partial<User>): void {
+    const current = this.currentUserSubject.value;
+    if (!current) return;
+    const updated: User = { ...current, ...partial };
+    Object.defineProperty(updated, 'fullName', {
+      get() { return `${this.firstName} ${this.lastName}`; },
+      configurable: true, enumerable: false
+    });
+    localStorage.setItem(this.USER_KEY, JSON.stringify(updated));
+    this.currentUserSubject.next(updated);
+  }
+
   private mapUser(u: BackendUserResponse): User {
     return {
       id: u.id,
+      username: u.username,
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,

@@ -4,7 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, Subject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Mandate } from '../models/mandate.model';
-import { MandateType, MandateStatus, TransactionType } from '../models/enums';
+import { MandateCategory, MandateType, MandateStatus, TransactionType } from '../models/enums';
 
 interface PageResponse<T> {
   content: T[];
@@ -23,6 +23,7 @@ interface ApiResponse<T> {
 interface BackendMandateResponse {
   id: string;
   mandateNumber: string;
+  category?: string;
   type: string;
   status: string;
   propertyId?: string;
@@ -35,7 +36,9 @@ interface BackendMandateResponse {
   agreedPrice?: number;
   agencyFees?: number;
   agencyFeesPercent?: number;
+  agencyFeesText?: string;
   feesChargedTo?: string;
+  maxDurationYears?: number;
   startDate?: string;
   endDate?: string;
   renewalDate?: string;
@@ -99,6 +102,12 @@ export class MandateService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  downloadDocument(id: string, signed = true, remiseDate?: string, blank = false): Observable<Blob> {
+    const params: Record<string, string> = { signed: signed.toString(), blank: blank.toString() };
+    if (remiseDate) params['remiseDate'] = remiseDate;
+    return this.http.get(`${this.apiUrl}/${id}/document`, { params, responseType: 'blob' });
+  }
+
   getExpiringMandates(days = 30): Observable<Mandate[]> {
     return this.http.get<ApiResponse<BackendMandateResponse[]>>(`${this.apiUrl}/expiring`, {
       params: new HttpParams().set('days', days.toString())
@@ -114,6 +123,7 @@ export class MandateService {
     return {
       id: m.id,
       reference: m.mandateNumber || `MND-${m.id.substring(0, 8).toUpperCase()}`,
+      category: (m.category as MandateCategory) || MandateCategory.GERANCE,
       type: m.type as MandateType,
       status: m.status as MandateStatus,
       transactionType: TransactionType.RENTAL, // défini par le bien lié
@@ -127,12 +137,14 @@ export class MandateService {
       price: m.agreedPrice || 0,
       agencyFeePercent: m.agencyFeesPercent || 0,
       agencyFeeAmount: m.agencyFees || 0,
+      agencyFeesText: m.agencyFeesText,
       startDate: m.startDate ? new Date(m.startDate) : new Date(),
       endDate,
       renewalDate: m.renewalDate ? new Date(m.renewalDate) : undefined,
       signedAt: m.signedAt ? new Date(m.signedAt) : undefined,
       signedAtPlace: m.signedAtPlace,
       notes: m.notes,
+      maxDurationYears: m.maxDurationYears,
       isRenewable: true,
       renewalCount: 0,
       daysRemaining,
@@ -142,15 +154,18 @@ export class MandateService {
     };
   }
 
-  private mapToRequest(data: Partial<Mandate> & { notes?: string; signedAtPlace?: string }): any {
+  private mapToRequest(data: Partial<Mandate> & { notes?: string; signedAtPlace?: string; maxDurationYears?: number }): any {
     return {
+      category: data.category,
       type: data.type,
       status: data.status,
       propertyId: data.propertyId || undefined,
       mandatorId: data.mandatorId || undefined,
       agentId: data.agentId || undefined,
       agreedPrice: data.price,
-      agencyFeesPercent: data.agencyFeePercent,
+      agencyFeesPercent: (data as any).feeType === 'percent' ? (data as any).agencyFeesPercentInput : undefined,
+      agencyFees: (data as any).feeType === 'amount' ? (data as any).agencyFeesAmountInput : undefined,
+      agencyFeesText: (data as any).feeType === 'text' ? (data as any).agencyFeesTextInput : undefined,
       startDate: data.startDate instanceof Date
         ? (data.startDate as Date).toISOString().split('T')[0]
         : data.startDate,
@@ -160,6 +175,7 @@ export class MandateService {
       renewalDate: data.renewalDate instanceof Date
         ? (data.renewalDate as Date).toISOString().split('T')[0]
         : data.renewalDate,
+      maxDurationYears: data.maxDurationYears,
       notes: data.notes,
       signedAtPlace: data.signedAtPlace
     };

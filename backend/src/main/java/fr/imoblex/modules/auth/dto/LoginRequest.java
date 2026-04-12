@@ -5,9 +5,6 @@ import lombok.Data;
 
 @Data
 public class LoginRequest {
-    @NotBlank(message = "L'identifiant agence est obligatoire")
-    private String agencyCode;
-
     @NotBlank(message = "L'identifiant utilisateur est obligatoire")
     private String username;
 

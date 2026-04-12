@@ -1,0 +1,359 @@
+<div class="detail-page">
+  @if (loading()) {
+    <div class="loading-wrap">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Chargement...</span>
+    </div>
+  }
+
+  @if (!loading() && lease()) {
+    <!-- Header -->
+    <div class="detail-header">
+      <button class="back-btn" (click)="goBack()">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="header-info">
+        <h1 class="detail-title">Bail — {{ lease()!.tenantName }}</h1>
+        <p class="detail-sub">{{ lease()!.propertyAddress }}, {{ lease()!.propertyCity }} · Réf. {{ lease()!.propertyReference }}</p>
+      </div>
+      <div class="header-actions">
+        <span class="status-badge" [ngClass]="getStatusClass(lease()!.status)">
+          {{ getStatusLabel(lease()!.status) }}
+        </span>
+        <button class="btn-outline" [routerLink]="['/rental', lease()!.id, 'edit']">
+          <i class="pi pi-pencil"></i> Modifier
+        </button>
+        @if (lease()!.status === 'ACTIVE' || lease()!.status === 'PENDING') {
+          <button class="btn-danger-outline" (click)="openTerminate()">
+            <i class="pi pi-times-circle"></i> Résilier
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-cards">
+      <div class="sum-card">
+        <i class="pi pi-euro sum-icon sum-icon--green"></i>
+        <div>
+          <span class="sum-label">Loyer CC</span>
+          <span class="sum-value">{{ lease()!.totalRent | number:'1.0-0' }} €/mois</span>
+          <span class="sum-sub">{{ lease()!.rentAmount | number:'1.0-0' }} € + {{ lease()!.chargesAmount | number:'1.0-0' }} € charges</span>
+        </div>
+      </div>
+      <div class="sum-card">
+        <i class="pi pi-shield sum-icon sum-icon--blue"></i>
+        <div>
+          <span class="sum-label">Dépôt de garantie</span>
+          <span class="sum-value">{{ lease()!.depositAmount | number:'1.0-0' }} €</span>
+          <span class="sum-sub">{{ getMethodLabel(lease()!.paymentMethod) }}</span>
+        </div>
+      </div>
+      <div class="sum-card">
+        <i class="pi pi-calendar sum-icon sum-icon--orange"></i>
+        <div>
+          <span class="sum-label">Période</span>
+          <span class="sum-value">{{ lease()!.startDate | date:'dd/MM/yyyy' }}</span>
+          <span class="sum-sub">{{ lease()!.endDate ? ('au ' + (lease()!.endDate | date:'dd/MM/yyyy')) : 'Sans fin définie' }}</span>
+        </div>
+      </div>
+      <div class="sum-card">
+        <i class="pi pi-check-circle sum-icon sum-icon--purple"></i>
+        <div>
+          <span class="sum-label">Paiements</span>
+          <span class="sum-value">{{ lease()!.paidPayments }}/{{ lease()!.totalPayments }}</span>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getPaidPercent(lease()!)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="detail-body">
+
+      <!-- Left: Tenant info + Lease info -->
+      <div class="detail-left">
+
+        <!-- Tenant card -->
+        <div class="info-card">
+          <h3 class="card-title"><i class="pi pi-user"></i> Locataire</h3>
+          <div class="tenant-hero">
+            <div class="tenant-big-avatar">{{ lease()!.tenantName.charAt(0).toUpperCase() }}</div>
+            <div>
+              <p class="tenant-big-name">{{ lease()!.tenantName }}</p>
+              <a [href]="'mailto:' + lease()!.tenantEmail" class="tenant-link">{{ lease()!.tenantEmail }}</a>
+              <p class="tenant-phone">{{ lease()!.tenantPhone }}</p>
+            </div>
+          </div>
+          <a [routerLink]="['/contacts', lease()!.tenantId]" class="contact-link-btn">
+            <i class="pi pi-external-link"></i> Voir la fiche contact
+          </a>
+        </div>
+
+        <!-- Lease details -->
+        <div class="info-card">
+          <h3 class="card-title"><i class="pi pi-file-edit"></i> Détails du bail</h3>
+          <dl class="detail-list">
+            <dt>Type de location</dt><dd>{{ getTypeLabel(lease()!.leaseType) }}</dd>
+            <dt>Jour de paiement</dt><dd>Le {{ lease()!.paymentDayOfMonth }} du mois</dd>
+            <dt>Mode de paiement</dt><dd>{{ getMethodLabel(lease()!.paymentMethod) }}</dd>
+            @if (lease()!.landlordName) {
+              <dt>Bailleur</dt><dd>{{ lease()!.landlordName }}</dd>
+            }
+            @if (lease()!.agentName) {
+              <dt>Agent responsable</dt><dd>{{ lease()!.agentName }}</dd>
+            }
+            @if (lease()!.renewalDate) {
+              <dt>Date de renouvellement</dt><dd>{{ lease()!.renewalDate | date:'dd/MM/yyyy' }}</dd>
+            }
+            @if (lease()!.notes) {
+              <dt>Notes</dt><dd class="notes-text">{{ lease()!.notes }}</dd>
+            }
+          </dl>
+        </div>
+      </div>
+
+      <!-- Right: Payments -->
+      <div class="detail-right">
+        <div class="payments-card">
+          <div class="payments-header">
+            <h3 class="card-title"><i class="pi pi-credit-card"></i> Historique des paiements</h3>
+            @if (lease()!.status !== 'TERMINATED') {
+              <button class="btn-sm-primary" (click)="openNewPayment()">
+                <i class="pi pi-plus"></i> Ajouter
+              </button>
+            }
+          </div>
+
+          @if (payments().length === 0) {
+            <div class="no-payments">
+              <i class="pi pi-credit-card"></i>
+              <p>Aucun paiement enregistré</p>
+            </div>
+          }
+
+          @for (p of payments(); track p.id) {
+            <div class="payment-row">
+              <div class="payment-month">
+                <span class="month-label">{{ MONTHS[p.paymentMonth - 1] }}</span>
+                <span class="year-label">{{ p.paymentYear }}</span>
+              </div>
+              <div class="payment-amounts">
+                <span class="expected">{{ p.expectedAmount | number:'1.0-0' }} €</span>
+                @if (p.paidAmount > 0 && p.paidAmount < p.expectedAmount) {
+                  <span class="paid-partial">{{ p.paidAmount | number:'1.0-0' }} € payé</span>
+                }
+              </div>
+              <span class="pay-badge" [ngClass]="getPaymentStatusClass(p.status)">
+                {{ getPaymentStatusLabel(p.status) }}
+              </span>
+              <div class="payment-meta">
+                @if (p.paymentDate) {
+                  <span class="meta-date"><i class="pi pi-check"></i> {{ p.paymentDate | date:'dd/MM' }}</span>
+                }
+                @if (p.reference) {
+                  <span class="meta-ref">Réf: {{ p.reference }}</span>
+                }
+              </div>
+              <div class="payment-actions">
+                @if (p.status === 'PAID' || p.status === 'PARTIAL') {
+                  <button class="pay-action-btn" (click)="openQuittance(p)" title="Quittance">
+                    <i class="pi pi-file-pdf"></i>
+                  </button>
+                }
+                <button class="pay-action-btn" (click)="openEditPayment(p)" title="Modifier">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="pay-action-btn pay-action-btn--delete" (click)="deletePayment(p)" title="Supprimer">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Delete Payment Modal -->
+@if (showDeletePaymentModal() && paymentToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDeletePayment()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-icon modal-icon--danger">
+        <i class="pi pi-trash"></i>
+      </div>
+      <h3 class="modal-title">Supprimer le paiement</h3>
+      <p class="modal-body">
+        Vous allez supprimer définitivement le paiement de
+        <strong>{{ MONTHS[paymentToDelete()!.paymentMonth - 1] }} {{ paymentToDelete()!.paymentYear }}</strong>
+        ({{ paymentToDelete()!.expectedAmount | number:'1.0-0' }} €).
+      </p>
+      <p class="modal-warning">Cette action est irréversible.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancelDeletePayment()">Annuler</button>
+        <button class="btn-delete" (click)="confirmDeletePayment()" [disabled]="deletingPayment()">
+          @if (deletingPayment()) { <i class="pi pi-spin pi-spinner"></i> }
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Terminate Modal -->
+@if (showTerminateModal()) {
+  <div class="modal-backdrop" (click)="cancelTerminate()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-icon modal-icon--danger">
+        <i class="pi pi-times-circle"></i>
+      </div>
+      <h3 class="modal-title">Résilier le bail</h3>
+      <p class="modal-body">
+        Vous allez résilier le bail de <strong>{{ lease()?.tenantName }}</strong>.<br>
+        Le statut du bien sera automatiquement remis à "Disponible".
+      </p>
+      <p class="modal-warning">Cette action est irréversible.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancelTerminate()">Annuler</button>
+        <button class="btn-delete" (click)="confirmTerminate()" [disabled]="terminating()">
+          @if (terminating()) { <i class="pi pi-spin pi-spinner"></i> }
+          Résilier
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Payment Modal -->
+@if (showPaymentModal()) {
+  <div class="modal-backdrop" (click)="showPaymentModal.set(false)">
+    <div class="modal-box modal-box--wide" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">
+        {{ editingPayment() ? 'Modifier le paiement' : 'Ajouter un paiement' }}
+      </h3>
+
+      <div class="payment-form-grid">
+        <div class="form-group">
+          <label>Mois</label>
+          <select [(ngModel)]="paymentForm.paymentMonth">
+            @for (m of MONTHS; track $index) {
+              <option [value]="$index + 1">{{ m }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Année</label>
+          <input type="number" [(ngModel)]="paymentForm.paymentYear" [min]="2020" [max]="2035" />
+        </div>
+        <div class="form-group">
+          <label>Montant attendu (€)</label>
+          <input type="number" [(ngModel)]="paymentForm.expectedAmount" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Montant payé (€)</label>
+          <input type="number" [(ngModel)]="paymentForm.paidAmount" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Date de paiement</label>
+          <input type="date" [(ngModel)]="paymentForm.paymentDate" />
+        </div>
+        <div class="form-group">
+          <label>Mode de paiement</label>
+          <select [(ngModel)]="paymentForm.paymentMethod">
+            <option value="">— Choisir —</option>
+            <option value="TRANSFER">Virement</option>
+            <option value="CASH">Espèces</option>
+            <option value="CHECK">Chèque</option>
+            <option value="DIRECT_DEBIT">Prélèvement</option>
+            <option value="OTHER">Autre</option>
+          </select>
+        </div>
+        <div class="form-group form-group--full">
+          <label>Référence</label>
+          <input type="text" [(ngModel)]="paymentForm.reference" placeholder="Numéro de chèque, référence virement..." />
+        </div>
+        <div class="form-group form-group--full">
+          <label>Notes</label>
+          <textarea [(ngModel)]="paymentForm.notes" rows="2" placeholder="Notes..."></textarea>
+        </div>
+      </div>
+
+      @if (paymentError()) {
+        <p class="form-error">{{ paymentError() }}</p>
+      }
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showPaymentModal.set(false)">Annuler</button>
+        <button class="btn-primary-modal" (click)="savePayment()" [disabled]="savingPayment()">
+          @if (savingPayment()) { <i class="pi pi-spin pi-spinner"></i> }
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Quittance Modal -->
+@if (showQuittanceModal() && quittancePayment() && lease()) {
+  <div class="modal-backdrop" (click)="showQuittanceModal.set(false)">
+    <div class="modal-box modal-box--quittance" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Quittance de loyer</h3>
+
+      <div class="quittance-doc" id="quittance-print">
+        <div class="quittance-header">
+          <h2>QUITTANCE DE LOYER</h2>
+          <p>{{ MONTHS[quittancePayment()!.paymentMonth - 1] }} {{ quittancePayment()!.paymentYear }}</p>
+        </div>
+        <div class="quittance-body">
+          <div class="quittance-row">
+            <span class="ql">Bailleur :</span>
+            <span>{{ lease()!.landlordName || 'N/A' }}</span>
+          </div>
+          <div class="quittance-row">
+            <span class="ql">Locataire :</span>
+            <span>{{ lease()!.tenantName }}</span>
+          </div>
+          <div class="quittance-row">
+            <span class="ql">Bien loué :</span>
+            <span>{{ lease()!.propertyAddress }}, {{ lease()!.propertyCity }}</span>
+          </div>
+          <div class="quittance-divider"></div>
+          <div class="quittance-row">
+            <span class="ql">Loyer hors charges :</span>
+            <span>{{ lease()!.rentAmount | number:'1.2-2' }} €</span>
+          </div>
+          <div class="quittance-row">
+            <span class="ql">Charges :</span>
+            <span>{{ lease()!.chargesAmount | number:'1.2-2' }} €</span>
+          </div>
+          <div class="quittance-row quittance-total">
+            <span class="ql"><strong>Total perçu :</strong></span>
+            <span><strong>{{ quittancePayment()!.paidAmount | number:'1.2-2' }} €</strong></span>
+          </div>
+          <div class="quittance-divider"></div>
+          <p class="quittance-text">
+            Je soussigné(e) {{ lease()!.landlordName || 'le(la) bailleur(euse)' }}, donne quittance à
+            {{ lease()!.tenantName }} pour la somme de <strong>{{ quittancePayment()!.paidAmount | number:'1.2-2' }} €</strong>
+            au titre du loyer et des charges du logement désigné ci-dessus pour la période du mois de
+            {{ MONTHS[quittancePayment()!.paymentMonth - 1] }} {{ quittancePayment()!.paymentYear }}.
+          </p>
+          <p class="quittance-date">Fait le {{ today | date:'dd MMMM yyyy' : '' : 'fr' }}</p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showQuittanceModal.set(false)">Fermer</button>
+        @if (!quittancePayment()!.quittanceGeneratedAt) {
+          <button class="btn-outline-modal" (click)="markQuittanceGenerated(quittancePayment()!)">
+            <i class="pi pi-check"></i> Marquer comme générée
+          </button>
+        }
+        <button class="btn-primary-modal" (click)="printQuittance()">
+          <i class="pi pi-print"></i> Imprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}

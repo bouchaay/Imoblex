@@ -15,6 +15,19 @@ interface CalendarDay {
   appointments: Appointment[];
 }
 
+interface WeekHour {
+  hour: number;
+  label: string;
+}
+
+interface WeekDay {
+  date: Date;
+  isToday: boolean;
+  label: string;
+  dayNum: string;
+  appointments: Appointment[];
+}
+
 @Component({
   selector: 'app-agenda',
   standalone: true,
@@ -47,9 +60,16 @@ export class AgendaComponent implements OnInit {
   dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   calendarDays = signal<CalendarDay[]>([]);
+  weekDays = signal<WeekDay[]>([]);
   groupedAppointments = signal<{ dateLabel: string; appointments: Appointment[] }[]>([]);
 
   currentMonthLabel = signal('');
+  weekLabel = signal('');
+
+  readonly weekHours: WeekHour[] = Array.from({ length: 13 }, (_, i) => ({
+    hour: i + 8,
+    label: `${(i + 8).toString().padStart(2, '0')}:00`
+  }));
 
   ngOnInit(): void {
     this.loadAppointments();
@@ -59,6 +79,7 @@ export class AgendaComponent implements OnInit {
     this.agendaService.getAll().subscribe(apts => {
       this.appointments.set(apts);
       this.buildCalendar();
+      this.buildWeekView();
       this.buildGroupedList();
       this.updateMonthLabel();
     });
@@ -115,23 +136,88 @@ export class AgendaComponent implements OnInit {
     this.currentMonthLabel.set(d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
   }
 
-  prevMonth(): void {
-    const d = this.currentDate();
-    this.currentDate.set(new Date(d.getFullYear(), d.getMonth() - 1, 1));
-    this.buildCalendar();
-    this.updateMonthLabel();
+  buildWeekView(): void {
+    const date = this.currentDate();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    // Find Monday of current week
+    const dayOfWeek = date.getDay(); // 0=Sun
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+
+    const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    const days: WeekDay[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const isToday = d.getTime() === today.getTime();
+      const apts = this.appointments().filter(a => {
+        const ad = new Date(a.startDate);
+        ad.setHours(0, 0, 0, 0);
+        return ad.getTime() === d.getTime();
+      });
+      days.push({
+        date: d,
+        isToday,
+        label: dayNames[i],
+        dayNum: d.getDate().toString(),
+        appointments: apts
+      });
+    }
+    this.weekDays.set(days);
+
+    const end = new Date(monday);
+    end.setDate(monday.getDate() + 6);
+    this.weekLabel.set(
+      `${monday.getDate()} – ${end.getDate()} ${end.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`
+    );
   }
 
-  nextMonth(): void {
-    const d = this.currentDate();
-    this.currentDate.set(new Date(d.getFullYear(), d.getMonth() + 1, 1));
-    this.buildCalendar();
-    this.updateMonthLabel();
+  getAptTopPct(apt: Appointment): number {
+    const start = new Date(apt.startDate);
+    const h = start.getHours() + start.getMinutes() / 60;
+    return Math.max(0, (h - 8) / 13 * 100);
   }
+
+  getAptHeightPct(apt: Appointment): number {
+    const start = new Date(apt.startDate);
+    const end = new Date(apt.endDate);
+    const dur = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    return Math.max(2, dur / 13 * 100);
+  }
+
+  prevPeriod(): void {
+    const d = this.currentDate();
+    if (this.viewMode() === 'week') {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7));
+      this.buildWeekView();
+    } else {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+      this.buildCalendar();
+      this.updateMonthLabel();
+    }
+  }
+
+  nextPeriod(): void {
+    const d = this.currentDate();
+    if (this.viewMode() === 'week') {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7));
+      this.buildWeekView();
+    } else {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth() + 1, 1));
+      this.buildCalendar();
+      this.updateMonthLabel();
+    }
+  }
+
+  prevMonth(): void { this.prevPeriod(); }
+  nextMonth(): void { this.nextPeriod(); }
 
   goToToday(): void {
     this.currentDate.set(new Date());
     this.buildCalendar();
+    this.buildWeekView();
     this.updateMonthLabel();
   }
 

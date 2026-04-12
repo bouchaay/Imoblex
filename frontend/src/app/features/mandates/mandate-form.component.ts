@@ -6,7 +6,7 @@ import { MandateService } from '../../core/services/mandate.service';
 import { PropertyService } from '../../core/services/property.service';
 import { ContactService } from '../../core/services/contact.service';
 import { AuthService } from '../../core/services/auth.service';
-import { MandateType, MandateStatus } from '../../core/models/enums';
+import { MandateCategory, MandateType, MandateStatus } from '../../core/models/enums';
 import { Property } from '../../core/models/property.model';
 import { Contact } from '../../core/models/contact.model';
 
@@ -46,16 +46,28 @@ export class MandateFormComponent implements OnInit {
   selectedProperty = signal<Property | null>(null);
   selectedContact = signal<Contact | null>(null);
 
+  // Options catégorie
+  categoryOptions = [
+    { value: MandateCategory.GERANCE, label: 'Gérance', desc: 'Mandat de gestion locative' },
+    { value: MandateCategory.VENTE,   label: 'Vente',   desc: 'Mandat de vente immobilière' }
+  ];
+
   // Formulaire
   formData = {
+    category: MandateCategory.GERANCE as MandateCategory,
     type: '' as MandateType | '',
     status: MandateStatus.ACTIVE as MandateStatus,
     propertyId: '',
     mandatorId: '',
     price: 0,
+    feeType: 'percent' as 'percent' | 'amount' | 'text',
+    agencyFeesPercentInput: 5,
+    agencyFeesAmountInput: null as number | null,
+    agencyFeesTextInput: '',
     agencyFeesPercent: 5,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    maxDurationYears: 3,
     renewalDate: '',
     signedAtPlace: '',
     notes: ''
@@ -145,12 +157,18 @@ export class MandateFormComponent implements OnInit {
       this.editId.set(id);
       this.mandateService.getById(id).subscribe({
         next: m => {
+          const feeType = m.agencyFeesText ? 'text' : m.agencyFeeAmount ? 'amount' : 'percent';
           this.formData = {
+            category: m.category || MandateCategory.GERANCE,
             type: m.type,
             status: m.status,
             propertyId: m.propertyId,
             mandatorId: m.mandatorId,
             price: m.price,
+            feeType: feeType as 'percent' | 'amount' | 'text',
+            agencyFeesPercentInput: m.agencyFeePercent || 5,
+            agencyFeesAmountInput: m.agencyFeeAmount || null,
+            agencyFeesTextInput: m.agencyFeesText || '',
             agencyFeesPercent: m.agencyFeePercent,
             startDate: m.startDate instanceof Date
               ? m.startDate.toISOString().split('T')[0]
@@ -158,6 +176,7 @@ export class MandateFormComponent implements OnInit {
             endDate: m.endDate instanceof Date
               ? m.endDate.toISOString().split('T')[0]
               : String(m.endDate),
+            maxDurationYears: m.maxDurationYears ?? 3,
             renewalDate: m.renewalDate instanceof Date
               ? m.renewalDate.toISOString().split('T')[0]
               : '',
@@ -244,17 +263,23 @@ export class MandateFormComponent implements OnInit {
     this.errorMessage.set('');
 
     const payload: any = {
+      category: this.formData.category,
       type: this.formData.type as MandateType,
       status: this.formData.status,
       agentId: this.authService.currentUser?.id,
       price: this.formData.price,
-      agencyFeePercent: this.formData.agencyFeesPercent,
+      // honoraires — transmis tels quels à mapToRequest()
+      feeType: this.formData.feeType,
+      agencyFeesPercentInput: this.formData.agencyFeesPercentInput,
+      agencyFeesAmountInput: this.formData.agencyFeesAmountInput,
+      agencyFeesTextInput: this.formData.agencyFeesTextInput,
       startDate: new Date(this.formData.startDate),
       endDate: new Date(this.formData.endDate),
       renewalDate: this.formData.renewalDate ? new Date(this.formData.renewalDate) : undefined,
       propertyId: this.formData.propertyId || undefined,
       mandatorId: this.formData.mandatorId || undefined,
       signedAtPlace: this.formData.signedAtPlace || undefined,
+      maxDurationYears: this.formData.maxDurationYears || 3,
       notes: this.formData.notes || undefined
     };
 

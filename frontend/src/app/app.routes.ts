@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -69,6 +70,11 @@ export const routes: Routes = [
           import('./features/contacts/contacts.component').then(m => m.ContactsComponent)
       },
       {
+        path: 'leads',
+        loadComponent: () =>
+          import('./features/leads/leads.component').then(m => m.LeadsComponent)
+      },
+      {
         path: 'contacts/new',
         loadComponent: () =>
           import('./features/contacts/contact-form.component').then(m => m.ContactFormComponent)
@@ -104,9 +110,35 @@ export const routes: Routes = [
           import('./features/reporting/reporting.component').then(m => m.ReportingComponent)
       },
       {
+        path: 'rental',
+        loadComponent: () =>
+          import('./features/rental/rental.component').then(m => m.RentalComponent)
+      },
+      {
+        path: 'rental/new',
+        loadComponent: () =>
+          import('./features/rental/rental-form/rental-form.component').then(m => m.RentalFormComponent)
+      },
+      {
+        path: 'rental/:id',
+        loadComponent: () =>
+          import('./features/rental/rental-detail/rental-detail.component').then(m => m.RentalDetailComponent)
+      },
+      {
+        path: 'rental/:id/edit',
+        loadComponent: () =>
+          import('./features/rental/rental-form/rental-form.component').then(m => m.RentalFormComponent)
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings.component').then(m => m.SettingsComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./features/users/users.component').then(m => m.UsersComponent),
+        canActivate: [adminGuard]
       }
     ]
   },

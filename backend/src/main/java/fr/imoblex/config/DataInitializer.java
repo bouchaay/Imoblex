@@ -19,41 +19,21 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        createOrUpdate("admin",  "Admin",  "Imoblex",  "admin@imoblex.fr",  "Admin@2024",  Role.ADMIN, "Directeur d'agence");
-        createOrUpdate("sophie", "Sophie", "Moreau",   "sophie.moreau@imoblex.fr", "Sophie@2024", Role.USER, "Négociatrice");
-    }
-
-    private void createOrUpdate(String username, String firstName, String lastName,
-                                String email, String rawPassword, Role role, String title) {
-        String encodedPassword = passwordEncoder.encode(rawPassword);
-
-        userRepository.findByUsername(username).ifPresentOrElse(
-            user -> {
-                // Mettre à jour le mot de passe et le rôle à chaque démarrage (dev)
-                user.setPassword(encodedPassword);
-                user.setRole(role);
-                user.setFirstName(firstName);
-                user.setLastName(lastName);
-                user.setEmail(email);
-                user.setTitle(title);
-                user.setEnabled(true);
-                userRepository.save(user);
-                log.info("✅ Utilisateur mis à jour — login: IMB01 / {} / {}", username, rawPassword);
-            },
-            () -> {
-                User user = User.builder()
-                        .username(username)
-                        .firstName(firstName)
-                        .lastName(lastName)
-                        .email(email)
-                        .password(encodedPassword)
-                        .role(role)
-                        .title(title)
-                        .enabled(true)
-                        .build();
-                userRepository.save(user);
-                log.info("✅ Utilisateur créé — login: IMB01 / {} / {}", username, rawPassword);
-            }
-        );
+        if (userRepository.existsByUsername("root")) {
+            log.info("✅ Utilisateur root déjà initialisé — aucune action requise");
+            return;
+        }
+        User root = User.builder()
+                .username("root")
+                .firstName("Admin")
+                .lastName("Imoblex")
+                .email("root@imoblex.fr")
+                .password(passwordEncoder.encode("root"))
+                .role(Role.ADMIN)
+                .title("Administrateur")
+                .enabled(true)
+                .build();
+        userRepository.save(root);
+        log.info("✅ Premier utilisateur créé — identifiants : root / root");
     }
 }

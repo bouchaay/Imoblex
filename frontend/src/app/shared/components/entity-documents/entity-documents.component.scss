@@ -1,0 +1,317 @@
+.entity-docs {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.entity-docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.entity-docs-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  i { color: #64748b; font-size: 0.85rem; }
+}
+
+.doc-count {
+  background: #1B4F72;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 100px;
+}
+
+.btn-add-doc {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f0f7ff;
+  color: #1B4F72;
+  border: 1.5px solid #bfdbfe;
+  padding: 0.35rem 0.75rem;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { background: #dbeafe; border-color: #1B4F72; }
+}
+
+/* States */
+.docs-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  i { font-size: 1rem; }
+}
+.docs-empty { flex-direction: column; justify-content: center; padding: 1.5rem 0; }
+
+/* Doc list */
+.doc-list { display: flex; flex-direction: column; gap: 4px; }
+
+.doc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  transition: background 0.15s;
+  &:hover {
+    background: #f8fafc;
+    .doc-row-actions { opacity: 1; }
+  }
+}
+
+.doc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  i { font-size: 0.95rem; }
+}
+
+.doc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doc-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-meta {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.doc-row-actions {
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.row-btn {
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.15s;
+  &:hover { border-color: #1B4F72; color: #1B4F72; }
+  &.danger:hover { border-color: #ef4444; color: #ef4444; }
+}
+
+/* Dialogs */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 16px;
+  width: 440px;
+  max-width: calc(100vw - 2rem);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  &.dialog-sm { width: 340px; text-align: center; }
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  &:hover { color: #1e293b; }
+}
+
+.dialog-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-label { font-size: 0.8rem; font-weight: 600; color: #374151; }
+.form-input {
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  outline: none;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  &:focus { border-color: #1B4F72; }
+}
+
+.file-drop {
+  border: 2px dashed #e2e8f0;
+  border-radius: 10px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  transition: border-color 0.15s;
+  i { font-size: 1.5rem; }
+  &:hover { border-color: #1B4F72; color: #1B4F72; }
+}
+
+.btn-cancel {
+  background: #fff;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { border-color: #94a3b8; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.btn-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #1B4F72;
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #154060; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+/* Delete dialog */
+.delete-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem auto 0.75rem;
+  i { font-size: 1.3rem; color: #ef4444; }
+}
+
+.delete-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.delete-filename {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.35rem 0.625rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0 auto 0.5rem;
+}
+
+.delete-warn {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0 1.5rem 1rem;
+}
+
+.btn-delete {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #dc2626; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}

@@ -7,6 +7,7 @@ import { PropertyService } from '../core/services/property.service';
 import { MandateService } from '../core/services/mandate.service';
 import { ContactService } from '../core/services/contact.service';
 import { AgendaService } from '../core/services/agenda.service';
+import { LeadService } from '../core/services/lead.service';
 
 interface NavItem {
   label: string;
@@ -37,6 +38,7 @@ export class SidebarComponent implements OnInit {
   private readonly mandateService = inject(MandateService);
   private readonly contactService = inject(ContactService);
   private readonly agendaService = inject(AgendaService);
+  private readonly leadService = inject(LeadService);
   private readonly router = inject(Router);
 
   navGroups: NavGroup[] = [
@@ -53,7 +55,9 @@ export class SidebarComponent implements OnInit {
       title: 'Gestion',
       items: [
         { label: 'Transactions', icon: 'pi-chart-line', route: '/transactions' },
+        { label: 'Locatif', icon: 'pi-key', route: '/rental' },
         { label: 'Agenda', icon: 'pi-calendar', route: '/agenda', badgeColor: '#3b82f6' },
+        { label: 'Formulaires', icon: 'pi-inbox', route: '/leads', badgeColor: '#ef4444' },
         { label: 'Documents', icon: 'pi-folder', route: '/documents' }
       ]
     },
@@ -74,6 +78,7 @@ export class SidebarComponent implements OnInit {
       this.mandateService.change$,
       this.contactService.change$,
       this.agendaService.change$,
+      this.leadService.change$,
       this.router.events.pipe(filter(e => e instanceof NavigationEnd))
     ).subscribe(() => this.loadCounts());
   }
@@ -111,14 +116,25 @@ export class SidebarComponent implements OnInit {
       },
       error: () => {}
     });
+
+    // Badge leads = formulaires non lus
+    this.leadService.countUnread().subscribe({
+      next: res => {
+        const item = this.navGroups[1].items.find(i => i.route === '/leads');
+        if (item) item.badge = res.count > 0 ? res.count : undefined;
+      },
+      error: () => {}
+    });
+  }
+
+  isAdmin(): boolean {
+    return this.authService.currentUser?.role === 'ADMIN';
   }
 
   getRoleLabel(role?: string): string {
     const labels: Record<string, string> = {
       ADMIN: 'Administrateur',
-      MANAGER: 'Directeur d\'agence',
-      AGENT: 'Négociateur',
-      ASSISTANT: 'Assistant(e)'
+      USER: 'Collaborateur'
     };
     return labels[role || ''] || role || '';
   }

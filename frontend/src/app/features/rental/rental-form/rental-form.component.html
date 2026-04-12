@@ -1,0 +1,216 @@
+<div class="form-page">
+
+  <!-- Header breadcrumb -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/rental" class="breadcrumb-link">
+        <i class="pi pi-arrow-left"></i> Locatif
+      </a>
+      <span>/</span>
+      <span>{{ isEditMode() ? 'Modifier le bail' : 'Nouveau bail' }}</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" (click)="cancel()">Annuler</button>
+      <button type="button" class="btn-primary" (click)="save()" [disabled]="saving()">
+        @if (saving()) {
+          <span class="spinner-sm"></span> Enregistrement...
+        } @else {
+          <i class="pi pi-check"></i> {{ isEditMode() ? 'Mettre à jour' : 'Créer le bail' }}
+        }
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="form-error-banner">
+      <i class="pi pi-exclamation-triangle"></i> {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-wrap">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Chargement...</span>
+    </div>
+  }
+
+  @if (!loading()) {
+    <div class="step-panel">
+
+      <!-- Card 1: Parties du contrat -->
+      <div class="card">
+        <h3 class="card-section-title">
+          <i class="pi pi-users"></i>
+          Parties du contrat
+        </h3>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label required">Bien immobilier</label>
+          @if (loadingProperties()) {
+            <div class="loading-field"><i class="pi pi-spin pi-spinner"></i> Chargement des biens...</div>
+          } @else {
+            <select class="form-input" [(ngModel)]="form.propertyId" name="propertyId">
+              <option value="">— Sélectionner un bien —</option>
+              @for (p of properties(); track p.id) {
+                <option [value]="p.id">{{ getPropertyLabel(p) }}</option>
+              }
+            </select>
+          }
+          <span class="field-hint">Seuls les biens disponibles ou déjà loués sont affichés.</span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label required">Locataire</label>
+            @if (loadingContacts()) {
+              <div class="loading-field"><i class="pi pi-spin pi-spinner"></i> Chargement...</div>
+            } @else {
+              <select class="form-input" [(ngModel)]="form.tenantId" name="tenantId">
+                <option value="">— Sélectionner le locataire —</option>
+                @for (c of tenants(); track c.id) {
+                  <option [value]="c.id">{{ getContactFullName(c) }}</option>
+                }
+              </select>
+            }
+            @if (!loadingContacts() && tenants().length === 0) {
+              <span class="field-hint field-hint--warn">
+                <i class="pi pi-info-circle"></i>
+                Aucun locataire.
+                <a routerLink="/contacts/new" class="hint-link">Créer un contact</a>
+              </span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Bailleur / Propriétaire</label>
+            @if (loadingContacts()) {
+              <div class="loading-field"><i class="pi pi-spin pi-spinner"></i> Chargement...</div>
+            } @else {
+              <select class="form-input" [(ngModel)]="form.landlordId" name="landlordId">
+                <option value="">— Aucun bailleur —</option>
+                @for (c of landlords(); track c.id) {
+                  <option [value]="c.id">{{ getContactFullName(c) }}</option>
+                }
+              </select>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Caractéristiques du bail -->
+      <div class="card">
+        <h3 class="card-section-title">
+          <i class="pi pi-file-edit"></i>
+          Caractéristiques du bail
+        </h3>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label required">Type de location</label>
+            <select class="form-input" [(ngModel)]="form.leaseType" name="leaseType">
+              <option value="UNFURNISHED">Non meublé</option>
+              <option value="FURNISHED">Meublé</option>
+              <option value="SEASONAL">Saisonnier</option>
+              <option value="OTHER">Autre</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Statut</label>
+            <select class="form-input" [(ngModel)]="form.status" name="status">
+              <option value="ACTIVE">Actif</option>
+              <option value="PENDING">En attente</option>
+              <option value="SUSPENDED">Suspendu</option>
+              <option value="TERMINATED">Résilié</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Date de début</label>
+            <input type="date" class="form-input" [(ngModel)]="form.startDate" name="startDate" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de fin</label>
+            <input type="date" class="form-input" [(ngModel)]="form.endDate" name="endDate" />
+            <span class="field-hint">Laisser vide pour un bail à durée indéterminée.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de renouvellement</label>
+            <input type="date" class="form-input" [(ngModel)]="form.renewalDate" name="renewalDate" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Conditions financières -->
+      <div class="card">
+        <h3 class="card-section-title">
+          <i class="pi pi-euro"></i>
+          Conditions financières
+        </h3>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label required">Loyer (€/mois)</label>
+            <input type="number" class="form-input" [(ngModel)]="form.rentAmount"
+                   name="rentAmount" min="0" step="0.01" placeholder="ex: 800" />
+            <span class="field-hint">Loyer hors charges, ou toutes charges comprises si le champ suivant est à 0.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Charges (€/mois)</label>
+            <input type="number" class="form-input" [(ngModel)]="form.chargesAmount"
+                   name="chargesAmount" min="0" step="0.01" placeholder="0 si charges comprises" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Total loyer CC</label>
+            <div class="total-display">
+              <span class="total-amount">{{ totalRent | number:'1.0-0' }} €</span>
+              <span class="total-sub">/mois toutes charges comprises</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Dépôt de garantie (€)</label>
+            <input type="number" class="form-input" [(ngModel)]="form.depositAmount"
+                   name="depositAmount" min="0" step="0.01" placeholder="ex: 1600" />
+            <span class="field-hint">Généralement 1 ou 2 mois de loyer HC.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Jour de paiement</label>
+            <input type="number" class="form-input" [(ngModel)]="form.paymentDayOfMonth"
+                   name="paymentDayOfMonth" min="1" max="28" />
+            <span class="field-hint">Entre le 1er et le 28 du mois.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Mode de paiement</label>
+            <select class="form-input" [(ngModel)]="form.paymentMethod" name="paymentMethod">
+              <option value="TRANSFER">Virement bancaire</option>
+              <option value="DIRECT_DEBIT">Prélèvement automatique</option>
+              <option value="CHECK">Chèque</option>
+              <option value="CASH">Espèces</option>
+              <option value="OTHER">Autre</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Notes -->
+      <div class="card">
+        <h3 class="card-section-title">
+          <i class="pi pi-align-left"></i>
+          Notes internes
+        </h3>
+        <div class="form-group">
+          <textarea class="form-input form-textarea" [(ngModel)]="form.notes" name="notes"
+                    rows="4" placeholder="Informations complémentaires sur le bail..."></textarea>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

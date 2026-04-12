@@ -2,6 +2,7 @@ package fr.imoblex.modules.mandate.controller;
 
 import fr.imoblex.modules.mandate.dto.MandateRequest;
 import fr.imoblex.modules.mandate.dto.MandateResponse;
+import fr.imoblex.modules.mandate.service.MandateDocumentService;
 import fr.imoblex.modules.mandate.service.MandateService;
 import fr.imoblex.shared.response.ApiResponse;
 import fr.imoblex.shared.response.PageResponse;
@@ -9,8 +10,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +25,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/mandates")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Mandats", description = "Gestion des mandats immobiliers")
 public class MandateController {
 
     private final MandateService mandateService;
+    private final MandateDocumentService mandateDocumentService;
 
     @GetMapping
     @Operation(summary = "Liste des mandats")
@@ -68,5 +75,26 @@ public class MandateController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         mandateService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/document")
+    @Operation(summary = "Générer le PDF du mandat")
+    public ResponseEntity<byte[]> generateDocument(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "true") boolean signed,
+            @RequestParam(required = false) String remiseDate,
+            @RequestParam(defaultValue = "false") boolean blank) {
+        try {
+            byte[] pdf = mandateDocumentService.generateGerance(id, signed, remiseDate, blank);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.attachment()
+                    .filename("mandat-" + id + ".pdf")
+                    .build());
+            return ResponseEntity.ok().headers(headers).body(pdf);
+        } catch (Exception e) {
+            log.error("Erreur génération PDF mandat {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE mandates ADD COLUMN IF NOT EXISTS agency_fees_text VARCHAR(500);
