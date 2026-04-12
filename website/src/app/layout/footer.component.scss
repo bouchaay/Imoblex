@@ -1,1 +1,399 @@
 :host { display: block; }
+
+/* Newsletter Strip */
+.newsletter-strip {
+  background: linear-gradient(135deg, #1B4F72 0%, #154060 100%);
+  padding: 2.5rem 0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(243,156,18,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.newsletter-strip-inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.newsletter-strip-icon {
+  width: 52px;
+  height: 52px;
+  background: rgba(243,156,18,0.2);
+  border: 1px solid rgba(243,156,18,0.3);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  svg { width: 26px; height: 26px; }
+}
+
+.newsletter-strip-text {
+  flex: 1;
+  min-width: 200px;
+  h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 0.2rem; }
+  p { font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0; }
+}
+
+.newsletter-strip-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    align-items: center;
+    width: 100%;
+  }
+}
+
+.newsletter-inline-form {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  max-width: 420px;
+}
+
+.newsletter-email-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  min-width: 0;
+  transition: border-color 0.2s;
+  &::placeholder { color: rgba(255,255,255,0.45); }
+  &:focus { border-color: #F39C12; background: rgba(255,255,255,0.15); }
+}
+
+.newsletter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem;
+  background: #F39C12;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 0 10px 10px 0;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  &:hover { background: #e08e0b; }
+}
+
+.newsletter-strip-legal {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0;
+}
+
+/* Modal */
+.nl-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: nlFadeIn 0.2s ease;
+}
+
+@keyframes nlFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nlSlideUp { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.nl-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+  animation: nlSlideUp 0.25s cubic-bezier(0.22,1,0.36,1);
+}
+
+.nl-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+}
+
+.nl-header-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #1B4F72, #154060);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nl-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 2px;
+}
+
+.nl-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.nl-close {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  &:hover { border-color: #cbd5e1; background: #f8fafc; }
+}
+
+.nl-close-abs {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin-left: 0;
+}
+
+.nl-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.nl-field { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.nl-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.nl-input {
+  padding: 0.65rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+  &:focus { border-color: #1B4F72; }
+  &::placeholder { color: #94a3b8; }
+}
+
+.nl-radio-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.nl-radio {
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+  &.active { border-color: #1B4F72; background: rgba(27,79,114,0.07); color: #1B4F72; font-weight: 600; }
+  &:hover:not(.active) { border-color: #cbd5e1; background: #f8fafc; }
+}
+
+.nl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.nl-chip {
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.15s;
+  &.active { border-color: #F39C12; background: rgba(243,156,18,0.08); color: #d97706; font-weight: 600; }
+  &:hover:not(.active) { border-color: #cbd5e1; }
+}
+
+.nl-budget-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  .nl-input { flex: 1; }
+}
+
+.nl-budget-sep {
+  color: #94a3b8;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.nl-gdpr {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.875rem;
+}
+
+.nl-gdpr-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.nl-gdpr-check {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: #1B4F72;
+  cursor: pointer;
+}
+
+.nl-gdpr-link {
+  color: #1B4F72;
+  font-weight: 600;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.nl-error {
+  font-size: 0.8rem;
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+}
+
+.nl-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #1B4F72, #154060);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,79,114,0.3); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+}
+
+.nl-submit-outline {
+  background: transparent;
+  color: #1B4F72;
+  border: 2px solid #1B4F72;
+  &:hover:not(:disabled) { background: rgba(27,79,114,0.05); box-shadow: none; }
+}
+
+.nl-legal-note {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Success */
+.nl-success {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.nl-success-icon {
+  width: 64px;
+  height: 64px;
+  background: #f0fdf4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  margin-bottom: 0.5rem;
+}
+
+.nl-success-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.nl-success-text {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0;
+}
+
+.nl-success-unsub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+}

@@ -1,1 +1,47 @@
 :host { display: block; }
+
+.nav-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+
+  .group:hover & {
+    transform: scale(1.06);
+  }
+}
+
+.nav-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.nav-logo-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1B4F72;
+  letter-spacing: 0.12em;
+  transition: color 0.2s;
+
+  .group:hover & { color: #F39C12; }
+}
+
+.nav-logo-tagline {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+  text-transform: uppercase;
+}

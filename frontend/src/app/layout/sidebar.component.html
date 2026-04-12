@@ -1,12 +1,7 @@
 <aside class="sidebar" [class.collapsed]="collapsed">
   <!-- Logo area -->
   <div class="sidebar-logo">
-    <div class="logo-icon">
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-        <path d="M16 3L3 14h4v15h7v-9h4v9h7V14h4L16 3z" fill="#F39C12"/>
-        <rect x="12" y="18" width="8" height="11" rx="1" fill="rgba(255,255,255,0.15)"/>
-      </svg>
-    </div>
+    <img class="logo-img" src="assets/logo.png" alt="IMOBLEX" />
     @if (!collapsed) {
       <div class="logo-text">
         <span class="logo-name">IMOBLEX</span>
@@ -46,6 +41,21 @@
             }
           </a>
         }
+      </div>
+    }
+
+    <!-- Section Administration — admin uniquement -->
+    @if (isAdmin()) {
+      <div class="nav-group">
+        @if (!collapsed) {
+          <span class="nav-group-title">Administration</span>
+        }
+        <a routerLink="/users" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Utilisateurs' : ''">
+          <i class="pi pi-users nav-icon"></i>
+          @if (!collapsed) {
+            <span class="nav-label">Utilisateurs</span>
+          }
+        </a>
       </div>
     }
   </nav>

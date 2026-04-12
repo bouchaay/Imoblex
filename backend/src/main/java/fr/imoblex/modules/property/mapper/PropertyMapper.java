@@ -4,6 +4,8 @@ import fr.imoblex.modules.property.dto.PropertyCreateRequest;
 import fr.imoblex.modules.property.dto.PropertyResponse;
 import fr.imoblex.modules.property.entity.Property;
 import fr.imoblex.modules.property.entity.PropertyPhoto;
+import fr.imoblex.modules.property.entity.PropertyShop;
+import fr.imoblex.modules.property.entity.PropertyTransport;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -92,6 +94,8 @@ public class PropertyMapper {
             .viewCount(p.getViewCount())
             .contactCount(p.getContactCount())
             .visitCount(p.getVisitCount())
+            .transports(mapTransports(p.getTransports()))
+            .shops(mapShops(p.getShops()))
             .build();
     }
 
@@ -236,6 +240,35 @@ public class PropertyMapper {
                 .thumbnailUrl(ph.getThumbnailUrl())
                 .caption(ph.getCaption())
                 .position(ph.getPosition())
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    private List<PropertyResponse.TransportDto> mapTransports(List<PropertyTransport> transports) {
+        if (transports == null) return Collections.emptyList();
+        return transports.stream()
+            .map(t -> PropertyResponse.TransportDto.builder()
+                .id(t.getId() != null ? t.getId().toString() : null)
+                .type(t.getType())
+                .line(t.getLine())
+                .name(t.getName())
+                .distanceMeters(t.getDistanceMeters())
+                .walkingMinutes(t.getWalkingMinutes())
+                .displayOrder(t.getDisplayOrder())
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    private List<PropertyResponse.ShopDto> mapShops(List<PropertyShop> shops) {
+        if (shops == null) return Collections.emptyList();
+        return shops.stream()
+            .map(s -> PropertyResponse.ShopDto.builder()
+                .id(s.getId() != null ? s.getId().toString() : null)
+                .type(s.getType())
+                .name(s.getName())
+                .distanceMeters(s.getDistanceMeters())
+                .walkingMinutes(s.getWalkingMinutes())
+                .displayOrder(s.getDisplayOrder())
                 .build())
             .collect(Collectors.toList());
     }

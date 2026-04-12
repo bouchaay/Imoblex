@@ -36,18 +36,38 @@
         </div>
       </div>
       <div class="hero-quick-links">
-        <a class="quick-link-btn" routerLink="/properties"
-           [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
-          <i class="pi pi-building"></i>
-          <span class="quick-count">{{ relatedProperties().length }}</span>
-          <span>Bien{{ relatedProperties().length > 1 ? 's' : '' }}</span>
-        </a>
-        <a class="quick-link-btn" routerLink="/mandates"
-           [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
-          <i class="pi pi-file-edit"></i>
-          <span class="quick-count">{{ relatedMandates().length }}</span>
-          <span>Mandat{{ relatedMandates().length > 1 ? 's' : '' }}</span>
-        </a>
+        @if (isTenant()) {
+          <a class="quick-link-btn" routerLink="/rental">
+            <i class="pi pi-key"></i>
+            <span class="quick-count">{{ relatedLeases().length }}</span>
+            <span>Bail{{ relatedLeases().length > 1 ? 's' : '' }}</span>
+          </a>
+        } @else if (isLandlord()) {
+          <a class="quick-link-btn" routerLink="/properties"
+             [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
+            <i class="pi pi-building"></i>
+            <span class="quick-count">{{ relatedProperties().length }}</span>
+            <span>Bien{{ relatedProperties().length > 1 ? 's' : '' }}</span>
+          </a>
+          <a class="quick-link-btn" routerLink="/rental">
+            <i class="pi pi-key"></i>
+            <span class="quick-count">{{ relatedLeases().length }}</span>
+            <span>Bail{{ relatedLeases().length > 1 ? 's' : '' }}</span>
+          </a>
+        } @else {
+          <a class="quick-link-btn" routerLink="/properties"
+             [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
+            <i class="pi pi-building"></i>
+            <span class="quick-count">{{ relatedProperties().length }}</span>
+            <span>Bien{{ relatedProperties().length > 1 ? 's' : '' }}</span>
+          </a>
+          <a class="quick-link-btn" routerLink="/mandates"
+             [queryParams]="{ contactId: contact()!.id, contactName: contact()!.firstName + ' ' + contact()!.lastName }">
+            <i class="pi pi-file-edit"></i>
+            <span class="quick-count">{{ relatedMandates().length }}</span>
+            <span>Mandat{{ relatedMandates().length > 1 ? 's' : '' }}</span>
+          </a>
+        }
       </div>
     </div>
 
@@ -55,75 +75,190 @@
       <!-- Colonne principale -->
       <div class="detail-main">
 
-        <!-- Biens associés -->
-        <div class="card">
-          <div class="card-header-row">
-            <h3 class="card-title"><i class="pi pi-building"></i> Biens associés</h3>
-            @if (relatedProperties().length > 0) {
-              <a routerLink="/properties" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+        <!-- LOCATAIRE : baux locatifs -->
+        @if (isTenant()) {
+          <div class="card">
+            <div class="card-header-row">
+              <h3 class="card-title"><i class="pi pi-key"></i> Contrats de location</h3>
+              <a routerLink="/rental" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+            </div>
+            @if (relatedLeases().length === 0) {
+              <div class="empty-state-small">
+                <i class="pi pi-key"></i>
+                <span>Aucun bail associé à ce locataire</span>
+              </div>
+            } @else {
+              <div class="related-leases">
+                @for (lease of relatedLeases(); track lease.id) {
+                  <div class="lease-row">
+                    <div class="lease-status-col">
+                      <span class="lease-status-badge" [ngClass]="getLeaseStatusClass(lease.status)">
+                        {{ getLeaseStatusLabel(lease.status) }}
+                      </span>
+                    </div>
+                    <div class="lease-info">
+                      <div class="lease-ref">{{ lease.propertyReference }}</div>
+                      <div class="lease-addr">{{ lease.propertyAddress }}, {{ lease.propertyCity }}</div>
+                      <div class="lease-meta">
+                        <span>{{ getLeaseTypeLabel(lease.leaseType) }}</span>
+                        <span>·</span>
+                        <span>depuis le {{ lease.startDate | date:'dd/MM/yyyy' }}</span>
+                        @if (lease.endDate) { <span>· jusqu'au {{ lease.endDate | date:'dd/MM/yyyy' }}</span> }
+                      </div>
+                    </div>
+                    <div class="lease-rent">
+                      <span class="lease-rent-amount">{{ lease.totalRent | number:'1.0-0' }} €</span>
+                      <span class="lease-rent-sub">/mois CC</span>
+                    </div>
+                    <a [routerLink]="['/rental', lease.id]" class="lease-detail-btn">
+                      <i class="pi pi-eye"></i> Voir le bail
+                    </a>
+                  </div>
+                }
+              </div>
             }
           </div>
-          @if (relatedProperties().length === 0) {
-            <div class="empty-state-small">
-              <i class="pi pi-building"></i>
-              <span>Aucun bien associé à ce contact</span>
-            </div>
-          } @else {
-            <div class="related-properties">
-              @for (prop of relatedProperties(); track prop.id) {
-                <a [routerLink]="['/properties', prop.id]" class="related-prop-card">
-                  @if (prop.photos && prop.photos.length > 0) {
-                    <img [src]="prop.photos[0].url" [alt]="prop.title" class="prop-thumb" />
-                  } @else {
-                    <div class="prop-thumb prop-thumb-empty"><i class="pi pi-image"></i></div>
-                  }
-                  <div class="prop-info">
-                    <div class="prop-ref">{{ prop.reference }}</div>
-                    <div class="prop-title">{{ prop.title }}</div>
-                    <div class="prop-address"><i class="pi pi-map-marker"></i> {{ prop.address?.city }}</div>
-                  </div>
-                  <div class="prop-price">
-                    {{ prop.price | number:'1.0-0' }} €{{ isRental(prop.transactionType) ? '/mois' : '' }}
-                  </div>
-                  <i class="pi pi-chevron-right prop-arrow"></i>
-                </a>
-              }
-            </div>
-          }
-        </div>
+        }
 
-        <!-- Mandats associés -->
-        <div class="card">
-          <div class="card-header-row">
-            <h3 class="card-title"><i class="pi pi-file-edit"></i> Mandats associés</h3>
-            @if (relatedMandates().length > 0) {
-              <a routerLink="/mandates" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+        <!-- BAILLEUR : biens + baux -->
+        @if (isLandlord()) {
+          <div class="card">
+            <div class="card-header-row">
+              <h3 class="card-title"><i class="pi pi-key"></i> Baux en tant que bailleur</h3>
+              <a routerLink="/rental" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+            </div>
+            @if (relatedLeases().length === 0) {
+              <div class="empty-state-small">
+                <i class="pi pi-key"></i>
+                <span>Aucun bail enregistré pour ce bailleur</span>
+              </div>
+            } @else {
+              <div class="related-leases">
+                @for (lease of relatedLeases(); track lease.id) {
+                  <div class="lease-row">
+                    <div class="lease-status-col">
+                      <span class="lease-status-badge" [ngClass]="getLeaseStatusClass(lease.status)">
+                        {{ getLeaseStatusLabel(lease.status) }}
+                      </span>
+                    </div>
+                    <div class="lease-info">
+                      <div class="lease-ref">{{ lease.propertyReference }}</div>
+                      <div class="lease-addr">{{ lease.propertyAddress }}, {{ lease.propertyCity }}</div>
+                      <div class="lease-meta">
+                        <span>Locataire : <strong>{{ lease.tenantName }}</strong></span>
+                        <span>· {{ lease.startDate | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                    </div>
+                    <div class="lease-rent">
+                      <span class="lease-rent-amount">{{ lease.totalRent | number:'1.0-0' }} €</span>
+                      <span class="lease-rent-sub">/mois CC</span>
+                    </div>
+                    <a [routerLink]="['/rental', lease.id]" class="lease-detail-btn">
+                      <i class="pi pi-eye"></i> Voir le bail
+                    </a>
+                  </div>
+                }
+              </div>
             }
           </div>
-          @if (relatedMandates().length === 0) {
-            <div class="empty-state-small">
-              <i class="pi pi-file-edit"></i>
-              <span>Aucun mandat associé à ce contact</span>
+          <div class="card">
+            <div class="card-header-row">
+              <h3 class="card-title"><i class="pi pi-building"></i> Biens associés</h3>
             </div>
-          } @else {
-            <div class="related-mandates">
-              @for (mandate of relatedMandates(); track mandate.id) {
-                <a [routerLink]="['/mandates', mandate.id]" class="related-mandate-row">
-                  <div class="mandate-status-dot" [style.background]="getMandateStatusColor(mandate.status)"></div>
-                  <div class="mandate-info">
-                    <div class="mandate-ref">{{ mandate.reference }}</div>
-                    <div class="mandate-desc">{{ getMandateTypeLabel(mandate.type) }} — {{ mandate.propertyAddress || mandate.propertyReference }}</div>
-                  </div>
-                  <div class="mandate-price">{{ mandate.price | number:'1.0-0' }} €</div>
-                  <div class="mandate-dates">
-                    {{ mandate.startDate | date:'dd/MM/yy' }} → {{ mandate.endDate | date:'dd/MM/yy' }}
-                  </div>
-                  <i class="pi pi-chevron-right mandate-arrow"></i>
-                </a>
+            @if (relatedProperties().length === 0) {
+              <div class="empty-state-small"><i class="pi pi-building"></i><span>Aucun bien associé</span></div>
+            } @else {
+              <div class="related-properties">
+                @for (prop of relatedProperties(); track prop.id) {
+                  <a [routerLink]="['/properties', prop.id]" class="related-prop-card">
+                    @if (prop.photos && prop.photos.length > 0) {
+                      <img [src]="prop.photos[0].url" [alt]="prop.title" class="prop-thumb" />
+                    } @else {
+                      <div class="prop-thumb prop-thumb-empty"><i class="pi pi-image"></i></div>
+                    }
+                    <div class="prop-info">
+                      <div class="prop-ref">{{ prop.reference }}</div>
+                      <div class="prop-title">{{ prop.title }}</div>
+                      <div class="prop-address"><i class="pi pi-map-marker"></i> {{ prop.address?.city }}</div>
+                    </div>
+                    <div class="prop-price">{{ prop.price | number:'1.0-0' }} €/mois</div>
+                    <i class="pi pi-chevron-right prop-arrow"></i>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ACHETEUR / VENDEUR / AUTRE : biens + mandats -->
+        @if (!isTenant() && !isLandlord()) {
+          <div class="card">
+            <div class="card-header-row">
+              <h3 class="card-title"><i class="pi pi-building"></i> Biens associés</h3>
+              @if (relatedProperties().length > 0) {
+                <a routerLink="/properties" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
               }
             </div>
-          }
-        </div>
+            @if (relatedProperties().length === 0) {
+              <div class="empty-state-small">
+                <i class="pi pi-building"></i>
+                <span>Aucun bien associé à ce contact</span>
+              </div>
+            } @else {
+              <div class="related-properties">
+                @for (prop of relatedProperties(); track prop.id) {
+                  <a [routerLink]="['/properties', prop.id]" class="related-prop-card">
+                    @if (prop.photos && prop.photos.length > 0) {
+                      <img [src]="prop.photos[0].url" [alt]="prop.title" class="prop-thumb" />
+                    } @else {
+                      <div class="prop-thumb prop-thumb-empty"><i class="pi pi-image"></i></div>
+                    }
+                    <div class="prop-info">
+                      <div class="prop-ref">{{ prop.reference }}</div>
+                      <div class="prop-title">{{ prop.title }}</div>
+                      <div class="prop-address"><i class="pi pi-map-marker"></i> {{ prop.address?.city }}</div>
+                    </div>
+                    <div class="prop-price">
+                      {{ prop.price | number:'1.0-0' }} €{{ isRental(prop.transactionType) ? '/mois' : '' }}
+                    </div>
+                    <i class="pi pi-chevron-right prop-arrow"></i>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+          <div class="card">
+            <div class="card-header-row">
+              <h3 class="card-title"><i class="pi pi-file-edit"></i> Mandats associés</h3>
+              @if (relatedMandates().length > 0) {
+                <a routerLink="/mandates" class="see-all-link">Voir tous <i class="pi pi-arrow-right"></i></a>
+              }
+            </div>
+            @if (relatedMandates().length === 0) {
+              <div class="empty-state-small">
+                <i class="pi pi-file-edit"></i>
+                <span>Aucun mandat associé à ce contact</span>
+              </div>
+            } @else {
+              <div class="related-mandates">
+                @for (mandate of relatedMandates(); track mandate.id) {
+                  <a [routerLink]="['/mandates', mandate.id]" class="related-mandate-row">
+                    <div class="mandate-status-dot" [style.background]="getMandateStatusColor(mandate.status)"></div>
+                    <div class="mandate-info">
+                      <div class="mandate-ref">{{ mandate.reference }}</div>
+                      <div class="mandate-desc">{{ getMandateTypeLabel(mandate.type) }} — {{ mandate.propertyAddress || mandate.propertyReference }}</div>
+                    </div>
+                    <div class="mandate-price">{{ mandate.price | number:'1.0-0' }} €</div>
+                    <div class="mandate-dates">
+                      {{ mandate.startDate | date:'dd/MM/yy' }} → {{ mandate.endDate | date:'dd/MM/yy' }}
+                    </div>
+                    <i class="pi pi-chevron-right mandate-arrow"></i>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
 
         <!-- Critères de recherche -->
         @if (contact()!.searchCriteria) {
@@ -147,6 +282,11 @@
         }
 
       </div>
+
+      <!-- Documents -->
+      @if (contact()?.id) {
+        <app-entity-documents entityType="contact" [entityId]="contact()!.id" [entitySubtype]="contact()!.type" />
+      }
 
       <!-- Colonne sidebar -->
       <div class="detail-sidebar">

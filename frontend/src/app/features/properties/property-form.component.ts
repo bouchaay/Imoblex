@@ -9,6 +9,7 @@ import { ContactService } from '../../core/services/contact.service';
 import { PropertyType, PropertyStatus, TransactionType, DpeClass, PROPERTY_TYPE_LABELS, DPE_COLORS } from '../../core/models/enums';
 import { DpeBadgeComponent } from '../../shared/components/dpe-badge.component';
 import { Contact } from '../../core/models/contact.model';
+import { PropertyTransport, PropertyShop } from '../../core/models/property.model';
 
 @Component({
   selector: 'app-property-form',
@@ -44,6 +45,10 @@ export class PropertyFormComponent implements OnInit {
   deletedPhotoIds = signal<string[]>([]);
   saveError = signal<string | null>(null);
   isEdit = false;
+
+  // Proximity signals
+  transports = signal<PropertyTransport[]>([]);
+  shops = signal<PropertyShop[]>([]);
   isGeocoding = signal(false);
   geocodeError = signal<string | null>(null);
 
@@ -78,7 +83,8 @@ export class PropertyFormComponent implements OnInit {
     { id: 1, label: 'Localisation' },
     { id: 2, label: 'Détails' },
     { id: 3, label: 'Photos' },
-    { id: 4, label: 'Publication' }
+    { id: 4, label: 'Publication' },
+    { id: 5, label: 'Proximité' }
   ];
 
   propertyTypes = Object.entries(PROPERTY_TYPE_LABELS).map(([value, label]) => ({
@@ -133,7 +139,9 @@ export class PropertyFormComponent implements OnInit {
       hasBalcony: [false],
       hasTerrace: [false],
       hasElevator: [false],
-      hasCellar: [false]
+      hasCellar: [false],
+      furnished: [null],
+      availableFrom: [null]
     });
 
     if (this.isEdit && routeId) {
@@ -151,7 +159,8 @@ export class PropertyFormComponent implements OnInit {
           hasParking: p.features.hasParking, hasGarage: p.features.hasGarage,
           hasGarden: p.features.hasGarden, hasPool: p.features.hasPool,
           hasBalcony: p.features.hasBalcony, hasTerrace: p.features.hasTerrace,
-          hasElevator: p.features.hasElevator, hasCellar: p.features.hasCellar
+          hasElevator: p.features.hasElevator, hasCellar: p.features.hasCellar,
+          furnished: p.features.furnished ?? null
         });
         // Restaurer le statut
         if (p.status) this.selectedStatus.set(p.status as PropertyStatus);
@@ -169,6 +178,17 @@ export class PropertyFormComponent implements OnInit {
             existingId: photo.id
           }));
         this.photoFiles.set(existingPhotos);
+        // Charger transports et commerces
+        if (p.transports && p.transports.length > 0) {
+          this.transports.set([...p.transports]);
+        }
+        if (p.shops && p.shops.length > 0) {
+          this.shops.set([...p.shops]);
+        }
+        // Charger la date de disponibilité
+        if (p.availableFrom) {
+          this.form.patchValue({ availableFrom: p.availableFrom });
+        }
       });
     }
   }
@@ -266,12 +286,15 @@ export class PropertyFormComponent implements OnInit {
       description: fv.description,
       price: fv.price,
       address: { street: fv.street, city: fv.city, postalCode: fv.postalCode, country: 'France', latitude: fv.latitude, longitude: fv.longitude },
-      features: { surface: fv.surface, rooms: fv.rooms, bedrooms: fv.bedrooms, bathrooms: fv.bathrooms, floor: fv.floor, constructionYear: fv.constructionYear, hasParking: fv.hasParking, hasGarage: fv.hasGarage, hasGarden: fv.hasGarden, hasPool: fv.hasPool, hasBalcony: fv.hasBalcony, hasTerrace: fv.hasTerrace, hasElevator: fv.hasElevator, hasCellar: fv.hasCellar, isGroundFloor: false },
+      features: { surface: fv.surface, rooms: fv.rooms, bedrooms: fv.bedrooms, bathrooms: fv.bathrooms, floor: fv.floor, constructionYear: fv.constructionYear, hasParking: fv.hasParking, hasGarage: fv.hasGarage, hasGarden: fv.hasGarden, hasPool: fv.hasPool, hasBalcony: fv.hasBalcony, hasTerrace: fv.hasTerrace, hasElevator: fv.hasElevator, hasCellar: fv.hasCellar, isGroundFloor: false, furnished: fv.furnished },
       dpe: fv.dpe,
       isPublished: this.selectedStatus() === PropertyStatus.AVAILABLE,
       status: this.selectedStatus(),
       ownerId: this.ownerId() || undefined,
-      photos: []
+      photos: [],
+      availableFrom: fv.availableFrom || undefined,
+      transports: this.transports().length > 0 ? this.transports() : undefined,
+      shops: this.shops().length > 0 ? this.shops() : undefined
     };
 
     const editId = this.id || this.route.snapshot.paramMap.get('id')!;
@@ -294,6 +317,22 @@ export class PropertyFormComponent implements OnInit {
       next: () => this.router.navigate(['/properties']),
       error: () => this.isSaving.set(false)
     });
+  }
+
+  addTransport(): void {
+    this.transports.update(list => [...list, { type: 'METRO', line: '', name: '', distanceMeters: undefined, walkingMinutes: undefined, displayOrder: list.length }]);
+  }
+
+  removeTransport(index: number): void {
+    this.transports.update(list => list.filter((_, i) => i !== index));
+  }
+
+  addShop(): void {
+    this.shops.update(list => [...list, { type: 'SUPERMARKET', name: '', distanceMeters: undefined, walkingMinutes: undefined, displayOrder: list.length }]);
+  }
+
+  removeShop(index: number): void {
+    this.shops.update(list => list.filter((_, i) => i !== index));
   }
 
   geocodeAddress(): void {

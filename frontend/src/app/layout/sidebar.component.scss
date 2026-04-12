@@ -26,15 +26,12 @@
   min-height: 72px;
 }
 
-.logo-icon {
+.logo-img {
   width: 40px;
   height: 40px;
-  background: rgba(243,156,18,0.15);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .logo-text {
@@ -46,19 +43,22 @@
 
 .logo-name {
   font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
   font-weight: 800;
-  font-size: 1.05rem;
   color: #ffffff;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .logo-subtitle {
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.4);
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.35);
   font-weight: 400;
-  margin-top: 2px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .collapse-btn {

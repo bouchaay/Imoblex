@@ -2,4 +2,32 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
 }
+
+@keyframes heroLogoIn {
+  from { opacity: 0; transform: translateY(-16px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 :host { display: block; }
+
+/* Hero logo */
+.hero-logo-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  animation: heroLogoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-logo-img {
+  height: 110px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 48px rgba(243, 156, 18, 0.45)) drop-shadow(0 2px 16px rgba(0,0,0,0.5));
+  transition: filter 0.3s ease, transform 0.3s ease;
+
+  &:hover {
+    filter: drop-shadow(0 12px 60px rgba(243, 156, 18, 0.65)) drop-shadow(0 4px 24px rgba(0,0,0,0.55));
+    transform: scale(1.03);
+  }
+}

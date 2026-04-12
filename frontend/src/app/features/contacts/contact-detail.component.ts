@@ -4,17 +4,20 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ContactService } from '../../core/services/contact.service';
 import { PropertyService } from '../../core/services/property.service';
 import { MandateService } from '../../core/services/mandate.service';
+import { RentalService } from '../../core/services/rental.service';
 import { Contact } from '../../core/models/contact.model';
 import { Property } from '../../core/models/property.model';
 import { Mandate } from '../../core/models/mandate.model';
+import { RentalLease } from '../../core/models/rental.model';
 import { CONTACT_TYPE_LABELS, ContactType, TransactionType } from '../../core/models/enums';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { EntityDocumentsComponent } from '../../shared/components/entity-documents/entity-documents.component';
 
 @Component({
   selector: 'app-contact-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, EntityDocumentsComponent],
   templateUrl: './contact-detail.component.html',
   styleUrls: ['./contact-detail.component.scss']
 })
@@ -24,31 +27,58 @@ export class ContactDetailComponent implements OnInit {
   private readonly contactService = inject(ContactService);
   private readonly propertyService = inject(PropertyService);
   private readonly mandateService = inject(MandateService);
+  private readonly rentalService = inject(RentalService);
 
   contact = signal<Contact | null>(null);
   relatedProperties = signal<Property[]>([]);
   relatedMandates = signal<Mandate[]>([]);
+  relatedLeases = signal<RentalLease[]>([]);
   isLoading = signal(true);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
 
-    forkJoin({
-      contact: this.contactService.getById(id),
-      properties: this.propertyService.getAll({ page: 0, pageSize: 100 }).pipe(
-        map(r => r.items.filter(p => p.ownerId === id)),
-        catchError(() => of([]))
-      ),
-      mandates: this.mandateService.getAll().pipe(
-        map(list => list.filter(m => m.mandatorId === id)),
-        catchError(() => of([]))
-      )
-    }).subscribe({
-      next: ({ contact, properties, mandates }) => {
+    this.contactService.getById(id).subscribe({
+      next: (contact) => {
         this.contact.set(contact);
-        this.relatedProperties.set(properties);
-        this.relatedMandates.set(mandates);
-        this.isLoading.set(false);
+        const isTenant = contact.type === ContactType.TENANT;
+        const isLandlord = contact.type === ContactType.LANDLORD;
+
+        if (isTenant) {
+          forkJoin({
+            leases: this.rentalService.getLeasesByTenant(contact.id).pipe(catchError(() => of([])))
+          }).subscribe(({ leases }) => {
+            this.relatedLeases.set(leases);
+            this.isLoading.set(false);
+          });
+        } else if (isLandlord) {
+          forkJoin({
+            leases: this.rentalService.getLeasesByTenant(contact.id).pipe(catchError(() => of([]))),
+            properties: this.propertyService.getAll({ page: 0, pageSize: 100 }).pipe(
+              map(r => r.items.filter(p => p.ownerId === contact.id)),
+              catchError(() => of([]))
+            )
+          }).subscribe(({ leases, properties }) => {
+            this.relatedLeases.set(leases);
+            this.relatedProperties.set(properties);
+            this.isLoading.set(false);
+          });
+        } else {
+          forkJoin({
+            properties: this.propertyService.getAll({ page: 0, pageSize: 100 }).pipe(
+              map(r => r.items.filter(p => p.ownerId === contact.id)),
+              catchError(() => of([]))
+            ),
+            mandates: this.mandateService.getAll().pipe(
+              map(list => list.filter(m => m.mandatorId === contact.id)),
+              catchError(() => of([]))
+            )
+          }).subscribe(({ properties, mandates }) => {
+            this.relatedProperties.set(properties);
+            this.relatedMandates.set(mandates);
+            this.isLoading.set(false);
+          });
+        }
       },
       error: () => this.isLoading.set(false)
     });
@@ -79,6 +109,37 @@ export class ContactDetailComponent implements OnInit {
   }
 
   isRental(t: TransactionType): boolean { return t === TransactionType.RENTAL || t === TransactionType.SEASONAL_RENTAL; }
+
+  isTenant(): boolean {
+    return this.contact()?.type === ContactType.TENANT;
+  }
+
+  isLandlord(): boolean {
+    return this.contact()?.type === ContactType.LANDLORD;
+  }
+
+  getLeaseStatusLabel(s: string): string {
+    const labels: Record<string, string> = {
+      ACTIVE: 'Actif', PENDING: 'En attente', TERMINATED: 'Résilié',
+      SUSPENDED: 'Suspendu', UNPAID: 'Impayé'
+    };
+    return labels[s] || s;
+  }
+
+  getLeaseStatusClass(s: string): string {
+    const cls: Record<string, string> = {
+      ACTIVE: 'lease-active', PENDING: 'lease-pending',
+      TERMINATED: 'lease-terminated', SUSPENDED: 'lease-suspended', UNPAID: 'lease-unpaid'
+    };
+    return cls[s] || '';
+  }
+
+  getLeaseTypeLabel(t: string): string {
+    const labels: Record<string, string> = {
+      UNFURNISHED: 'Non meublé', FURNISHED: 'Meublé', SEASONAL: 'Saisonnier', OTHER: 'Autre'
+    };
+    return labels[t] || t;
+  }
 
   edit(): void { this.router.navigate(['/contacts', this.contact()!.id, 'edit']); }
 }

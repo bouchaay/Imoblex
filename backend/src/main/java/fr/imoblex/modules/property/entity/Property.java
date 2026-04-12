@@ -146,6 +146,15 @@ public class Property {
     @JoinColumn(name = "owner_id")
     private Contact owner;
 
+    // ===== PROXIMITÉ =====
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("displayOrder ASC")
+    private List<PropertyTransport> transports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("displayOrder ASC")
+    private List<PropertyShop> shops = new ArrayList<>();
+
     // ===== DATES =====
     private LocalDate availableFrom;     // Disponible à partir de
     private LocalDate constructionYear;  // Année de construction

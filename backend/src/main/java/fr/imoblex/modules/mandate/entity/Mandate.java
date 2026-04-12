@@ -1,6 +1,7 @@
 package fr.imoblex.modules.mandate.entity;
 
 import fr.imoblex.modules.contact.entity.Contact;
+import fr.imoblex.modules.mandate.enums.MandateCategory;
 import fr.imoblex.modules.mandate.enums.MandateStatus;
 import fr.imoblex.modules.mandate.enums.MandateType;
 import fr.imoblex.modules.property.entity.Property;
@@ -29,6 +30,10 @@ public class Mandate {
     // Numéro de mandat légal (séquence par agence)
     @Column(unique = true, nullable = false)
     private String mandateNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mandate_category", nullable = false)
+    private MandateCategory category; // GERANCE, VENTE
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,7 +65,12 @@ public class Mandate {
     @Column(precision = 10, scale = 2)
     private BigDecimal agencyFees;
     private BigDecimal agencyFeesPercent;
+    @Column(length = 500)
+    private String agencyFeesText;
     private String feesChargedTo; // SELLER, BUYER, SHARED
+
+    // Limite de renouvellement (en années)
+    private Integer maxDurationYears;
 
     // Durée du mandat
     @Column(nullable = false)

@@ -14,6 +14,54 @@
       <a routerLink="/mandates" class="breadcrumb-link">
         <i class="pi pi-arrow-left"></i> Mandats
       </a>
+      <div class="pdf-dropdown-wrap" (click)="$event.stopPropagation()">
+        <button class="btn-secondary pdf-trigger" (click)="togglePdfMenu($event)" [disabled]="generatingPdf()">
+          @if (generatingPdf()) {
+            <i class="pi pi-spin pi-spinner"></i> Génération…
+          } @else {
+            <i class="pi pi-file-pdf"></i> Générer le mandat
+            <i class="pi pi-chevron-down pdf-chevron" [class.open]="showPdfMenu()"></i>
+          }
+        </button>
+        @if (showPdfMenu()) {
+          <div class="pdf-menu">
+            <div class="pdf-menu-date" (click)="$event.stopPropagation()">
+              <label class="pdf-date-label">
+                <i class="pi pi-calendar"></i> Date de remise
+                <span class="pdf-date-optional">(optionnel)</span>
+              </label>
+              <input
+                type="date"
+                class="pdf-date-input"
+                [(ngModel)]="remiseDateInput"
+                placeholder="Laisser vide = blanc"
+              />
+            </div>
+            <button class="pdf-menu-item" (click)="generateDocument(true)">
+              <i class="pi pi-check-circle"></i>
+              <span>
+                <strong>Avec signature</strong>
+                <small>Inclut la signature de l'agence</small>
+              </span>
+            </button>
+            <button class="pdf-menu-item" (click)="generateDocument(false)">
+              <i class="pi pi-circle"></i>
+              <span>
+                <strong>Sans signature</strong>
+                <small>Version brouillon / à signer</small>
+              </span>
+            </button>
+            <div class="pdf-menu-separator"></div>
+            <button class="pdf-menu-item pdf-menu-item--blank" (click)="generateDocument(false, true)">
+              <i class="pi pi-file-edit"></i>
+              <span>
+                <strong>Document vierge</strong>
+                <small>À remplir à la main après impression</small>
+              </span>
+            </button>
+          </div>
+        }
+      </div>
       <button class="btn-primary" (click)="edit()">
         <i class="pi pi-pencil"></i> Modifier
       </button>
@@ -43,8 +91,14 @@
       <div class="hero-price-block">
         <div class="hero-price">{{ mandate()!.price | number:'1.0-0' }} €</div>
         <div class="hero-fee">
-          Commission {{ mandate()!.agencyFeePercent }}% =
-          {{ (mandate()!.agencyFeeAmount || mandate()!.price * mandate()!.agencyFeePercent / 100) | number:'1.0-0' }} €
+          @if (mandate()!.agencyFeesText) {
+            {{ mandate()!.agencyFeesText }}
+          } @else if (mandate()!.agencyFeeAmount) {
+            Commission {{ mandate()!.agencyFeeAmount | number:'1.0-0' }} €
+          } @else {
+            Commission {{ mandate()!.agencyFeePercent }}% =
+            {{ (mandate()!.price * mandate()!.agencyFeePercent / 100) | number:'1.0-0' }} €
+          }
         </div>
       </div>
     </div>
@@ -133,6 +187,11 @@
 
       </div>
 
+      <!-- Documents -->
+      @if (mandate()?.id) {
+        <app-entity-documents entityType="mandate" [entityId]="mandate()!.id" />
+      }
+
       <!-- Sidebar -->
       <div class="detail-sidebar">
 
@@ -146,14 +205,22 @@
             </div>
             <div class="info-row">
               <span>Honoraires</span>
-              <strong>{{ mandate()!.agencyFeePercent }}%</strong>
+              @if (mandate()!.agencyFeesText) {
+                <strong>{{ mandate()!.agencyFeesText }}</strong>
+              } @else if (mandate()!.agencyFeeAmount) {
+                <strong>{{ mandate()!.agencyFeeAmount | number:'1.0-0' }} €</strong>
+              } @else {
+                <strong>{{ mandate()!.agencyFeePercent }}%</strong>
+              }
             </div>
-            <div class="info-row">
-              <span>Montant HN</span>
-              <strong class="text-blue">
-                {{ (mandate()!.agencyFeeAmount || mandate()!.price * mandate()!.agencyFeePercent / 100) | number:'1.0-0' }} €
-              </strong>
-            </div>
+            @if (!mandate()!.agencyFeesText) {
+              <div class="info-row">
+                <span>Montant HN</span>
+                <strong class="text-blue">
+                  {{ (mandate()!.agencyFeeAmount || mandate()!.price * mandate()!.agencyFeePercent / 100) | number:'1.0-0' }} €
+                </strong>
+              </div>
+            }
           </div>
         </div>
 

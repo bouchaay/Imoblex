@@ -1,0 +1,71 @@
+.form-page { max-width: 860px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Header */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.breadcrumb { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; color: #64748b; }
+.breadcrumb-link { display: flex; align-items: center; gap: 0.4rem; color: #1B4F72; text-decoration: none; font-weight: 500; }
+.breadcrumb-link:hover { text-decoration: underline; }
+.header-actions { display: flex; gap: 0.75rem; }
+
+/* Buttons */
+.btn-primary { display: flex; align-items: center; gap: 0.4rem; background: #1B4F72; color: #fff; border: none; padding: 0.625rem 1.25rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-primary:hover:not(:disabled) { background: #164469; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-secondary { display: flex; align-items: center; gap: 0.4rem; background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 0.625rem 1.125rem; border-radius: 8px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.btn-secondary:hover { border-color: #cbd5e1; background: #f8fafc; }
+
+/* Spinner */
+.spinner-sm { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error banner */
+.form-error-banner { display: flex; align-items: center; gap: 0.5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 0.75rem 1rem; color: #dc2626; font-size: 0.875rem; margin-bottom: 1rem; }
+
+/* Loading */
+.loading-wrap { display: flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 6rem; color: #64748b; }
+.loading-wrap i { font-size: 1.5rem; color: #1B4F72; }
+
+/* Cards */
+.step-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+.card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.card-section-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 1.25rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.875rem; border-bottom: 1.5px solid #f1f5f9; }
+.card-section-title i { color: #1B4F72; font-size: 1rem; }
+
+/* Grid */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
+
+/* Form */
+.form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.875rem; }
+.form-group:last-child { margin-bottom: 0; }
+.form-label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+.form-label.required::after { content: ' *'; color: #ef4444; }
+
+.form-input {
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s;
+  width: 100%;
+  background: #f8fafc;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.form-input:focus { border-color: #1B4F72; background: #fff; box-shadow: 0 0 0 3px rgba(27,79,114,0.08); }
+.form-textarea { resize: vertical; min-height: 100px; }
+
+.field-hint { font-size: 0.73rem; color: #94a3b8; display: flex; align-items: center; gap: 0.3rem; }
+.field-hint--warn { color: #92400e; }
+.hint-link { color: #1B4F72; font-weight: 600; text-decoration: none; }
+.hint-link:hover { text-decoration: underline; }
+
+.loading-field { padding: 0.625rem 0.875rem; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; color: #94a3b8; display: flex; align-items: center; gap: 0.5rem; background: #fafafa; }
+
+/* Total CC display */
+.total-display { padding: 0.7rem 0.875rem; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1.5px solid #bae6fd; border-radius: 8px; }
+.total-amount { display: block; font-size: 1.2rem; font-weight: 800; color: #0369a1; }
+.total-sub { font-size: 0.72rem; color: #0284c7; }

@@ -4,6 +4,10 @@
     <div class="login-left-content">
       <div class="brand-logo">
         <img src="assets/logo.png" alt="Imoblex" class="brand-img" />
+        <div class="brand-name-wrap">
+          <span class="brand-name">IMOBLEX</span>
+          <span class="brand-tagline">Le Monde Immobilier</span>
+        </div>
       </div>
 
       <div class="hero-content">
@@ -37,6 +41,13 @@
         <p class="form-subtitle">Accédez à votre espace de gestion</p>
       </div>
 
+      @if (sessionExpired) {
+        <div class="error-alert" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;">
+          <i class="pi pi-clock"></i>
+          <span>Votre session a expiré. Veuillez vous reconnecter.</span>
+        </div>
+      }
+
       @if (errorMessage()) {
         <div class="error-alert">
           <i class="pi pi-exclamation-circle"></i>
@@ -45,23 +56,6 @@
       }
 
       <form class="login-form" (ngSubmit)="onSubmit()" #form="ngForm">
-
-        <!-- Code agence -->
-        <div class="form-group">
-          <label class="form-label">Identifiant agence</label>
-          <div class="input-wrapper">
-            <i class="pi pi-building input-icon"></i>
-            <input
-              type="text"
-              name="agencyCode"
-              [(ngModel)]="credentials.agencyCode"
-              required
-              placeholder="Ex : IMB01"
-              class="form-input"
-              autocomplete="organization"
-            />
-          </div>
-        </div>
 
         <!-- Username -->
         <div class="form-group">
@@ -115,17 +109,6 @@
           }
         </button>
       </form>
-
-      <!-- Hint -->
-      <div class="demo-hint">
-        <i class="pi pi-info-circle"></i>
-        <div>
-          <strong>Identifiants :</strong><br/>
-          Agence : <code>IMB01</code><br/>
-          Admin : <code>admin</code> / <code>Admin&#64;2024</code><br/>
-          Sophie : <code>sophie</code> / <code>Sophie&#64;2024</code>
-        </div>
-      </div>
 
       <p class="login-footer">© 2025 Imoblex — Tous droits réservés</p>
     </div>

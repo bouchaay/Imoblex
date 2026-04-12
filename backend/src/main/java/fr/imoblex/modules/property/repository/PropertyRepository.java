@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,4 +45,7 @@ public interface PropertyRepository extends JpaRepository<Property, UUID>, JpaSp
     // Génération de la prochaine référence
     @Query("SELECT MAX(CAST(SUBSTRING(p.reference, 4) AS long)) FROM Property p WHERE p.reference LIKE 'IMB%'")
     Optional<Long> findMaxReferenceNumber();
+
+    @Query(value = "SELECT property_type, COUNT(*) FROM properties GROUP BY property_type ORDER BY COUNT(*) DESC", nativeQuery = true)
+    List<Object[]> countByPropertyType();
 }

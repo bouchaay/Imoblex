@@ -32,32 +32,42 @@
 
 .brand-logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.875rem;
+  text-align: center;
   margin-bottom: 4rem;
+  gap: 1rem;
 }
 
-.brand-icon {
-  width: 56px; height: 56px;
-  background: rgba(243,156,18,0.15);
-  border: 1px solid rgba(243,156,18,0.3);
-  border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
+.brand-img {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 24px rgba(243,156,18,0.3)) drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+}
+
+.brand-name-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .brand-name {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   color: #ffffff;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   display: block;
+  line-height: 1;
 }
 
 .brand-tagline {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: rgba(255,255,255,0.4);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   display: block;
 }
 
@@ -362,21 +372,6 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Demo hint */
-.demo-hint {
-  display: flex;
-  gap: 0.625rem;
-  background: rgba(27,79,114,0.06);
-  border: 1px solid rgba(27,79,114,0.12);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  font-size: 0.8rem;
-  color: #475569;
-  margin-top: 1.5rem;
-  line-height: 1.45;
-}
-
-.demo-hint i { color: #1B4F72; margin-top: 1px; flex-shrink: 0; }
 
 .login-footer {
   text-align: center;

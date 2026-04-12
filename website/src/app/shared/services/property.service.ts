@@ -6,6 +6,8 @@ import {
   Property,
   PropertySearchParams,
   PropertySearchResult,
+  PropertyTransport,
+  PropertyShop,
   PropertyType,
   TransactionType
 } from '../models/property.model';
@@ -70,6 +72,9 @@ interface BackendPropertyResponse {
   updatedAt?: string;
   viewCount?: number;
   visitCount?: number;
+  availableFrom?: string;
+  transports?: PropertyTransport[];
+  shops?: PropertyShop[];
 }
 
 interface BackendPageResponse<T> {
@@ -398,7 +403,8 @@ export class PropertyService {
     if (p.balcony) features.push('Balcon');
     if (p.terrace) features.push('Terrasse');
     if (p.cellar) features.push('Cave');
-    if (p.furnished) features.push('Meublé');
+    if (p.furnished === true) features.push('Meublé');
+    else if (p.furnished === false) features.push('Non meublé');
     if (p.fireplace) features.push('Cheminée');
     if (p.airConditioning) features.push('Climatisation');
 
@@ -446,6 +452,9 @@ export class PropertyService {
       charges: p.rentCharges,
       publishedAt: publishedDate,
       updatedAt: new Date(p.updatedAt || p.createdAt || Date.now()),
+      availableFrom: p.availableFrom,
+      transports: p.transports || [],
+      shops: p.shops || [],
       agent: p.agentName ? {
         id: p.agentId || '',
         name: p.agentName,

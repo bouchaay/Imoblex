@@ -1,0 +1,114 @@
+<section class="entity-docs">
+  <div class="entity-docs-header">
+    <h3 class="entity-docs-title">
+      <i class="pi pi-paperclip"></i>
+      Documents
+      @if (documents().length > 0) {
+        <span class="doc-count">{{ documents().length }}</span>
+      }
+    </h3>
+    <button class="btn-add-doc" (click)="showUploadDialog.set(true)">
+      <i class="pi pi-plus"></i> Ajouter
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="docs-state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Chargement...</span>
+    </div>
+  } @else if (documents().length === 0) {
+    <div class="docs-state docs-empty">
+      <i class="pi pi-folder-open"></i>
+      <span>Aucun document joint</span>
+    </div>
+  } @else {
+    <div class="doc-list">
+      @for (doc of documents(); track doc.id) {
+        <div class="doc-row">
+          <div class="doc-icon" [style.background]="getIcon(doc).color + '18'">
+            <i class="pi {{ getIcon(doc).icon }}" [style.color]="getIcon(doc).color"></i>
+          </div>
+          <div class="doc-info">
+            <span class="doc-name">{{ doc.name }}</span>
+            <span class="doc-meta">{{ getTypeLabel(doc.type) }}@if (doc.fileSize) { · {{ formatSize(doc.fileSize) }} } · {{ doc.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="doc-row-actions">
+            <button class="row-btn" title="Télécharger" (click)="download(doc, $event)">
+              <i class="pi pi-download"></i>
+            </button>
+            <a [href]="doc.fileUrl" target="_blank" class="row-btn" title="Ouvrir" (click)="$event.stopPropagation()">
+              <i class="pi pi-eye"></i>
+            </a>
+            <button class="row-btn danger" title="Supprimer" (click)="askDelete(doc, $event)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<!-- Upload dialog -->
+@if (showUploadDialog()) {
+  <div class="dialog-overlay" (click)="showUploadDialog.set(false)">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span>Joindre un document</span>
+        <button class="close-btn" (click)="showUploadDialog.set(false)"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label">Type de document</label>
+          <select [(ngModel)]="uploadType" class="form-input">
+            @for (cat of typeCategories; track cat.key) {
+              <option [value]="cat.key">{{ cat.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fichiers</label>
+          <div class="file-drop" (click)="triggerFileInput()">
+            <i class="pi pi-cloud-upload"></i>
+            @if (uploadFiles.length === 0) {
+              <span>Cliquez pour sélectionner vos fichiers</span>
+            } @else {
+              <span>{{ uploadFiles.length }} fichier(s) — {{ uploadFiles[0].name }}{{ uploadFiles.length > 1 ? '...' : '' }}</span>
+            }
+          </div>
+          <input #fileInput type="file" multiple hidden (change)="onFilesSelected($event)" />
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn-cancel" (click)="showUploadDialog.set(false)">Annuler</button>
+        <button class="btn-confirm" (click)="doUpload()" [disabled]="!uploadFiles.length || uploading()">
+          @if (uploading()) { <i class="pi pi-spin pi-spinner"></i> } Joindre
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete dialog -->
+@if (showDeleteDialog() && docToDelete()) {
+  <div class="dialog-overlay" (click)="cancelDelete()">
+    <div class="dialog dialog-sm delete-dialog" (click)="$event.stopPropagation()">
+      <div class="delete-icon-wrap">
+        <i class="pi pi-trash"></i>
+      </div>
+      <h3 class="delete-title">Supprimer ce document ?</h3>
+      <p class="delete-filename">
+        <i class="pi {{ getIcon(docToDelete()!).icon }}" [style.color]="getIcon(docToDelete()!).color"></i>
+        {{ docToDelete()!.name }}
+      </p>
+      <p class="delete-warn">Cette action est irréversible.</p>
+      <div class="dialog-footer" style="border-top:none;padding-top:0">
+        <button class="btn-cancel" (click)="cancelDelete()" [disabled]="deleting()">Annuler</button>
+        <button class="btn-delete" (click)="confirmDelete()" [disabled]="deleting()">
+          @if (deleting()) { <i class="pi pi-spin pi-spinner"></i> } Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}

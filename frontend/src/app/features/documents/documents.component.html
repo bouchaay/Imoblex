@@ -4,50 +4,284 @@
       <h1 class="page-title">Documents</h1>
       <p class="page-subtitle">Gestion documentaire de l'agence</p>
     </div>
-    <button class="btn-primary"><i class="pi pi-upload"></i> Importer</button>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="showFolderDialog.set(true)">
+        <i class="pi pi-folder-plus"></i> Nouveau dossier
+      </button>
+      <button class="btn-primary" (click)="openUploadDialog()">
+        <i class="pi pi-upload"></i> Importer
+      </button>
+    </div>
   </div>
 
   <div class="docs-layout">
-    <!-- Categories sidebar -->
+    <!-- Sidebar -->
     <aside class="docs-sidebar">
-      <div class="category-list">
-        @for (cat of categories; track cat.label) {
-          <div class="cat-item" [class.active]="activeCategory === cat.key" (click)="activeCategory = cat.key">
+      <!-- All / Personal -->
+      <div class="sidebar-section">
+        <div class="cat-item" [class.active]="filterMode === 'all'" (click)="setFilter('all')">
+          <i class="pi pi-files" style="color:#1B4F72"></i>
+          <span>Tous les documents</span>
+        </div>
+        <div class="cat-item" [class.active]="filterMode === 'personal'" (click)="setFilter('personal')">
+          <i class="pi pi-user" style="color:#64748b"></i>
+          <span>Mes documents</span>
+        </div>
+      </div>
+
+      <!-- By type -->
+      <div class="sidebar-section">
+        <p class="sidebar-section-label">Par type</p>
+        @for (cat of typeCategories; track cat.key) {
+          <div class="cat-item"
+               [class.active]="filterMode === 'type' && activeTypeKey === cat.key"
+               (click)="setFilter('type', cat.key)">
             <i class="pi {{ cat.icon }}" [style.color]="cat.color"></i>
             <span>{{ cat.label }}</span>
-            <span class="cat-count">{{ cat.count }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Folders -->
+      <div class="sidebar-section">
+        <p class="sidebar-section-label">Dossiers</p>
+        @if (folders().length === 0) {
+          <p class="sidebar-empty">Aucun dossier</p>
+        }
+        @for (folder of folders(); track folder) {
+          <div class="cat-item folder-item"
+               [class.active]="filterMode === 'folder' && activeFolder === folder"
+               (click)="setFilter('folder', folder)">
+            <i class="pi pi-folder" style="color:#F39C12"></i>
+            <span>{{ folder }}</span>
+            <button class="folder-delete-btn" title="Supprimer le dossier"
+                    (click)="deleteFolder(folder, $event)">
+              <i class="pi pi-trash"></i>
+            </button>
           </div>
         }
       </div>
     </aside>
 
-    <!-- Documents grid -->
+    <!-- Main -->
     <div class="docs-main">
       <div class="docs-toolbar">
         <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher un document..." class="search-input" />
         <div class="view-btns">
-          <button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'"><i class="pi pi-th-large"></i></button>
-          <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"><i class="pi pi-list"></i></button>
+          <button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Grille"><i class="pi pi-th-large"></i></button>
+          <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Liste"><i class="pi pi-list"></i></button>
         </div>
       </div>
 
-      <div class="docs-grid" [class.list-mode]="viewMode === 'list'">
-        @for (doc of filteredDocs; track doc.id) {
-          <div class="doc-card">
-            <div class="doc-icon-wrap" [style.background]="doc.iconColor + '15'">
-              <i class="pi {{ doc.icon }}" [style.color]="doc.iconColor"></i>
+      @if (loading()) {
+        <div class="docs-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Chargement...</span>
+        </div>
+      } @else if (filteredDocs.length === 0) {
+        <div class="docs-empty">
+          <i class="pi pi-folder-open"></i>
+          <p>Aucun document trouvé</p>
+        </div>
+      } @else {
+        <div class="docs-grid" [class.list-mode]="viewMode === 'list'">
+          @for (doc of filteredDocs; track doc.id) {
+            <div class="doc-card" [class.selected]="selectedDoc()?.id === doc.id" (click)="selectedDoc.set(doc)">
+              <div class="doc-icon-wrap" [style.background]="getDocIcon(doc).color + '15'">
+                <i class="pi {{ getDocIcon(doc).icon }}" [style.color]="getDocIcon(doc).color"></i>
+              </div>
+              <div class="doc-info">
+                <div class="doc-name">{{ doc.name }}</div>
+                <div class="doc-meta">
+                  {{ getTypeLabel(doc.type) }}
+                  @if (doc.fileSize) { • {{ formatSize(doc.fileSize) }} }
+                  @if (doc.propertyReference) { • {{ doc.propertyReference }} }
+                  @if (doc.contactName) { • {{ doc.contactName }} }
+                </div>
+                <div class="doc-date">{{ doc.createdAt | date:'dd/MM/yyyy' }}</div>
+              </div>
+              <div class="doc-actions" (click)="$event.stopPropagation()">
+                <button class="doc-action-btn" title="Télécharger" (click)="download(doc, $event)">
+                  <i class="pi pi-download"></i>
+                </button>
+                <button class="doc-action-btn danger" title="Supprimer" (click)="delete(doc, $event)">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
             </div>
-            <div class="doc-info">
-              <div class="doc-name">{{ doc.name }}</div>
-              <div class="doc-meta">{{ doc.size }} • {{ doc.date | date:'dd/MM/yyyy' }}</div>
-            </div>
-            <div class="doc-actions">
-              <button class="doc-action-btn" title="Télécharger" (click)="downloadDoc(doc)"><i class="pi pi-download"></i></button>
-              <button class="doc-action-btn danger" title="Supprimer" (click)="deleteDoc(doc.id)"><i class="pi pi-trash"></i></button>
-            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Detail panel -->
+    @if (selectedDoc()) {
+      <aside class="doc-detail">
+        <div class="detail-header">
+          <span class="detail-title">Détails</span>
+          <button class="close-btn" (click)="selectedDoc.set(null)"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="detail-icon-wrap" [style.background]="getDocIcon(selectedDoc()!).color + '15'">
+          <i class="pi {{ getDocIcon(selectedDoc()!).icon }}" [style.color]="getDocIcon(selectedDoc()!).color" style="font-size:2.5rem"></i>
+        </div>
+        <p class="detail-name">{{ selectedDoc()!.name }}</p>
+        <div class="detail-rows">
+          <div class="detail-row"><span>Type</span><strong>{{ getTypeLabel(selectedDoc()!.type) }}</strong></div>
+          @if (selectedDoc()!.fileSize) {
+            <div class="detail-row"><span>Taille</span><strong>{{ formatSize(selectedDoc()!.fileSize) }}</strong></div>
+          }
+          @if (selectedDoc()!.folderPath) {
+            <div class="detail-row"><span>Dossier</span><strong>{{ selectedDoc()!.folderPath }}</strong></div>
+          }
+          @if (selectedDoc()!.propertyReference) {
+            <div class="detail-row"><span>Bien</span><strong>{{ selectedDoc()!.propertyReference }}</strong></div>
+          }
+          @if (selectedDoc()!.mandateReference) {
+            <div class="detail-row"><span>Mandat</span><strong>{{ selectedDoc()!.mandateReference }}</strong></div>
+          }
+          @if (selectedDoc()!.contactName) {
+            <div class="detail-row"><span>Contact</span><strong>{{ selectedDoc()!.contactName }}</strong></div>
+          }
+          @if (selectedDoc()!.uploadedByName) {
+            <div class="detail-row"><span>Ajouté par</span><strong>{{ selectedDoc()!.uploadedByName }}</strong></div>
+          }
+          <div class="detail-row"><span>Date</span><strong>{{ selectedDoc()!.createdAt | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+          @if (selectedDoc()!.notes) {
+            <div class="detail-notes">{{ selectedDoc()!.notes }}</div>
+          }
+        </div>
+        <div class="detail-btns">
+          <a [href]="selectedDoc()!.fileUrl" target="_blank" class="btn-primary" style="text-decoration:none;display:flex;align-items:center;gap:.4rem;justify-content:center">
+            <i class="pi pi-eye"></i> Ouvrir
+          </a>
+          <button class="btn-secondary" (click)="download(selectedDoc()!, $event)">
+            <i class="pi pi-download"></i> Télécharger
+          </button>
+        </div>
+      </aside>
+    }
+  </div>
+</div>
+
+<!-- Upload dialog -->
+@if (showUploadDialog()) {
+  <div class="dialog-overlay" (click)="showUploadDialog.set(false)">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span>Importer des documents</span>
+        <button class="close-btn" (click)="showUploadDialog.set(false)"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label">Type de document</label>
+          <select [(ngModel)]="uploadType" class="form-input">
+            @for (cat of typeCategories; track cat.key) {
+              <option [value]="cat.key">{{ cat.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dossier <span class="optional">(optionnel)</span></label>
+          <select [(ngModel)]="uploadFolder" class="form-input">
+            <option value="">— Aucun dossier —</option>
+            @for (folder of folders(); track folder) {
+              <option [value]="folder">{{ folder }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fichiers</label>
+          <div class="file-drop-zone" (click)="triggerFileInput()">
+            <i class="pi pi-cloud-upload" style="font-size:2rem;color:#94a3b8"></i>
+            @if (uploadFiles.length === 0) {
+              <p>Cliquez pour sélectionner ou déposez vos fichiers</p>
+            } @else {
+              <p>{{ uploadFiles.length }} fichier(s) sélectionné(s)</p>
+              <ul class="file-list">
+                @for (f of uploadFiles; track f.name) {
+                  <li>{{ f.name }} <span class="file-size">({{ formatSize(f.size) }})</span></li>
+                }
+              </ul>
+            }
           </div>
-        }
+          <input #fileInput type="file" multiple hidden (change)="onFilesSelected($event)" />
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn-secondary" (click)="showUploadDialog.set(false)">Annuler</button>
+        <button class="btn-primary" (click)="doUpload()" [disabled]="!uploadFiles.length || uploading()">
+          @if (uploading()) { <i class="pi pi-spin pi-spinner"></i> } Importer
+        </button>
       </div>
     </div>
   </div>
-</div>
+}
+
+<!-- Delete confirm dialog -->
+@if (showDeleteDialog() && docToDelete()) {
+  <div class="dialog-overlay" (click)="cancelDelete()">
+    <div class="dialog dialog-sm delete-dialog" (click)="$event.stopPropagation()">
+      <div class="delete-dialog-icon">
+        <i class="pi pi-trash"></i>
+      </div>
+      <h3 class="delete-dialog-title">Supprimer ce document ?</h3>
+      <p class="delete-dialog-file">
+        <i class="pi {{ getDocIcon(docToDelete()!).icon }}" [style.color]="getDocIcon(docToDelete()!).color"></i>
+        {{ docToDelete()!.name }}
+      </p>
+      <p class="delete-dialog-warn">Cette action est irréversible. Le fichier sera définitivement supprimé.</p>
+      <div class="dialog-footer" style="border-top:none;padding-top:0">
+        <button class="btn-secondary" (click)="cancelDelete()" [disabled]="deleting()">Annuler</button>
+        <button class="btn-danger" (click)="confirmDelete()" [disabled]="deleting()">
+          @if (deleting()) { <i class="pi pi-spin pi-spinner"></i> } Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete folder dialog -->
+@if (folderToDelete()) {
+  <div class="dialog-overlay" (click)="cancelDeleteFolder()">
+    <div class="dialog dialog-sm delete-dialog" (click)="$event.stopPropagation()">
+      <div class="delete-dialog-icon">
+        <i class="pi pi-folder"></i>
+      </div>
+      <h3 class="delete-dialog-title">Supprimer ce dossier ?</h3>
+      <p class="delete-dialog-file">
+        <i class="pi pi-folder" style="color:#F39C12"></i>
+        {{ folderToDelete() }}
+      </p>
+      <p class="delete-dialog-warn">Le dossier sera supprimé. Les documents qu'il contient ne seront pas supprimés.</p>
+      <div class="dialog-footer" style="border-top:none;padding-top:0">
+        <button class="btn-secondary" (click)="cancelDeleteFolder()" [disabled]="deletingFolder()">Annuler</button>
+        <button class="btn-danger" (click)="confirmDeleteFolder()" [disabled]="deletingFolder()">
+          @if (deletingFolder()) { <i class="pi pi-spin pi-spinner"></i> } Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- New folder dialog -->
+@if (showFolderDialog()) {
+  <div class="dialog-overlay" (click)="showFolderDialog.set(false)">
+    <div class="dialog dialog-sm" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span>Nouveau dossier</span>
+        <button class="close-btn" (click)="showFolderDialog.set(false)"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label">Nom du dossier</label>
+          <input type="text" [(ngModel)]="newFolderName" class="form-input" placeholder="Ex: Mandats 2024"
+                 (keydown.enter)="createFolder()" autofocus />
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn-secondary" (click)="showFolderDialog.set(false)">Annuler</button>
+        <button class="btn-primary" (click)="createFolder()" [disabled]="!newFolderName.trim()">Créer</button>
+      </div>
+    </div>
+  </div>
+}

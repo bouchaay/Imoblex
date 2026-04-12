@@ -1,19 +1,9 @@
-import { Component, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/services/auth.service';
-
-interface Notification {
-  id: string;
-  type: 'mandate' | 'contact' | 'transaction' | 'appointment';
-  title: string;
-  message: string;
-  time: Date;
-  read: boolean;
-  icon: string;
-  iconColor: string;
-}
+import { NotificationService, AppNotification } from '../core/services/notification.service';
 
 @Component({
   selector: 'app-topbar',
@@ -22,9 +12,10 @@ interface Notification {
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss']
 })
-export class TopbarComponent {
+export class TopbarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
   readonly authService = inject(AuthService);
+  readonly notifService = inject(NotificationService);
   private readonly router = inject(Router);
 
   searchQuery = '';
@@ -32,15 +23,13 @@ export class TopbarComponent {
   showUserMenu = false;
   showActionMenu = false;
 
-  notifications: Notification[] = [
-    { id: '1', type: 'mandate', title: 'Mandat expirant', message: 'Le mandat MND-10001 expire dans 5 jours', time: new Date(Date.now() - 1000 * 60 * 30), read: false, icon: 'pi-file-edit', iconColor: '#ef4444' },
-    { id: '2', type: 'contact', title: 'Nouveau contact', message: 'Jean Dupont a soumis une demande via le site', time: new Date(Date.now() - 1000 * 60 * 90), read: false, icon: 'pi-user', iconColor: '#1B4F72' },
-    { id: '3', type: 'appointment', title: 'Rappel rendez-vous', message: 'Visite appartement Paris 8 dans 1h', time: new Date(Date.now() - 1000 * 60 * 120), read: false, icon: 'pi-calendar', iconColor: '#3b82f6' },
-    { id: '4', type: 'transaction', title: 'Compromis signé', message: 'Transaction TRX-10003 : compromis signé', time: new Date(Date.now() - 1000 * 60 * 60 * 3), read: true, icon: 'pi-check-circle', iconColor: '#10b981' },
-  ];
+  get notifications(): AppNotification[] { return this.notifService.notifications(); }
+  get unreadCount(): number { return this.notifService.unreadCount; }
 
-  get unreadCount(): number {
-    return this.notifications.filter(n => !n.read).length;
+  ngOnInit(): void {
+    this.notifService.refresh();
+    // Rafraîchir toutes les minutes
+    setInterval(() => this.notifService.refresh(), 60 * 1000);
   }
 
   onSearch(): void {
@@ -50,18 +39,17 @@ export class TopbarComponent {
     }
   }
 
-  markAllRead(): void {
-    this.notifications.forEach(n => n.read = true);
-  }
+  markAllRead(): void { this.notifService.markAllRead(); }
 
-  readNotification(notif: Notification): void {
-    notif.read = true;
+  readNotification(notif: AppNotification): void {
     this.showNotifications = false;
+    this.notifService.markRead(notif);
   }
 
   getTimeAgo(date: Date): string {
-    const diff = Date.now() - date.getTime();
+    const diff = Date.now() - new Date(date).getTime();
     const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'À l\'instant';
     if (mins < 60) return `Il y a ${mins} min`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `Il y a ${hours}h`;

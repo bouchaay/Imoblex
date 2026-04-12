@@ -111,9 +111,78 @@
             @if (property()!.features.hasTerrace) { <span class="amenity"><i class="pi pi-check"></i> Terrasse</span> }
             @if (property()!.features.hasElevator) { <span class="amenity"><i class="pi pi-check"></i> Ascenseur</span> }
             @if (property()!.features.hasCellar) { <span class="amenity"><i class="pi pi-check"></i> Cave</span> }
+            @if (property()!.features.furnished === true) { <span class="amenity amenity-furnished"><i class="pi pi-home"></i> Meublé</span> }
+            @if (property()!.features.furnished === false) { <span class="amenity amenity-unfurnished"><i class="pi pi-home"></i> Non meublé</span> }
           </div>
         </div>
+
+      <!-- Proximité & disponibilité -->
+      @if (property()!.availableFrom || (property()!.transports?.length ?? 0) > 0 || (property()!.shops?.length ?? 0) > 0) {
+        <div class="card">
+          <h3 class="card-title">Proximité & disponibilité</h3>
+
+          @if (property()!.availableFrom) {
+            <div class="proximity-available">
+              <i class="pi pi-calendar"></i>
+              Disponible à partir du
+              <strong>{{ property()!.availableFrom | date:'dd/MM/yyyy' }}</strong>
+            </div>
+          }
+
+          @if ((property()!.transports?.length ?? 0) > 0) {
+            <p class="proximity-section-label"><i class="pi pi-map-marker"></i> Transports en commun</p>
+            <div class="transport-list">
+              @for (t of property()!.transports!; track t) {
+                <div class="transport-item">
+                  <span class="transport-badge" [ngClass]="getTransportBadgeClass(t.type)">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path [attr.d]="getTransportIconPath(t.type)" />
+                    </svg>
+                  </span>
+                  <span class="transport-name">
+                    {{ t.name || getTransportLabel(t.type) }}
+                    @if (t.line) { <em class="transport-line">{{ t.line }}</em> }
+                  </span>
+                  @if (t.walkingMinutes || t.distanceMeters) {
+                    <span class="transport-distance">
+                      @if (t.walkingMinutes) { {{ t.walkingMinutes }} min }
+                      @if (t.walkingMinutes && t.distanceMeters) { · }
+                      @if (t.distanceMeters) { {{ t.distanceMeters }} m }
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if ((property()!.shops?.length ?? 0) > 0) {
+            <p class="proximity-section-label"><i class="pi pi-shopping-bag"></i> Commerces & services</p>
+            <div class="transport-list">
+              @for (s of property()!.shops!; track s) {
+                <div class="transport-item">
+                  <span class="shop-emoji">{{ getShopEmoji(s.type) }}</span>
+                  <span class="transport-name">
+                    {{ s.name || getShopLabel(s.type) }}
+                  </span>
+                  @if (s.walkingMinutes || s.distanceMeters) {
+                    <span class="transport-distance">
+                      @if (s.walkingMinutes) { {{ s.walkingMinutes }} min }
+                      @if (s.walkingMinutes && s.distanceMeters) { · }
+                      @if (s.distanceMeters) { {{ s.distanceMeters }} m }
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
       </div>
+
+      <!-- Documents -->
+      @if (property()?.id) {
+        <app-entity-documents entityType="property" [entityId]="property()!.id" />
+      }
 
       <!-- Sidebar -->
       <div class="detail-sidebar">

@@ -221,11 +221,22 @@
             </button>
           }
         } @else {
-          <button (click)="submitForm()" class="btn-accent text-sm py-3 px-8">
-            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-            </svg>
-            Obtenir mon estimation
+          @if (error()) {
+            <p class="text-red-600 text-sm text-center mb-3">{{ error() }}</p>
+          }
+          <button (click)="submitForm()" class="btn-accent text-sm py-3 px-8" [disabled]="sending()">
+            @if (sending()) {
+              <svg class="w-4 h-4 inline mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Envoi en cours...
+            } @else {
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+              Obtenir mon estimation
+            }
           </button>
         }
       </div>

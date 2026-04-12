@@ -31,7 +31,8 @@ export class ContactFormComponent implements OnInit {
     email: ['', Validators.email],
     mobilePhone: [''],
     city: [''],
-    source: ['']
+    source: [''],
+    notes: ['']
   });
 
   ngOnInit(): void {
@@ -50,7 +51,8 @@ export class ContactFormComponent implements OnInit {
             email: contact.email || '',
             mobilePhone: contact.mobilePhone || contact.phone || '',
             city: contact.address?.city || '',
-            source: contact.source || ''
+            source: contact.source || '',
+            notes: contact.notes || ''
           });
           this.isLoading = false;
         },
@@ -75,7 +77,8 @@ export class ContactFormComponent implements OnInit {
       email: fv.email || undefined,
       mobilePhone: fv.mobilePhone || undefined,
       address: { city: fv.city || undefined },
-      source: fv.source || undefined
+      source: fv.source || undefined,
+      notes: fv.notes || undefined
     };
 
     const op$ = this.isEditMode && this.contactId

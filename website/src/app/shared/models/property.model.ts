@@ -26,6 +26,25 @@ export interface PropertyLocation {
   lng: number;
 }
 
+export interface PropertyTransport {
+  id?: string;
+  type: string; // METRO | BUS | TRAM | RER | TRAIN | OTHER
+  line?: string;
+  name?: string;
+  distanceMeters?: number;
+  walkingMinutes?: number;
+  displayOrder?: number;
+}
+
+export interface PropertyShop {
+  id?: string;
+  type: string; // SUPERMARKET | BAKERY | PHARMACY | SCHOOL | PARK | RESTAURANT | BANK | HOSPITAL | OTHER
+  name?: string;
+  distanceMeters?: number;
+  walkingMinutes?: number;
+  displayOrder?: number;
+}
+
 export interface Property {
   id: string;
   reference: string;
@@ -74,9 +93,14 @@ export interface Property {
   // Dates
   publishedAt: Date;
   updatedAt: Date;
+  availableFrom?: string; // ISO date
 
   // Agent
   agent?: AgentInfo;
+
+  // Proximité
+  transports?: PropertyTransport[];
+  shops?: PropertyShop[];
 }
 
 export interface PropertySearchParams {

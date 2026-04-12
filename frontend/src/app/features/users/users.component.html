@@ -1,0 +1,223 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Utilisateurs</h1>
+      <p class="page-subtitle">Gérez les accès au back-office CRM</p>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouvel utilisateur
+    </button>
+  </div>
+
+  <!-- Success toast -->
+  @if (successMsg()) {
+    <div class="toast-success">
+      <i class="pi pi-check-circle"></i> {{ successMsg() }}
+    </div>
+  }
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-value">{{ totalCount() }}</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-card stat-admin">
+      <span class="stat-value">{{ adminCount() }}</span>
+      <span class="stat-label">Administrateurs</span>
+    </div>
+    <div class="stat-card stat-active">
+      <span class="stat-value">{{ activeCount() }}</span>
+      <span class="stat-label">Actifs</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="users-table-wrap">
+    @if (loading()) {
+      <div class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i> Chargement…
+      </div>
+    } @else if (users().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-users"></i>
+        <p>Aucun utilisateur trouvé</p>
+      </div>
+    } @else {
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Identifiant</th>
+            <th>Rôle</th>
+            <th>Titre / Poste</th>
+            <th>Dernière connexion</th>
+            <th>Statut</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr [class.row-disabled]="!user.enabled">
+              <td>
+                <div class="user-cell">
+                  @if (user.avatarUrl) {
+                    <img [src]="user.avatarUrl" [alt]="user.firstName" class="user-avatar" />
+                  } @else {
+                    <div class="user-initials" [class.initials-admin]="user.role === 'ADMIN'">
+                      {{ getInitials(user) }}
+                    </div>
+                  }
+                  <div>
+                    <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                    <div class="user-email">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><code class="user-login">{{ user.username }}</code></td>
+              <td>
+                <span class="role-badge" [class.badge-admin]="user.role === 'ADMIN'" [class.badge-user]="user.role === 'USER'">
+                  {{ getRoleLabel(user.role) }}
+                </span>
+              </td>
+              <td class="td-muted">{{ user.title || '—' }}</td>
+              <td class="td-muted">
+                {{ user.lastLoginAt ? (user.lastLoginAt | date:'dd/MM/yyyy HH:mm':'':'fr') : 'Jamais' }}
+              </td>
+              <td>
+                @if (user.enabled) {
+                  <span class="status-badge status-active"><i class="pi pi-check"></i> Actif</span>
+                } @else {
+                  <span class="status-badge status-disabled"><i class="pi pi-ban"></i> Désactivé</span>
+                }
+              </td>
+              <td class="td-actions">
+                <button class="action-btn" title="Modifier" (click)="openEdit(user)">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                @if (!isSelf(user)) {
+                  @if (user.enabled) {
+                    <button class="action-btn action-warn" title="Désactiver" (click)="requestDisable(user.id)">
+                      <i class="pi pi-ban"></i>
+                    </button>
+                  } @else {
+                    <button class="action-btn action-success" title="Réactiver" (click)="enableUser(user.id)">
+                      <i class="pi pi-undo"></i>
+                    </button>
+                  }
+                  <button class="action-btn action-danger" title="Supprimer définitivement" (click)="requestDelete(user.id)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+</div>
+
+<!-- Modal create/edit -->
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingUser() ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}</h2>
+        <button class="modal-close" (click)="closeModal()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="modal-body">
+        @if (errorMsg()) {
+          <div class="alert-error"><i class="pi pi-exclamation-circle"></i> {{ errorMsg() }}</div>
+        }
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label required">Prénom *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.firstName" placeholder="Jean" />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Nom *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.lastName" placeholder="Dupont" />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Identifiant (login) *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.username"
+                   placeholder="jean.dupont"
+                   [readonly]="!!editingUser()"
+                   [class.readonly-field]="!!editingUser()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Email *</label>
+            <input type="email" class="form-input" [(ngModel)]="form.email" placeholder="jean@imoblex.fr" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input type="text" class="form-input" [(ngModel)]="form.phone" placeholder="06 00 00 00 00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Titre / Poste</label>
+            <input type="text" class="form-input" [(ngModel)]="form.title" placeholder="Négociateur" />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Rôle *</label>
+            <select class="form-input" [(ngModel)]="form.role">
+              <option value="USER">Collaborateur</option>
+              <option value="ADMIN">Administrateur</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ editingUser() ? 'Nouveau mot de passe' : 'Mot de passe *' }}</label>
+            <input type="password" class="form-input" [(ngModel)]="form.password"
+                   [placeholder]="editingUser() ? 'Laisser vide pour ne pas changer' : 'Mot de passe'" />
+            @if (editingUser()) {
+              <span class="form-hint">Laisser vide pour conserver le mot de passe actuel</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Annuler</button>
+        <button class="btn-primary" (click)="onSave()" [disabled]="saving()">
+          @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
+          {{ editingUser() ? 'Enregistrer' : 'Créer l\'utilisateur' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm disable dialog -->
+@if (confirmDisableId()) {
+  <div class="modal-backdrop" (click)="cancelDisable()">
+    <div class="modal-box modal-confirm" (click)="$event.stopPropagation()">
+      <div class="confirm-icon confirm-icon-warn"><i class="pi pi-ban"></i></div>
+      <h3>Désactiver l'utilisateur ?</h3>
+      <p>L'utilisateur ne pourra plus se connecter au CRM. Vous pourrez le réactiver à tout moment.</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" (click)="cancelDisable()">Annuler</button>
+        <button class="btn-warn" (click)="confirmDisable()">Désactiver</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm permanent delete dialog -->
+@if (confirmDeleteId()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-box modal-confirm" (click)="$event.stopPropagation()">
+      <div class="confirm-icon confirm-icon-danger"><i class="pi pi-trash"></i></div>
+      <h3>Supprimer définitivement ?</h3>
+      <p>Cette action est <strong>irréversible</strong>. L'utilisateur sera supprimé de la base de données et ne pourra pas être récupéré.</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-danger" (click)="confirmDelete()">Supprimer définitivement</button>
+      </div>
+    </div>
+  </div>
+}

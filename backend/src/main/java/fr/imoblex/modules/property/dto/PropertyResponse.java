@@ -118,6 +118,37 @@ public class PropertyResponse {
     private Integer contactCount;
     private Integer visitCount;
 
+    // Proximité
+    private List<TransportDto> transports;
+    private List<ShopDto> shops;
+
+    @Data
+    @Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class TransportDto {
+        private String id;
+        private String type;
+        private String line;
+        private String name;
+        private Integer distanceMeters;
+        private Integer walkingMinutes;
+        private Integer displayOrder;
+    }
+
+    @Data
+    @Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ShopDto {
+        private String id;
+        private String type;
+        private String name;
+        private Integer distanceMeters;
+        private Integer walkingMinutes;
+        private Integer displayOrder;
+    }
+
     @Data
     @Builder
     public static class PhotoDto {

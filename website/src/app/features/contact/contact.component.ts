@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb.component';
+import { LeadService } from '../../shared/services/lead.service';
 
 @Component({
   selector: 'app-contact',
@@ -12,7 +13,11 @@ import { BreadcrumbComponent } from '../../shared/components/breadcrumb.componen
   styleUrls: ['./contact.component.scss']
 })
 export class ContactComponent {
+  private readonly leadService = inject(LeadService);
+
   submitted = signal(false);
+  sending = signal(false);
+  error = signal('');
   showToast = signal(false);
 
   formData = {
@@ -75,11 +80,37 @@ export class ContactComponent {
   ];
 
   onSubmit(): void {
-    console.log('Contact form submitted:', this.formData);
-    this.submitted.set(true);
-    this.showToast.set(true);
-    setTimeout(() => this.showToast.set(false), 5000);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (this.sending()) return;
+    this.sending.set(true);
+    this.error.set('');
+
+    const messageParts = [
+      this.formData.subject ? `Sujet : ${this.formData.subject}` : '',
+      this.formData.message ? this.formData.message : '',
+    ].filter(Boolean);
+
+    this.leadService.submit({
+      firstName: this.formData.firstName,
+      lastName: this.formData.lastName,
+      email: this.formData.email,
+      phone: this.formData.phone || undefined,
+      message: messageParts.join('\n\n'),
+      propertyReference: this.formData.propertyRef || undefined,
+      formType: 'CONTACT',
+      gdprConsent: this.formData.gdpr,
+    }).subscribe({
+      next: () => {
+        this.sending.set(false);
+        this.submitted.set(true);
+        this.showToast.set(true);
+        setTimeout(() => this.showToast.set(false), 5000);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: () => {
+        this.sending.set(false);
+        this.error.set('Une erreur est survenue. Veuillez réessayer ou nous contacter par téléphone.');
+      },
+    });
   }
 
   reset(): void {

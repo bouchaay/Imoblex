@@ -45,6 +45,7 @@ export interface PropertyFeatures {
   orientation?: string;
   heatingType?: string;
   heatingEnergy?: string;
+  furnished?: boolean | null;
 }
 
 export interface Property {
@@ -77,6 +78,28 @@ export interface Property {
   visitCount?: number;
   favoriteCount?: number;
   notes?: string;
+  availableFrom?: string; // ISO date
+  transports?: PropertyTransport[];
+  shops?: PropertyShop[];
+}
+
+export interface PropertyTransport {
+  id?: string;
+  type: string; // METRO | BUS | TRAM | RER | TRAIN | OTHER
+  line?: string;
+  name?: string;
+  distanceMeters?: number;
+  walkingMinutes?: number;
+  displayOrder?: number;
+}
+
+export interface PropertyShop {
+  id?: string;
+  type: string; // SUPERMARKET | BAKERY | PHARMACY | SCHOOL | PARK | RESTAURANT | BANK | HOSPITAL | OTHER
+  name?: string;
+  distanceMeters?: number;
+  walkingMinutes?: number;
+  displayOrder?: number;
 }
 
 export interface PropertySearchRequest {

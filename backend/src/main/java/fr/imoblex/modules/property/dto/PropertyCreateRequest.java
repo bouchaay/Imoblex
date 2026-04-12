@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -110,4 +111,27 @@ public class PropertyCreateRequest {
     // Dates
     private LocalDate availableFrom;
     private LocalDate constructionYear;
+
+    // Proximité
+    private List<TransportDto> transports;
+    private List<ShopDto> shops;
+
+    @Data
+    public static class TransportDto {
+        private String type;
+        private String line;
+        private String name;
+        private Integer distanceMeters;
+        private Integer walkingMinutes;
+        private Integer displayOrder;
+    }
+
+    @Data
+    public static class ShopDto {
+        private String type;
+        private String name;
+        private Integer distanceMeters;
+        private Integer walkingMinutes;
+        private Integer displayOrder;
+    }
 }

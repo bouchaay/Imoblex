@@ -16,10 +16,11 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  credentials = { agencyCode: '', username: '', password: '' };
+  credentials = { username: '', password: '' };
   isLoading = signal(false);
   showPassword = signal(false);
   errorMessage = signal('');
+  sessionExpired = this.route.snapshot.queryParams['reason'] === 'session_expired';
 
   features = [
     { icon: 'pi-building', text: 'Gestion complète de vos biens immobiliers' },
@@ -30,7 +31,7 @@ export class LoginComponent {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    if (!this.credentials.agencyCode || !this.credentials.username || !this.credentials.password) {
+    if (!this.credentials.username || !this.credentials.password) {
       this.errorMessage.set('Veuillez remplir tous les champs.');
       return;
     }
